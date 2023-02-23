@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2023-02-17T14:35:26+00:00" specversion="4" source="" lineno="306">
+<version>3.6.2</version>
+<doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;</doc>
+<tags>
+</tags>
+<inits>
+<init name="__init__" lineno="142">
+<arguments repr="source: str, ignored_endpoints: List[str] | None = None, ignored_responses: List[int] | None = None, ignored_testcases: List[List[str]] | None = None, origin: str = , base_path: str = , mappings_path: str | Path = , username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, cert: str | Tuple[str, str] | None = None, extra_headers: Dict[str, str] | None = None, response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, require_body_for_invalid_url: bool = False, invalid_property_default_response: int = 422, recursion_limit: int = 1, recursion_default: Any = {}, faker_locale: str | List[str] | None = None, default_id_property_name: str = id">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="source: str">
+<name>source</name>
+<type typedoc="string">str</type>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_endpoints: List[str] | None = None">
+<name>ignored_endpoints</name>
+<type typedoc="list">List[str]</type>
+<type typedoc="None">None</type>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_responses: List[int] | None = None">
+<name>ignored_responses</name>
+<type typedoc="list">List[int]</type>
+<type typedoc="None">None</type>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_testcases: List[List[str]] | None = None">
+<name>ignored_testcases</name>
+<type typedoc="list">List[List[str]]</type>
+<type typedoc="None">None</type>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="origin: str = ">
+<name>origin</name>
+<type typedoc="string">str</type>
+<default/>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="base_path: str = ">
+<name>base_path</name>
+<type typedoc="string">str</type>
+<default/>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="mappings_path: str | Path = ">
+<name>mappings_path</name>
+<type typedoc="string">str</type>
+<type typedoc="Path">Path</type>
+<default/>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="username: str = ">
+<name>username</name>
+<type typedoc="string">str</type>
+<default/>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="password: str = ">
+<name>password</name>
+<type typedoc="string">str</type>
+<default/>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="security_token: str = ">
+<name>security_token</name>
+<type typedoc="string">str</type>
+<default/>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="auth: AuthBase | None = None">
+<name>auth</name>
+<type>AuthBase</type>
+<type typedoc="None">None</type>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="cert: str | Tuple[str, str] | None = None">
+<name>cert</name>
+<type typedoc="string">str</type>
+<type typedoc="tuple">Tuple[str, str]</type>
+<type typedoc="None">None</type>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="extra_headers: Dict[str, str] | None = None">
+<name>extra_headers</name>
+<type typedoc="dictionary">Dict[str, str]</type>
+<type typedoc="None">None</type>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="response_validation: ValidationLevel = WARN">
+<name>response_validation</name>
+<type typedoc="ValidationLevel">ValidationLevel</type>
+<default>WARN</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="disable_server_validation: bool = True">
+<name>disable_server_validation</name>
+<type typedoc="boolean">bool</type>
+<default>True</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="require_body_for_invalid_url: bool = False">
+<name>require_body_for_invalid_url</name>
+<type typedoc="boolean">bool</type>
+<default>False</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="invalid_property_default_response: int = 422">
+<name>invalid_property_default_response</name>
+<type typedoc="integer">int</type>
+<default>422</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="recursion_limit: int = 1">
+<name>recursion_limit</name>
+<type typedoc="integer">int</type>
+<default>1</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="recursion_default: Any = {}">
+<name>recursion_default</name>
+<type>Any</type>
+<default>{}</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="faker_locale: str | List[str] | None = None">
+<name>faker_locale</name>
+<type typedoc="string">str</type>
+<type typedoc="list">List[str]</type>
+<type typedoc="None">None</type>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="default_id_property_name: str = id">
+<name>default_id_property_name</name>
+<type typedoc="string">str</type>
+<default>id</default>
+</arg>
+</arguments>
+<doc>&lt;h4&gt;source&lt;/h4&gt;
+&lt;p&gt;An absolute path to an openapi.json or openapi.yaml file or an url to such a file.&lt;/p&gt;
+&lt;h4&gt;ignored_endpoints&lt;/h4&gt;
+&lt;p&gt;A list of endpoints that will be ignored when generating the test cases.&lt;/p&gt;
+&lt;h4&gt;ignored_responses&lt;/h4&gt;
+&lt;p&gt;A list of responses that will be ignored when generating the test cases.&lt;/p&gt;
+&lt;h4&gt;ignored_testcases&lt;/h4&gt;
+&lt;p&gt;A list of specific test cases that, if it would be generated, will be ignored. Specific test cases to ignore must be specified as a &lt;code&gt;List&lt;/code&gt; of &lt;code&gt;endpoint&lt;/code&gt;, &lt;code&gt;method&lt;/code&gt; and &lt;code&gt;response&lt;/code&gt;.&lt;/p&gt;
+&lt;h4&gt;origin&lt;/h4&gt;
+&lt;p&gt;The server (and port) of the target server. E.g. &lt;code&gt;https://localhost:8000&lt;/code&gt;&lt;/p&gt;
+&lt;h4&gt;base_path&lt;/h4&gt;
+&lt;p&gt;The routing between &lt;code&gt;origin&lt;/code&gt; and the endpoints as found in the &lt;code&gt;paths&lt;/code&gt; in the openapi document. E.g. &lt;code&gt;/petshop/v2&lt;/code&gt;.&lt;/p&gt;
+&lt;h4&gt;mappings_path&lt;/h4&gt;
+&lt;p&gt;See &lt;a href="https://marketsquare.github.io/robotframework-openapi-libcore/advanced_use.html"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;h4&gt;username&lt;/h4&gt;
+&lt;p&gt;The username to be used for Basic Authentication.&lt;/p&gt;
+&lt;h4&gt;password&lt;/h4&gt;
+&lt;p&gt;The password to be used for Basic Authentication.&lt;/p&gt;
+&lt;h4&gt;security_token&lt;/h4&gt;
+&lt;p&gt;The token to be used for token based security using the &lt;code&gt;Authorization&lt;/code&gt; header.&lt;/p&gt;
+&lt;h4&gt;auth&lt;/h4&gt;
+&lt;p&gt;A &lt;a href="https://requests.readthedocs.io/en/latest/api/#authentication"&gt;requests AuthBase instance&lt;/a&gt; to be used for authentication instead of the &lt;code&gt;username&lt;/code&gt; and &lt;code&gt;password&lt;/code&gt;.&lt;/p&gt;
+&lt;h4&gt;cert&lt;/h4&gt;
+&lt;p&gt;The SSL certificate to use with all requests. If string: the path to ssl client cert file (.pem). If tuple, ('cert', 'key') pair.&lt;/p&gt;
+&lt;h4&gt;extra_headers&lt;/h4&gt;
+&lt;p&gt;A dictionary with extra / custom headers that will be send with every request. This parameter can be used to send headers that are not documented in the openapi document.&lt;/p&gt;
+&lt;h4&gt;response_validation&lt;/h4&gt;
+&lt;p&gt;By default, a &lt;code&gt;WARN&lt;/code&gt; is logged when the Response received after a Request does not comply with the schema as defined in the openapi document for the given operation. The following values are supported:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;DISABLED&lt;/code&gt;: All Response validation errors will be ignored&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;INFO&lt;/code&gt;: Any Response validation erros will be logged at &lt;code&gt;INFO&lt;/code&gt; level&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;WARN&lt;/code&gt;: Any Response validation erros will be logged at &lt;code&gt;WARN&lt;/code&gt; level&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;STRICT&lt;/code&gt;: The Test Case will fail on any Response validation errors&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;disable_server_validation&lt;/h4&gt;
+&lt;p&gt;If enabled by setting this parameter to &lt;code&gt;True&lt;/code&gt;, the Response validation will also include possible errors for Requests made to a server address that is not defined in the list of servers in the openapi document. This generally means that if there is a mismatch, every Test Case will raise this error. Note that &lt;code&gt;localhost&lt;/code&gt; and &lt;code&gt;127.0.0.1&lt;/code&gt; are not considered the same by Response validation.&lt;/p&gt;
+&lt;h4&gt;require_body_for_invalid_url&lt;/h4&gt;
+&lt;p&gt;When a request is made against an invalid url, this usually is because of a "404" request; a request for a resource that does not exist. Depending on API implementation, when a request with a missing or invalid request body is made on a non-existent resource, either a 404 or a 422 or 400 Response is normally returned. If the API being tested processes the request body before checking if the requested resource exists, set this parameter to True.&lt;/p&gt;
+&lt;h4&gt;invalid_property_default_response&lt;/h4&gt;
+&lt;p&gt;The default response code for requests with a JSON body that does not comply with the schema. Example: a value outside the specified range or a string value for a property defined as integer in the schema.&lt;/p&gt;
+&lt;h4&gt;recursion_limit&lt;/h4&gt;
+&lt;p&gt;The recursion depth to which to fully parse recursive references before the &lt;span class="name"&gt;recursion_default&lt;/span&gt; is used to end the recursion.&lt;/p&gt;
+&lt;h4&gt;recursion_default&lt;/h4&gt;
+&lt;p&gt;The value that is used instead of the referenced schema when the &lt;span class="name"&gt;recursion_limit&lt;/span&gt; has been reached. The default &lt;span class="name"&gt;{}&lt;/span&gt; represents an empty object in JSON. Depending on schema definitions, this may cause schema validation errors. If this is the case, &lt;a href="#type-None" class="name"&gt;None&lt;/a&gt; (&lt;span class="name"&gt;${NONE}&lt;/span&gt; in Robot Framework) can be tried as an alternative.&lt;/p&gt;
+&lt;h4&gt;faker_locale&lt;/h4&gt;
+&lt;p&gt;A locale string or list of locale strings to pass to Faker to be used in generation of string data for supported format types.&lt;/p&gt;
+&lt;h4&gt;default_id_property_name&lt;/h4&gt;
+&lt;p&gt;The default name for the property that identifies a resource (i.e. a unique entiry) within the API. The default value for this property name is &lt;span class="name"&gt;id&lt;/span&gt;. If the target API uses a different name for all the resources within the API, you can configure it globally using this property.&lt;/p&gt;
+&lt;p&gt;If different property names are used for the unique identifier for different types of resources, an &lt;span class="name"&gt;ID_MAPPING&lt;/span&gt; can be implemented in the &lt;span class="name"&gt;mappings_path&lt;/span&gt;.&lt;/p&gt;</doc>
+<shortdoc>=== source === An absolute path to an openapi.json or openapi.yaml file or an url to such a file.</shortdoc>
+</init>
+</inits>
+<keywords>
+<kw name="Test Endpoint" source="" lineno="148">
+<arguments repr="endpoint: str, method: str, status_code: int">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
+<name>endpoint</name>
+<type typedoc="string">str</type>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
+<name>method</name>
+<type typedoc="string">str</type>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="status_code: int">
+<name>status_code</name>
+<type typedoc="integer">int</type>
+</arg>
+</arguments>
+<doc>&lt;p&gt;Validate that performing the &lt;span class="name"&gt;method&lt;/span&gt; operation on &lt;span class="name"&gt;endpoint&lt;/span&gt; results in a &lt;span class="name"&gt;status_code&lt;/span&gt; response.&lt;/p&gt;
+&lt;p&gt;This is the main keyword to be used in the &lt;span class="name"&gt;Test Template&lt;/span&gt; keyword when using the OpenApiDriver.&lt;/p&gt;
+&lt;p&gt;The keyword calls other keywords to generate the neccesary data to perform the desired operation and validate the response against the openapi document.&lt;/p&gt;</doc>
+<shortdoc>Validate that performing the `method` operation on `endpoint` results in a `status_code` response.</shortdoc>
+</kw>
+<kw name="Test Invalid Url" source="" lineno="106">
+<arguments repr="endpoint: str, method: str, expected_status_code: int = 404">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
+<name>endpoint</name>
+<type typedoc="string">str</type>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
+<name>method</name>
+<type typedoc="string">str</type>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="expected_status_code: int = 404">
+<name>expected_status_code</name>
+<type typedoc="integer">int</type>
+<default>404</default>
+</arg>
+</arguments>
+<doc>&lt;p&gt;Perform a request for the provided 'endpoint' and 'method' where the url for the &lt;span class="name"&gt;endpoint&lt;/span&gt; is invalidated.&lt;/p&gt;
+&lt;p&gt;This keyword will be &lt;span class="name"&gt;SKIPPED&lt;/span&gt; if the endpoint contains no parts that can be invalidated.&lt;/p&gt;
+&lt;p&gt;The optional &lt;span class="name"&gt;expected_status_code&lt;/span&gt; parameter (default: 404) can be set to the expected status code for APIs that do not return a 404 on invalid urls.&lt;/p&gt;
+&lt;p&gt;&amp;gt; Note: Depending on API design, the url may be validated before or after validation of headers, query parameters and / or (json) body. By default, no parameters are send with the request. The &lt;span class="name"&gt;require_body_for_invalid_url&lt;/span&gt; parameter can be set to &lt;span class="name"&gt;True&lt;/span&gt; if needed.&lt;/p&gt;</doc>
+<shortdoc>Perform a request for the provided 'endpoint' and 'method' where the url for the `endpoint` is invalidated.</shortdoc>
+</kw>
+<kw name="Test Unauthorized" source="" lineno="86">
+<arguments repr="endpoint: str, method: str">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
+<name>endpoint</name>
+<type typedoc="string">str</type>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
+<name>method</name>
+<type typedoc="string">str</type>
+</arg>
+</arguments>
+<doc>&lt;p&gt;Perform a request for &lt;span class="name"&gt;method&lt;/span&gt; on the &lt;span class="name"&gt;endpoint&lt;/span&gt;, with no authorization.&lt;/p&gt;
+&lt;p&gt;This keyword only passes if the response code is 401: Unauthorized.&lt;/p&gt;
+&lt;p&gt;Any authorization parameters used to initialize the library are ignored for this request. &amp;gt; Note: No headers or (json) body are send with the request. For security reasons, the authorization validation should be checked first.&lt;/p&gt;</doc>
+<shortdoc>Perform a request for `method` on the `endpoint`, with no authorization.</shortdoc>
+</kw>
+</keywords>
+<datatypes>
+<enums>
+<enum name="ValidationLevel">
+<doc>&lt;p&gt;The available levels for the response_validation parameter.&lt;/p&gt;</doc>
+<members>
+<member name="DISABLED" value="DISABLED"/>
+<member name="INFO" value="INFO"/>
+<member name="WARN" value="WARN"/>
+<member name="STRICT" value="STRICT"/>
+</members>
+</enum>
+</enums>
+</datatypes>
+<typedocs>
+<type name="boolean" type="Standard">
+<doc>&lt;p&gt;Strings &lt;code&gt;TRUE&lt;/code&gt;, &lt;code&gt;YES&lt;/code&gt;, &lt;code&gt;ON&lt;/code&gt; and &lt;code&gt;1&lt;/code&gt; are converted to Boolean &lt;code&gt;True&lt;/code&gt;, the empty string as well as strings &lt;code&gt;FALSE&lt;/code&gt;, &lt;code&gt;NO&lt;/code&gt;, &lt;code&gt;OFF&lt;/code&gt; and &lt;code&gt;0&lt;/code&gt; are converted to Boolean &lt;code&gt;False&lt;/code&gt;, and the string &lt;code&gt;NONE&lt;/code&gt; is converted to the Python &lt;code&gt;None&lt;/code&gt; object. Other strings and other accepted values are passed as-is, allowing keywords to handle them specially if needed. All string comparisons are case-insensitive.&lt;/p&gt;
+&lt;p&gt;Examples: &lt;code&gt;TRUE&lt;/code&gt; (converted to &lt;code&gt;True&lt;/code&gt;), &lt;code&gt;off&lt;/code&gt; (converted to &lt;code&gt;False&lt;/code&gt;), &lt;code&gt;example&lt;/code&gt; (used as-is)&lt;/p&gt;</doc>
+<accepts>
+<type>string</type>
+<type>integer</type>
+<type>float</type>
+<type>None</type>
+</accepts>
+<usages>
+<usage>__init__</usage>
+</usages>
+</type>
+<type name="dictionary" type="Standard">
+<doc>&lt;p&gt;Strings must be Python &lt;a href="https://docs.python.org/library/stdtypes.html#dict"&gt;dictionary&lt;/a&gt; literals. They are converted to actual dictionaries using the &lt;a href="https://docs.python.org/library/ast.html#ast.literal_eval"&gt;ast.literal_eval&lt;/a&gt; function. They can contain any values &lt;code&gt;ast.literal_eval&lt;/code&gt; supports, including dictionaries and other containers.&lt;/p&gt;
+&lt;p&gt;If the type has nested types like &lt;code&gt;dict[str, int]&lt;/code&gt;, items are converted to those types automatically. This in new in Robot Framework 6.0.&lt;/p&gt;
+&lt;p&gt;Examples: &lt;code&gt;{'a': 1, 'b': 2}&lt;/code&gt;, &lt;code&gt;{'key': 1, 'nested': {'key': 2}}&lt;/code&gt;&lt;/p&gt;</doc>
+<accepts>
+<type>string</type>
+<type>Mapping</type>
+</accepts>
+<usages>
+<usage>__init__</usage>
+</usages>
+</type>
+<type name="integer" type="Standard">
+<doc>&lt;p&gt;Conversion is done using Python's &lt;a href="https://docs.python.org/library/functions.html#int"&gt;int&lt;/a&gt; built-in function. Floating point numbers are accepted only if they can be represented as integers exactly. For example, &lt;code&gt;1.0&lt;/code&gt; is accepted and &lt;code&gt;1.1&lt;/code&gt; is not.&lt;/p&gt;
+&lt;p&gt;Starting from RF 4.1, it is possible to use hexadecimal, octal and binary numbers by prefixing values with &lt;code&gt;0x&lt;/code&gt;, &lt;code&gt;0o&lt;/code&gt; and &lt;code&gt;0b&lt;/code&gt;, respectively.&lt;/p&gt;
+&lt;p&gt;Starting from RF 4.1, spaces and underscores can be used as visual separators for digit grouping purposes.&lt;/p&gt;
+&lt;p&gt;Examples: &lt;code&gt;42&lt;/code&gt;, &lt;code&gt;-1&lt;/code&gt;, &lt;code&gt;0b1010&lt;/code&gt;, &lt;code&gt;10 000 000&lt;/code&gt;, &lt;code&gt;0xBAD_C0FFEE&lt;/code&gt;&lt;/p&gt;</doc>
+<accepts>
+<type>string</type>
+<type>float</type>
+</accepts>
+<usages>
+<usage>__init__</usage>
+<usage>Test Endpoint</usage>
+<usage>Test Invalid Url</usage>
+</usages>
+</type>
+<type name="list" type="Standard">
+<doc>&lt;p&gt;Strings must be Python &lt;a href="https://docs.python.org/library/stdtypes.html#list"&gt;list&lt;/a&gt; literals. They are converted to actual lists using the &lt;a href="https://docs.python.org/library/ast.html#ast.literal_eval"&gt;ast.literal_eval&lt;/a&gt; function. They can contain any values &lt;code&gt;ast.literal_eval&lt;/code&gt; supports, including lists and other containers.&lt;/p&gt;
+&lt;p&gt;If the type has nested types like &lt;code&gt;list[int]&lt;/code&gt;, items are converted to those types automatically. This in new in Robot Framework 6.0.&lt;/p&gt;
+&lt;p&gt;Examples: &lt;code&gt;['one', 'two']&lt;/code&gt;, &lt;code&gt;[('one', 1), ('two', 2)]&lt;/code&gt;&lt;/p&gt;</doc>
+<accepts>
+<type>string</type>
+<type>Sequence</type>
+</accepts>
+<usages>
+<usage>__init__</usage>
+</usages>
+</type>
+<type name="None" type="Standard">
+<doc>&lt;p&gt;String &lt;code&gt;NONE&lt;/code&gt; (case-insensitive) is converted to Python &lt;code&gt;None&lt;/code&gt; object. Other values cause an error.&lt;/p&gt;</doc>
+<accepts>
+<type>string</type>
+</accepts>
+<usages>
+<usage>__init__</usage>
+</usages>
+</type>
+<type name="Path" type="Standard">
+<doc>&lt;p&gt;Strings are converted &lt;a href="https://docs.python.org/library/pathlib.html"&gt;Path&lt;/a&gt; objects. On Windows &lt;code&gt;/&lt;/code&gt; is converted to &lt;code&gt;\&lt;/code&gt; automatically.&lt;/p&gt;
+&lt;p&gt;Examples: &lt;code&gt;/tmp/absolute/path&lt;/code&gt;, &lt;code&gt;relative/path/to/file.ext&lt;/code&gt;, &lt;code&gt;name.txt&lt;/code&gt;&lt;/p&gt;</doc>
+<accepts>
+<type>string</type>
+<type>PurePath</type>
+</accepts>
+<usages>
+<usage>__init__</usage>
+</usages>
+</type>
+<type name="string" type="Standard">
+<doc>&lt;p&gt;All arguments are converted to Unicode strings.&lt;/p&gt;</doc>
+<accepts>
+<type>Any</type>
+</accepts>
+<usages>
+<usage>__init__</usage>
+<usage>Test Endpoint</usage>
+<usage>Test Invalid Url</usage>
+<usage>Test Unauthorized</usage>
+</usages>
+</type>
+<type name="tuple" type="Standard">
+<doc>&lt;p&gt;Strings must be Python &lt;a href="https://docs.python.org/library/stdtypes.html#tuple"&gt;tuple&lt;/a&gt; literals. They are converted to actual tuples using the &lt;a href="https://docs.python.org/library/ast.html#ast.literal_eval"&gt;ast.literal_eval&lt;/a&gt; function. They can contain any values &lt;code&gt;ast.literal_eval&lt;/code&gt; supports, including tuples and other containers.&lt;/p&gt;
+&lt;p&gt;If the type has nested types like &lt;code&gt;tuple[str, int, int]&lt;/code&gt;, items are converted to those types automatically. This in new in Robot Framework 6.0.&lt;/p&gt;
+&lt;p&gt;Examples: &lt;code&gt;('one', 'two')&lt;/code&gt;, &lt;code&gt;(('one', 1), ('two', 2))&lt;/code&gt;&lt;/p&gt;</doc>
+<accepts>
+<type>string</type>
+<type>Sequence</type>
+</accepts>
+<usages>
+<usage>__init__</usage>
+</usages>
+</type>
+<type name="ValidationLevel" type="Enum">
+<doc>&lt;p&gt;The available levels for the response_validation parameter.&lt;/p&gt;</doc>
+<accepts>
+<type>string</type>
+</accepts>
+<usages>
+<usage>__init__</usage>
+</usages>
+<members>
+<member name="DISABLED" value="DISABLED"/>
+<member name="INFO" value="INFO"/>
+<member name="WARN" value="WARN"/>
+<member name="STRICT" value="STRICT"/>
+</members>
+</type>
+</typedocs>
+</keywordspec>
