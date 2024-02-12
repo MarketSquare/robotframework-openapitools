@@ -1,13 +1,13 @@
 *** Settings ***
 Library         OpenApiLibCore
 ...                 source=${root}/tests/files/schema_with_allof.yaml
-...                 origin=${origin}
+...                 origin=${ORIGIN}
 ...                 base_path=${EMPTY}
 Variables       ${root}/tests/variables.py
 
 
 *** Variables ***
-${origin}=      http://localhost:8000
+${ORIGIN}=      http://localhost:8000
 
 
 *** Test Cases ***

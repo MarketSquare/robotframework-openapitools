@@ -34,7 +34,7 @@ class WagegroupDto(Dto):
                 invalid_value_error_code=422,
             ),
             PropertyValueConstraint(
-                property_name="hourly_rate",
+                property_name="hourly-rate",
                 values=[80.99, 90.99, 99.99],
                 error_code=400,
             ),
@@ -117,7 +117,11 @@ DTO_MAPPING: Dict[Tuple[str, str], Type[Dto]] = {
     ("/secret_message", "get"): MessageDto,
 }
 
+# NOTE: "/available_employees": "identification" is not mapped for testing purposes
 ID_MAPPING: Dict[str, str] = {
+    "/employees": "identification",
+    "/employees/{employee_id}": "identification",
     "/wagegroups": "wagegroup_id",
     "/wagegroups/{wagegroup_id}": "wagegroup_id",
+    "/wagegroups/{wagegroup_id}/employees": "identification",
 }

@@ -1,153 +1,153 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2023-02-17T14:35:26+00:00" specversion="4" source="" lineno="306">
-<version>3.6.2</version>
+<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2024-02-12T13:49:58+00:00" specversion="5" source="/workspaces/robotframework-openapidriver/src/OpenApiDriver/openapidriver.py" lineno="352">
+<version>4.3.0</version>
 <doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;</doc>
 <tags>
 </tags>
 <inits>
-<init name="__init__" lineno="142">
-<arguments repr="source: str, ignored_endpoints: List[str] | None = None, ignored_responses: List[int] | None = None, ignored_testcases: List[List[str]] | None = None, origin: str = , base_path: str = , mappings_path: str | Path = , username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, cert: str | Tuple[str, str] | None = None, extra_headers: Dict[str, str] | None = None, response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, require_body_for_invalid_url: bool = False, invalid_property_default_response: int = 422, recursion_limit: int = 1, recursion_default: Any = {}, faker_locale: str | List[str] | None = None, default_id_property_name: str = id">
+<init name="__init__" lineno="144">
+<arguments repr="source: str, origin: str = , base_path: str = , included_paths: Iterable[str] | None = None, ignored_paths: Iterable[str] | None = None, ignored_responses: Iterable[int] | None = None, ignored_testcases: Iterable[Tuple[str, str, int]] | None = None, response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, mappings_path: str | Path = , invalid_property_default_response: int = 422, default_id_property_name: str = id, faker_locale: str | List[str] | None = None, require_body_for_invalid_url: bool = False, recursion_limit: int = 1, recursion_default: Any = {}, username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, cert: str | Tuple[str, str] | None = None, verify_tls: bool | str | None = True, extra_headers: Dict[str, str] | None = None, cookies: Dict[str, str] | RequestsCookieJar | None = None, proxies: Dict[str, str] | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="source: str">
 <name>source</name>
-<type typedoc="string">str</type>
-</arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_endpoints: List[str] | None = None">
-<name>ignored_endpoints</name>
-<type typedoc="list">List[str]</type>
-<type typedoc="None">None</type>
-<default>None</default>
-</arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_responses: List[int] | None = None">
-<name>ignored_responses</name>
-<type typedoc="list">List[int]</type>
-<type typedoc="None">None</type>
-<default>None</default>
-</arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_testcases: List[List[str]] | None = None">
-<name>ignored_testcases</name>
-<type typedoc="list">List[List[str]]</type>
-<type typedoc="None">None</type>
-<default>None</default>
+<type name="str" typedoc="string">str</type>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="origin: str = ">
 <name>origin</name>
-<type typedoc="string">str</type>
+<type name="str" typedoc="string">str</type>
 <default/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="base_path: str = ">
 <name>base_path</name>
-<type typedoc="string">str</type>
+<type name="str" typedoc="string">str</type>
 <default/>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="mappings_path: str | Path = ">
-<name>mappings_path</name>
-<type typedoc="string">str</type>
-<type typedoc="Path">Path</type>
-<default/>
-</arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="username: str = ">
-<name>username</name>
-<type typedoc="string">str</type>
-<default/>
-</arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="password: str = ">
-<name>password</name>
-<type typedoc="string">str</type>
-<default/>
-</arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="security_token: str = ">
-<name>security_token</name>
-<type typedoc="string">str</type>
-<default/>
-</arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="auth: AuthBase | None = None">
-<name>auth</name>
-<type>AuthBase</type>
-<type typedoc="None">None</type>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="included_paths: Iterable[str] | None = None">
+<name>included_paths</name>
+<type name="Union" union="true">Iterable[str] | None<type name="Iterable">Iterable[str]<type name="str" typedoc="string">str</type></type><type name="None" typedoc="None">None</type></type>
 <default>None</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="cert: str | Tuple[str, str] | None = None">
-<name>cert</name>
-<type typedoc="string">str</type>
-<type typedoc="tuple">Tuple[str, str]</type>
-<type typedoc="None">None</type>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_paths: Iterable[str] | None = None">
+<name>ignored_paths</name>
+<type name="Union" union="true">Iterable[str] | None<type name="Iterable">Iterable[str]<type name="str" typedoc="string">str</type></type><type name="None" typedoc="None">None</type></type>
 <default>None</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="extra_headers: Dict[str, str] | None = None">
-<name>extra_headers</name>
-<type typedoc="dictionary">Dict[str, str]</type>
-<type typedoc="None">None</type>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_responses: Iterable[int] | None = None">
+<name>ignored_responses</name>
+<type name="Union" union="true">Iterable[int] | None<type name="Iterable">Iterable[int]<type name="int" typedoc="integer">int</type></type><type name="None" typedoc="None">None</type></type>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_testcases: Iterable[Tuple[str, str, int]] | None = None">
+<name>ignored_testcases</name>
+<type name="Union" union="true">Iterable[Tuple[str, str, int]] | None<type name="Iterable">Iterable[Tuple[str, str, int]]<type name="Tuple" typedoc="tuple">Tuple[str, str, int]<type name="str" typedoc="string">str</type><type name="str" typedoc="string">str</type><type name="int" typedoc="integer">int</type></type></type><type name="None" typedoc="None">None</type></type>
 <default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="response_validation: ValidationLevel = WARN">
 <name>response_validation</name>
-<type typedoc="ValidationLevel">ValidationLevel</type>
+<type name="ValidationLevel" typedoc="ValidationLevel">ValidationLevel</type>
 <default>WARN</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="disable_server_validation: bool = True">
 <name>disable_server_validation</name>
-<type typedoc="boolean">bool</type>
+<type name="bool" typedoc="boolean">bool</type>
 <default>True</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="require_body_for_invalid_url: bool = False">
-<name>require_body_for_invalid_url</name>
-<type typedoc="boolean">bool</type>
-<default>False</default>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="mappings_path: str | Path = ">
+<name>mappings_path</name>
+<type name="Union" union="true">str | Path<type name="str" typedoc="string">str</type><type name="Path" typedoc="Path">Path</type></type>
+<default/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="invalid_property_default_response: int = 422">
 <name>invalid_property_default_response</name>
-<type typedoc="integer">int</type>
+<type name="int" typedoc="integer">int</type>
 <default>422</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="default_id_property_name: str = id">
+<name>default_id_property_name</name>
+<type name="str" typedoc="string">str</type>
+<default>id</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="faker_locale: str | List[str] | None = None">
+<name>faker_locale</name>
+<type name="Union" union="true">str | List[str] | None<type name="str" typedoc="string">str</type><type name="List" typedoc="list">List[str]<type name="str" typedoc="string">str</type></type><type name="None" typedoc="None">None</type></type>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="require_body_for_invalid_url: bool = False">
+<name>require_body_for_invalid_url</name>
+<type name="bool" typedoc="boolean">bool</type>
+<default>False</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="recursion_limit: int = 1">
 <name>recursion_limit</name>
-<type typedoc="integer">int</type>
+<type name="int" typedoc="integer">int</type>
 <default>1</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="recursion_default: Any = {}">
 <name>recursion_default</name>
-<type>Any</type>
+<type name="Any" typedoc="Any">Any</type>
 <default>{}</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="faker_locale: str | List[str] | None = None">
-<name>faker_locale</name>
-<type typedoc="string">str</type>
-<type typedoc="list">List[str]</type>
-<type typedoc="None">None</type>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="username: str = ">
+<name>username</name>
+<type name="str" typedoc="string">str</type>
+<default/>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="password: str = ">
+<name>password</name>
+<type name="str" typedoc="string">str</type>
+<default/>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="security_token: str = ">
+<name>security_token</name>
+<type name="str" typedoc="string">str</type>
+<default/>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="auth: AuthBase | None = None">
+<name>auth</name>
+<type name="Union" union="true">AuthBase | None<type name="AuthBase">AuthBase</type><type name="None" typedoc="None">None</type></type>
 <default>None</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="default_id_property_name: str = id">
-<name>default_id_property_name</name>
-<type typedoc="string">str</type>
-<default>id</default>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="cert: str | Tuple[str, str] | None = None">
+<name>cert</name>
+<type name="Union" union="true">str | Tuple[str, str] | None<type name="str" typedoc="string">str</type><type name="Tuple" typedoc="tuple">Tuple[str, str]<type name="str" typedoc="string">str</type><type name="str" typedoc="string">str</type></type><type name="None" typedoc="None">None</type></type>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="verify_tls: bool | str | None = True">
+<name>verify_tls</name>
+<type name="Union" union="true">bool | str | None<type name="bool" typedoc="boolean">bool</type><type name="str" typedoc="string">str</type><type name="None" typedoc="None">None</type></type>
+<default>True</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="extra_headers: Dict[str, str] | None = None">
+<name>extra_headers</name>
+<type name="Union" union="true">Dict[str, str] | None<type name="Dict" typedoc="dictionary">Dict[str, str]<type name="str" typedoc="string">str</type><type name="str" typedoc="string">str</type></type><type name="None" typedoc="None">None</type></type>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="cookies: Dict[str, str] | RequestsCookieJar | None = None">
+<name>cookies</name>
+<type name="Union" union="true">Dict[str, str] | RequestsCookieJar | None<type name="Dict" typedoc="dictionary">Dict[str, str]<type name="str" typedoc="string">str</type><type name="str" typedoc="string">str</type></type><type name="RequestsCookieJar" typedoc="dictionary">RequestsCookieJar</type><type name="None" typedoc="None">None</type></type>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="proxies: Dict[str, str] | None = None">
+<name>proxies</name>
+<type name="Union" union="true">Dict[str, str] | None<type name="Dict" typedoc="dictionary">Dict[str, str]<type name="str" typedoc="string">str</type><type name="str" typedoc="string">str</type></type><type name="None" typedoc="None">None</type></type>
+<default>None</default>
 </arg>
 </arguments>
-<doc>&lt;h4&gt;source&lt;/h4&gt;
+<doc>&lt;h3&gt;Base parameters&lt;/h3&gt;
+&lt;h4&gt;source&lt;/h4&gt;
 &lt;p&gt;An absolute path to an openapi.json or openapi.yaml file or an url to such a file.&lt;/p&gt;
-&lt;h4&gt;ignored_endpoints&lt;/h4&gt;
-&lt;p&gt;A list of endpoints that will be ignored when generating the test cases.&lt;/p&gt;
-&lt;h4&gt;ignored_responses&lt;/h4&gt;
-&lt;p&gt;A list of responses that will be ignored when generating the test cases.&lt;/p&gt;
-&lt;h4&gt;ignored_testcases&lt;/h4&gt;
-&lt;p&gt;A list of specific test cases that, if it would be generated, will be ignored. Specific test cases to ignore must be specified as a &lt;code&gt;List&lt;/code&gt; of &lt;code&gt;endpoint&lt;/code&gt;, &lt;code&gt;method&lt;/code&gt; and &lt;code&gt;response&lt;/code&gt;.&lt;/p&gt;
 &lt;h4&gt;origin&lt;/h4&gt;
 &lt;p&gt;The server (and port) of the target server. E.g. &lt;code&gt;https://localhost:8000&lt;/code&gt;&lt;/p&gt;
 &lt;h4&gt;base_path&lt;/h4&gt;
-&lt;p&gt;The routing between &lt;code&gt;origin&lt;/code&gt; and the endpoints as found in the &lt;code&gt;paths&lt;/code&gt; in the openapi document. E.g. &lt;code&gt;/petshop/v2&lt;/code&gt;.&lt;/p&gt;
-&lt;h4&gt;mappings_path&lt;/h4&gt;
-&lt;p&gt;See &lt;a href="https://marketsquare.github.io/robotframework-openapi-libcore/advanced_use.html"&gt;here&lt;/a&gt;.&lt;/p&gt;
-&lt;h4&gt;username&lt;/h4&gt;
-&lt;p&gt;The username to be used for Basic Authentication.&lt;/p&gt;
-&lt;h4&gt;password&lt;/h4&gt;
-&lt;p&gt;The password to be used for Basic Authentication.&lt;/p&gt;
-&lt;h4&gt;security_token&lt;/h4&gt;
-&lt;p&gt;The token to be used for token based security using the &lt;code&gt;Authorization&lt;/code&gt; header.&lt;/p&gt;
-&lt;h4&gt;auth&lt;/h4&gt;
-&lt;p&gt;A &lt;a href="https://requests.readthedocs.io/en/latest/api/#authentication"&gt;requests AuthBase instance&lt;/a&gt; to be used for authentication instead of the &lt;code&gt;username&lt;/code&gt; and &lt;code&gt;password&lt;/code&gt;.&lt;/p&gt;
-&lt;h4&gt;cert&lt;/h4&gt;
-&lt;p&gt;The SSL certificate to use with all requests. If string: the path to ssl client cert file (.pem). If tuple, ('cert', 'key') pair.&lt;/p&gt;
-&lt;h4&gt;extra_headers&lt;/h4&gt;
-&lt;p&gt;A dictionary with extra / custom headers that will be send with every request. This parameter can be used to send headers that are not documented in the openapi document.&lt;/p&gt;
+&lt;p&gt;The routing between &lt;code&gt;origin&lt;/code&gt; and the endpoints as found in the &lt;code&gt;paths&lt;/code&gt; section in the openapi document. E.g. &lt;code&gt;/petshop/v2&lt;/code&gt;.&lt;/p&gt;
+&lt;h3&gt;Test case generation and execution&lt;/h3&gt;
+&lt;h4&gt;included_paths&lt;/h4&gt;
+&lt;p&gt;A list of paths that will be included when generating the test cases. The &lt;code&gt;*&lt;/code&gt; character can be used at the end of a partial path to include all paths starting with the partial path (wildcard include).&lt;/p&gt;
+&lt;h4&gt;ignored_paths&lt;/h4&gt;
+&lt;p&gt;A list of paths that will be ignored when generating the test cases. The &lt;code&gt;*&lt;/code&gt; character can be used at the end of a partial path to ignore all paths starting with the partial path (wildcard ignore).&lt;/p&gt;
+&lt;h4&gt;ignored_responses&lt;/h4&gt;
+&lt;p&gt;A list of responses that will be ignored when generating the test cases.&lt;/p&gt;
+&lt;h4&gt;ignored_testcases&lt;/h4&gt;
+&lt;p&gt;A list of specific test cases that, if it would be generated, will be ignored. Specific test cases to ignore must be specified as a &lt;code&gt;Tuple&lt;/code&gt; or &lt;code&gt;List&lt;/code&gt; of &lt;code&gt;path&lt;/code&gt;, &lt;code&gt;method&lt;/code&gt; and &lt;code&gt;response&lt;/code&gt;.&lt;/p&gt;
 &lt;h4&gt;response_validation&lt;/h4&gt;
 &lt;p&gt;By default, a &lt;code&gt;WARN&lt;/code&gt; is logged when the Response received after a Request does not comply with the schema as defined in the openapi document for the given operation. The following values are supported:&lt;/p&gt;
 &lt;ul&gt;
@@ -158,80 +158,104 @@
 &lt;/ul&gt;
 &lt;h4&gt;disable_server_validation&lt;/h4&gt;
 &lt;p&gt;If enabled by setting this parameter to &lt;code&gt;True&lt;/code&gt;, the Response validation will also include possible errors for Requests made to a server address that is not defined in the list of servers in the openapi document. This generally means that if there is a mismatch, every Test Case will raise this error. Note that &lt;code&gt;localhost&lt;/code&gt; and &lt;code&gt;127.0.0.1&lt;/code&gt; are not considered the same by Response validation.&lt;/p&gt;
-&lt;h4&gt;require_body_for_invalid_url&lt;/h4&gt;
-&lt;p&gt;When a request is made against an invalid url, this usually is because of a "404" request; a request for a resource that does not exist. Depending on API implementation, when a request with a missing or invalid request body is made on a non-existent resource, either a 404 or a 422 or 400 Response is normally returned. If the API being tested processes the request body before checking if the requested resource exists, set this parameter to True.&lt;/p&gt;
+&lt;h3&gt;API-specific configurations&lt;/h3&gt;
+&lt;h4&gt;mappings_path&lt;/h4&gt;
+&lt;p&gt;See &lt;a href="https://marketsquare.github.io/robotframework-openapi-libcore/advanced_use.html"&gt;this page&lt;/a&gt; for an in-depth explanation.&lt;/p&gt;
 &lt;h4&gt;invalid_property_default_response&lt;/h4&gt;
 &lt;p&gt;The default response code for requests with a JSON body that does not comply with the schema. Example: a value outside the specified range or a string value for a property defined as integer in the schema.&lt;/p&gt;
+&lt;h4&gt;default_id_property_name&lt;/h4&gt;
+&lt;p&gt;The default name for the property that identifies a resource (i.e. a unique entity) within the API. The default value for this property name is &lt;code&gt;id&lt;/code&gt;. If the target API uses a different name for all the resources within the API, you can configure it globally using this property.&lt;/p&gt;
+&lt;p&gt;If different property names are used for the unique identifier for different types of resources, an &lt;code&gt;ID_MAPPING&lt;/code&gt; can be implemented using the &lt;code&gt;mappings_path&lt;/code&gt;.&lt;/p&gt;
+&lt;h4&gt;faker_locale&lt;/h4&gt;
+&lt;p&gt;A locale string or list of locale strings to pass to the Faker library to be used in generation of string data for supported format types.&lt;/p&gt;
+&lt;h4&gt;require_body_for_invalid_url&lt;/h4&gt;
+&lt;p&gt;When a request is made against an invalid url, this usually is because of a "404" request; a request for a resource that does not exist. Depending on API implementation, when a request with a missing or invalid request body is made on a non-existent resource, either a 404 or a 422 or 400 Response is normally returned. If the API being tested processes the request body before checking if the requested resource exists, set this parameter to True.&lt;/p&gt;
+&lt;h3&gt;Parsing parameters&lt;/h3&gt;
 &lt;h4&gt;recursion_limit&lt;/h4&gt;
 &lt;p&gt;The recursion depth to which to fully parse recursive references before the &lt;span class="name"&gt;recursion_default&lt;/span&gt; is used to end the recursion.&lt;/p&gt;
 &lt;h4&gt;recursion_default&lt;/h4&gt;
-&lt;p&gt;The value that is used instead of the referenced schema when the &lt;span class="name"&gt;recursion_limit&lt;/span&gt; has been reached. The default &lt;span class="name"&gt;{}&lt;/span&gt; represents an empty object in JSON. Depending on schema definitions, this may cause schema validation errors. If this is the case, &lt;a href="#type-None" class="name"&gt;None&lt;/a&gt; (&lt;span class="name"&gt;${NONE}&lt;/span&gt; in Robot Framework) can be tried as an alternative.&lt;/p&gt;
-&lt;h4&gt;faker_locale&lt;/h4&gt;
-&lt;p&gt;A locale string or list of locale strings to pass to Faker to be used in generation of string data for supported format types.&lt;/p&gt;
-&lt;h4&gt;default_id_property_name&lt;/h4&gt;
-&lt;p&gt;The default name for the property that identifies a resource (i.e. a unique entiry) within the API. The default value for this property name is &lt;span class="name"&gt;id&lt;/span&gt;. If the target API uses a different name for all the resources within the API, you can configure it globally using this property.&lt;/p&gt;
-&lt;p&gt;If different property names are used for the unique identifier for different types of resources, an &lt;span class="name"&gt;ID_MAPPING&lt;/span&gt; can be implemented in the &lt;span class="name"&gt;mappings_path&lt;/span&gt;.&lt;/p&gt;</doc>
-<shortdoc>=== source === An absolute path to an openapi.json or openapi.yaml file or an url to such a file.</shortdoc>
+&lt;p&gt;The value that is used instead of the referenced schema when the &lt;span class="name"&gt;recursion_limit&lt;/span&gt; has been reached. The default &lt;span class="name"&gt;{}&lt;/span&gt; represents an empty object in JSON. Depending on schema definitions, this may cause schema validation errors. If this is the case, 'None' (&lt;code&gt;${NONE}&lt;/code&gt; in Robot Framework) or an empty list can be tried as an alternative.&lt;/p&gt;
+&lt;h3&gt;Security-related parameters&lt;/h3&gt;
+&lt;p&gt;&lt;i&gt;Note: these parameters are equivalent to those in the &lt;code&gt;requests&lt;/code&gt; library.&lt;/i&gt;&lt;/p&gt;
+&lt;h4&gt;username&lt;/h4&gt;
+&lt;p&gt;The username to be used for Basic Authentication.&lt;/p&gt;
+&lt;h4&gt;password&lt;/h4&gt;
+&lt;p&gt;The password to be used for Basic Authentication.&lt;/p&gt;
+&lt;h4&gt;security_token&lt;/h4&gt;
+&lt;p&gt;The token to be used for token based security using the &lt;code&gt;Authorization&lt;/code&gt; header.&lt;/p&gt;
+&lt;h4&gt;auth&lt;/h4&gt;
+&lt;p&gt;A &lt;a href="https://requests.readthedocs.io/en/latest/api/#authentication"&gt;requests &lt;code&gt;AuthBase&lt;/code&gt; instance&lt;/a&gt; to be used for authentication instead of the &lt;code&gt;username&lt;/code&gt; and &lt;code&gt;password&lt;/code&gt;.&lt;/p&gt;
+&lt;h4&gt;cert&lt;/h4&gt;
+&lt;p&gt;The SSL certificate to use with all requests. If string: the path to ssl client cert file (.pem). If tuple: the ('cert', 'key') pair.&lt;/p&gt;
+&lt;h4&gt;verify_tls&lt;/h4&gt;
+&lt;p&gt;Whether or not to verify the TLS / SSL certificate of the server. If boolean: whether or not to verify the server TLS certificate. If string: path to a CA bundle to use for verification.&lt;/p&gt;
+&lt;h4&gt;extra_headers&lt;/h4&gt;
+&lt;p&gt;A dictionary with extra / custom headers that will be send with every request. This parameter can be used to send headers that are not documented in the openapi document or to provide an API-key.&lt;/p&gt;
+&lt;h4&gt;cookies&lt;/h4&gt;
+&lt;p&gt;A dictionary or &lt;a href="https://docs.python.org/3/library/http.cookiejar.html#http.cookiejar.CookieJar"&gt;CookieJar object&lt;/a&gt; to send with all requests.&lt;/p&gt;
+&lt;h4&gt;proxies&lt;/h4&gt;
+&lt;p&gt;A dictionary of 'protocol': 'proxy url' to use for all requests.&lt;/p&gt;</doc>
+<shortdoc> == Base parameters ==</shortdoc>
 </init>
 </inits>
 <keywords>
-<kw name="Test Endpoint" source="" lineno="148">
-<arguments repr="endpoint: str, method: str, status_code: int">
-<arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
-<name>endpoint</name>
-<type typedoc="string">str</type>
+<kw name="Test Endpoint" source="/workspaces/robotframework-openapidriver/src/OpenApiDriver/openapi_executors.py" lineno="156">
+<arguments repr="path: str, method: str, status_code: int">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
+<name>path</name>
+<type name="str" typedoc="string">str</type>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
 <name>method</name>
-<type typedoc="string">str</type>
+<type name="str" typedoc="string">str</type>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="status_code: int">
 <name>status_code</name>
-<type typedoc="integer">int</type>
+<type name="int" typedoc="integer">int</type>
 </arg>
 </arguments>
-<doc>&lt;p&gt;Validate that performing the &lt;span class="name"&gt;method&lt;/span&gt; operation on &lt;span class="name"&gt;endpoint&lt;/span&gt; results in a &lt;span class="name"&gt;status_code&lt;/span&gt; response.&lt;/p&gt;
+<doc>&lt;p&gt;Validate that performing the &lt;span class="name"&gt;method&lt;/span&gt; operation on &lt;a href="#type-Path" class="name"&gt;path&lt;/a&gt; results in a &lt;span class="name"&gt;status_code&lt;/span&gt; response.&lt;/p&gt;
 &lt;p&gt;This is the main keyword to be used in the &lt;span class="name"&gt;Test Template&lt;/span&gt; keyword when using the OpenApiDriver.&lt;/p&gt;
 &lt;p&gt;The keyword calls other keywords to generate the neccesary data to perform the desired operation and validate the response against the openapi document.&lt;/p&gt;</doc>
-<shortdoc>Validate that performing the `method` operation on `endpoint` results in a `status_code` response.</shortdoc>
+<shortdoc>Validate that performing the `method` operation on `path` results in a `status_code` response.</shortdoc>
 </kw>
-<kw name="Test Invalid Url" source="" lineno="106">
-<arguments repr="endpoint: str, method: str, expected_status_code: int = 404">
-<arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
-<name>endpoint</name>
-<type typedoc="string">str</type>
+<kw name="Test Invalid Url" source="/workspaces/robotframework-openapidriver/src/OpenApiDriver/openapi_executors.py" lineno="114">
+<arguments repr="path: str, method: str, expected_status_code: int = 404">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
+<name>path</name>
+<type name="str" typedoc="string">str</type>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
 <name>method</name>
-<type typedoc="string">str</type>
+<type name="str" typedoc="string">str</type>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="expected_status_code: int = 404">
 <name>expected_status_code</name>
-<type typedoc="integer">int</type>
+<type name="int" typedoc="integer">int</type>
 <default>404</default>
 </arg>
 </arguments>
-<doc>&lt;p&gt;Perform a request for the provided 'endpoint' and 'method' where the url for the &lt;span class="name"&gt;endpoint&lt;/span&gt; is invalidated.&lt;/p&gt;
-&lt;p&gt;This keyword will be &lt;span class="name"&gt;SKIPPED&lt;/span&gt; if the endpoint contains no parts that can be invalidated.&lt;/p&gt;
+<doc>&lt;p&gt;Perform a request for the provided 'path' and 'method' where the url for the &lt;a href="#type-Path" class="name"&gt;path&lt;/a&gt; is invalidated.&lt;/p&gt;
+&lt;p&gt;This keyword will be &lt;span class="name"&gt;SKIPPED&lt;/span&gt; if the path contains no parts that can be invalidated.&lt;/p&gt;
 &lt;p&gt;The optional &lt;span class="name"&gt;expected_status_code&lt;/span&gt; parameter (default: 404) can be set to the expected status code for APIs that do not return a 404 on invalid urls.&lt;/p&gt;
 &lt;p&gt;&amp;gt; Note: Depending on API design, the url may be validated before or after validation of headers, query parameters and / or (json) body. By default, no parameters are send with the request. The &lt;span class="name"&gt;require_body_for_invalid_url&lt;/span&gt; parameter can be set to &lt;span class="name"&gt;True&lt;/span&gt; if needed.&lt;/p&gt;</doc>
-<shortdoc>Perform a request for the provided 'endpoint' and 'method' where the url for the `endpoint` is invalidated.</shortdoc>
+<shortdoc>Perform a request for the provided 'path' and 'method' where the url for the `path` is invalidated.</shortdoc>
 </kw>
-<kw name="Test Unauthorized" source="" lineno="86">
-<arguments repr="endpoint: str, method: str">
-<arg kind="POSITIONAL_OR_NAMED" required="true" repr="endpoint: str">
-<name>endpoint</name>
-<type typedoc="string">str</type>
+<kw name="Test Unauthorized" source="/workspaces/robotframework-openapidriver/src/OpenApiDriver/openapi_executors.py" lineno="94">
+<arguments repr="path: str, method: str">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
+<name>path</name>
+<type name="str" typedoc="string">str</type>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
 <name>method</name>
-<type typedoc="string">str</type>
+<type name="str" typedoc="string">str</type>
 </arg>
 </arguments>
-<doc>&lt;p&gt;Perform a request for &lt;span class="name"&gt;method&lt;/span&gt; on the &lt;span class="name"&gt;endpoint&lt;/span&gt;, with no authorization.&lt;/p&gt;
+<doc>&lt;p&gt;Perform a request for &lt;span class="name"&gt;method&lt;/span&gt; on the &lt;a href="#type-Path" class="name"&gt;path&lt;/a&gt;, with no authorization.&lt;/p&gt;
 &lt;p&gt;This keyword only passes if the response code is 401: Unauthorized.&lt;/p&gt;
 &lt;p&gt;Any authorization parameters used to initialize the library are ignored for this request. &amp;gt; Note: No headers or (json) body are send with the request. For security reasons, the authorization validation should be checked first.&lt;/p&gt;</doc>
-<shortdoc>Perform a request for `method` on the `endpoint`, with no authorization.</shortdoc>
+<shortdoc>Perform a request for `method` on the `path`, with no authorization.</shortdoc>
 </kw>
 </keywords>
 <datatypes>
@@ -248,6 +272,15 @@
 </enums>
 </datatypes>
 <typedocs>
+<type name="Any" type="Standard">
+<doc>&lt;p&gt;Any value is accepted. No conversion is done.&lt;/p&gt;</doc>
+<accepts>
+<type>Any</type>
+</accepts>
+<usages>
+<usage>__init__</usage>
+</usages>
+</type>
 <type name="boolean" type="Standard">
 <doc>&lt;p&gt;Strings &lt;code&gt;TRUE&lt;/code&gt;, &lt;code&gt;YES&lt;/code&gt;, &lt;code&gt;ON&lt;/code&gt; and &lt;code&gt;1&lt;/code&gt; are converted to Boolean &lt;code&gt;True&lt;/code&gt;, the empty string as well as strings &lt;code&gt;FALSE&lt;/code&gt;, &lt;code&gt;NO&lt;/code&gt;, &lt;code&gt;OFF&lt;/code&gt; and &lt;code&gt;0&lt;/code&gt; are converted to Boolean &lt;code&gt;False&lt;/code&gt;, and the string &lt;code&gt;NONE&lt;/code&gt; is converted to the Python &lt;code&gt;None&lt;/code&gt; object. Other strings and other accepted values are passed as-is, allowing keywords to handle them specially if needed. All string comparisons are case-insensitive.&lt;/p&gt;
 &lt;p&gt;Examples: &lt;code&gt;TRUE&lt;/code&gt; (converted to &lt;code&gt;True&lt;/code&gt;), &lt;code&gt;off&lt;/code&gt; (converted to &lt;code&gt;False&lt;/code&gt;), &lt;code&gt;example&lt;/code&gt; (used as-is)&lt;/p&gt;</doc>

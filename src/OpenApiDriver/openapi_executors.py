@@ -1,7 +1,6 @@
 """Module containing the classes to perform automatic OpenAPI contract validation."""
 
 import json as _json
-from dataclasses import asdict
 from enum import Enum
 from logging import getLogger
 from pathlib import Path
@@ -12,12 +11,15 @@ from openapi_core.contrib.requests import (
     RequestsOpenAPIRequest,
     RequestsOpenAPIResponse,
 )
-from openapi_core.templating.paths.exceptions import ServerNotFound
-from openapi_core.unmarshalling.schemas.exceptions import InvalidSchemaValue
+from openapi_core.exceptions import OpenAPIError
+from openapi_core.validation.exceptions import ValidationError
+from openapi_core.validation.response.exceptions import InvalidData
+from openapi_core.validation.schemas.exceptions import InvalidSchemaValue
 from OpenApiLibCore import OpenApiLibCore, RequestData, RequestValues, resolve_schema
 from requests import Response
 from requests.auth import AuthBase
-from robot.api import SkipExecution
+from requests.cookies import RequestsCookieJar as CookieJar
+from robot.api import Failure, SkipExecution
 from robot.api.deco import keyword, library
 from robot.libraries.BuiltIn import BuiltIn
 
@@ -40,42 +42,48 @@ class ValidationLevel(str, Enum):
 class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-attributes
     """Main class providing the keywords and core logic to perform endpoint validations."""
 
-    def __init__(  # pylint: disable=too-many-arguments, dangerous-default-value
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         source: str,
         origin: str = "",
         base_path: str = "",
+        response_validation: ValidationLevel = ValidationLevel.WARN,
+        disable_server_validation: bool = True,
         mappings_path: Union[str, Path] = "",
+        invalid_property_default_response: int = 422,
+        default_id_property_name: str = "id",
+        faker_locale: Optional[Union[str, List[str]]] = None,
+        require_body_for_invalid_url: bool = False,
+        recursion_limit: int = 1,
+        recursion_default: Any = {},
         username: str = "",
         password: str = "",
         security_token: str = "",
         auth: Optional[AuthBase] = None,
         cert: Optional[Union[str, Tuple[str, str]]] = None,
+        verify_tls: Optional[Union[bool, str]] = True,
         extra_headers: Optional[Dict[str, str]] = None,
-        response_validation: ValidationLevel = ValidationLevel.WARN,
-        disable_server_validation: bool = True,
-        require_body_for_invalid_url: bool = False,
-        invalid_property_default_response: int = 422,
-        recursion_limit: int = 1,
-        recursion_default: Any = {},
-        faker_locale: Optional[Union[str, List[str]]] = None,
-        default_id_property_name: str = "id",
+        cookies: Optional[Union[Dict[str, str], CookieJar]] = None,
+        proxies: Optional[Dict[str, str]] = None,
     ) -> None:
         super().__init__(
             source=source,
             origin=origin,
             base_path=base_path,
             mappings_path=mappings_path,
+            default_id_property_name=default_id_property_name,
+            faker_locale=faker_locale,
+            recursion_limit=recursion_limit,
+            recursion_default=recursion_default,
             username=username,
             password=password,
             security_token=security_token,
             auth=auth,
             cert=cert,
+            verify_tls=verify_tls,
             extra_headers=extra_headers,
-            recursion_limit=recursion_limit,
-            recursion_default=recursion_default,
-            faker_locale=faker_locale,
-            default_id_property_name=default_id_property_name,
+            cookies=cookies,
+            proxies=proxies,
         )
         self.response_validation = response_validation
         self.disable_server_validation = disable_server_validation
@@ -83,9 +91,9 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         self.invalid_property_default_response = invalid_property_default_response
 
     @keyword
-    def test_unauthorized(self, endpoint: str, method: str) -> None:
+    def test_unauthorized(self, path: str, method: str) -> None:
         """
-        Perform a request for `method` on the `endpoint`, with no authorization.
+        Perform a request for `method` on the `path`, with no authorization.
 
         This keyword only passes if the response code is 401: Unauthorized.
 
@@ -94,7 +102,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         > Note: No headers or (json) body are send with the request. For security
         reasons, the authorization validation should be checked first.
         """
-        url: str = run_keyword("get_valid_url", endpoint, method)
+        url: str = run_keyword("get_valid_url", path, method)
         response = self.session.request(
             method=method,
             url=url,
@@ -104,13 +112,13 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
 
     @keyword
     def test_invalid_url(
-        self, endpoint: str, method: str, expected_status_code: int = 404
+        self, path: str, method: str, expected_status_code: int = 404
     ) -> None:
         """
-        Perform a request for the provided 'endpoint' and 'method' where the url for
-        the `endpoint` is invalidated.
+        Perform a request for the provided 'path' and 'method' where the url for
+        the `path` is invalidated.
 
-        This keyword will be `SKIPPED` if the endpoint contains no parts that
+        This keyword will be `SKIPPED` if the path contains no parts that
         can be invalidated.
 
         The optional `expected_status_code` parameter (default: 404) can be set to the
@@ -121,21 +129,21 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         parameters are send with the request. The `require_body_for_invalid_url`
         parameter can be set to `True` if needed.
         """
-        valid_url: str = run_keyword("get_valid_url", endpoint, method)
+        valid_url: str = run_keyword("get_valid_url", path, method)
 
         if not (url := run_keyword("get_invalidated_url", valid_url)):
             raise SkipExecution(
-                f"Endpoint {endpoint} does not contain resource references that "
+                f"Path {path} does not contain resource references that "
                 f"can be invalidated."
             )
 
         params, headers, json_data = None, None, None
         if self.require_body_for_invalid_url:
-            request_data = self.get_request_data(method=method, endpoint=endpoint)
+            request_data = self.get_request_data(method=method, endpoint=path)
             params = request_data.params
             headers = request_data.headers
             dto = request_data.dto
-            json_data = asdict(dto)
+            json_data = dto.as_dict()
         response: Response = run_keyword(
             "authorized_request", url, method, params, headers, json_data
         )
@@ -145,9 +153,9 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             )
 
     @keyword
-    def test_endpoint(self, endpoint: str, method: str, status_code: int) -> None:
+    def test_endpoint(self, path: str, method: str, status_code: int) -> None:
         """
-        Validate that performing the `method` operation on `endpoint` results in a
+        Validate that performing the `method` operation on `path` results in a
         `status_code` response.
 
         This is the main keyword to be used in the `Test Template` keyword when using
@@ -159,13 +167,11 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         json_data: Optional[Dict[str, Any]] = None
         original_data = None
 
-        url: str = run_keyword("get_valid_url", endpoint, method)
-        request_data: RequestData = self.get_request_data(
-            method=method, endpoint=endpoint
-        )
+        url: str = run_keyword("get_valid_url", path, method)
+        request_data: RequestData = self.get_request_data(method=method, endpoint=path)
         params = request_data.params
         headers = request_data.headers
-        json_data = asdict(request_data.dto)
+        json_data = request_data.dto.as_dict()
         # when patching, get the original data to check only patched data has changed
         if method == "PATCH":
             original_data = self.get_original_data(url=url)
@@ -230,7 +236,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                 )
         run_keyword(
             "perform_validated_request",
-            endpoint,
+            path,
             status_code,
             RequestValues(
                 url=url,
@@ -247,8 +253,8 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             or request_data.has_optional_headers
         ):
             logger.info("Performing request without optional properties and parameters")
-            url = run_keyword("get_valid_url", endpoint, method)
-            request_data = self.get_request_data(method=method, endpoint=endpoint)
+            url = run_keyword("get_valid_url", path, method)
+            request_data = self.get_request_data(method=method, endpoint=path)
             params = request_data.get_required_params()
             headers = request_data.get_required_headers()
             json_data = request_data.get_required_properties_dict()
@@ -257,7 +263,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                 original_data = self.get_original_data(url=url)
             run_keyword(
                 "perform_validated_request",
-                endpoint,
+                path,
                 status_code,
                 RequestValues(
                     url=url,
@@ -276,8 +282,8 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         If the GET request fails, None is returned.
         """
         original_data = None
-        endpoint = self.get_parameterized_endpoint_from_url(url)
-        get_request_data = self.get_request_data(endpoint=endpoint, method="GET")
+        path = self.get_parameterized_endpoint_from_url(url)
+        get_request_data = self.get_request_data(endpoint=path, method="GET")
         get_params = get_request_data.params
         get_headers = get_request_data.headers
         response: Response = run_keyword(
@@ -290,7 +296,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
     @keyword
     def perform_validated_request(
         self,
-        endpoint: str,
+        path: str,
         status_code: int,
         request_values: RequestValues,
         original_data: Optional[Dict[str, Any]] = None,
@@ -334,9 +340,10 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                 f"Response status_code {response.status_code} was not {status_code}"
             )
 
-        run_keyword("validate_response", endpoint, response, original_data)
+        run_keyword("validate_response", path, response, original_data)
+
         if request_values.method == "DELETE":
-            get_request_data = self.get_request_data(endpoint=endpoint, method="GET")
+            get_request_data = self.get_request_data(endpoint=path, method="GET")
             get_params = get_request_data.params
             get_headers = get_request_data.headers
             get_response = run_keyword(
@@ -347,24 +354,23 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                     raise AssertionError(
                         f"Resource still exists after deletion. Url was {request_values.url}"
                     )
-                # if the endpoint supports GET, 404 is expected, if not 405 is expected
+                # if the path supports GET, 404 is expected, if not 405 is expected
                 if get_response.status_code not in [404, 405]:
                     logger.warning(
                         f"Unexpected response after deleting resource: Status_code "
                         f"{get_response.status_code} was received after trying to get {request_values.url} "
                         f"after sucessfully deleting it."
                     )
-            else:
-                if not get_response.ok:
-                    raise AssertionError(
-                        f"Resource could not be retrieved after failed deletion. "
-                        f"Url was {request_values.url}, status_code was {get_response.status_code}"
-                    )
+            elif not get_response.ok:
+                raise AssertionError(
+                    f"Resource could not be retrieved after failed deletion. "
+                    f"Url was {request_values.url}, status_code was {get_response.status_code}"
+                )
 
     @keyword
     def validate_response(
         self,
-        endpoint: str,
+        path: str,
         response: Response,
         original_data: Optional[Dict[str, Any]] = None,
     ) -> None:
@@ -381,36 +387,52 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         if response.status_code == 204:
             assert not response.content
             return None
-        # validate the response against the schema
-        self._validate_response_against_spec(response)
+
+        try:
+            self._validate_response_against_spec(response)
+        except OpenAPIError:
+            raise Failure("Response did not pass schema validation.")
 
         request_method = response.request.method
         if request_method is None:
             logger.warning(
-                f"Could not validate response for endpoint {endpoint}; no method found "
+                f"Could not validate response for path {path}; no method found "
                 f"on the request property of the provided response."
             )
             return None
 
         response_spec = self._get_response_spec(
-            endpoint=endpoint,
+            path=path,
             method=request_method,
             status_code=response.status_code,
         )
-        # "content" is optional in the OAS, if not provided, look at the response header
+
+        content_type_from_response = response.headers.get("Content-Type", "unknown")
+        mime_type_from_response, _, _ = content_type_from_response.partition(";")
+
         if not response_spec.get("content"):
-            content_type = response.headers.get("Content-Type", "unknown")
-        else:
-            # content should be a single key/value entry, so use tuple assignment
-            (content_type,) = response_spec["content"].keys()
-        if not content_type.endswith("json"):
-            # at present, only json reponses are supported
-            raise NotImplementedError(f"content_type '{content_type}' not supported")
-        if response.headers.get("Content-Type") != content_type:
+            logger.warning(
+                "The response cannot be validated: 'content' not specified in the OAS."
+            )
+            return None
+
+        # multiple content types can be specified in the OAS
+        content_types = list(response_spec["content"].keys())
+        supported_types = [
+            ct for ct in content_types if ct.partition(";")[0].endswith("json")
+        ]
+        if not supported_types:
+            raise NotImplementedError(
+                f"The content_types '{content_types}' are not supported. "
+                f"Only json types are currently supported."
+            )
+        content_type = supported_types[0]
+        mime_type = content_type.partition(";")[0]
+
+        if mime_type != mime_type_from_response:
             raise ValueError(
-                f"Content-Type '{response.headers.get('Content-Type')}' of the response "
-                f"is not '{content_type}' as specified in the OpenAPI document or the "
-                f"Content-Type was not specified."
+                f"Content-Type '{content_type_from_response}' of the response "
+                f"does not match '{mime_type}' as specified in the OpenAPI document."
             )
 
         json_response = response.json()
@@ -448,10 +470,10 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             run_keyword("validate_send_response", response, original_data)
         return None
 
-    def _assert_href_is_valid(self, href: str, json_response: Dict[str, Any]):
+    def _assert_href_is_valid(self, href: str, json_response: Dict[str, Any]) -> None:
         url = f"{self.origin}{href}"
-        endpoint = url.replace(self.base_url, "")
-        request_data = self.get_request_data(endpoint=endpoint, method="GET")
+        path = url.replace(self.base_url, "")
+        request_data = self.get_request_data(endpoint=path, method="GET")
         params = request_data.params
         headers = request_data.headers
         get_response = run_keyword("authorized_request", url, "GET", params, headers)
@@ -459,45 +481,37 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             get_response.json() == json_response
         ), f"{get_response.json()} not equal to original {json_response}"
 
-    def _validate_response_against_spec(self, response: Response):
-        validation_result = self.validate_response_vs_spec(
-            request=RequestsOpenAPIRequest(response.request),
-            response=RequestsOpenAPIResponse(response),
-        )
-        if self.disable_server_validation:
-            validation_result.errors = [
-                e for e in validation_result.errors if not isinstance(e, ServerNotFound)
-            ]
-
-        # The OAS concepts of optional / nullable are not compatible with Python.
-        # Filter the schema errors caused by this incompatibility.
-        errors_to_keep = []
-        for error in validation_result.errors:
-            if isinstance(error, InvalidSchemaValue):
-                schema_errors_to_keep = []
-                for schema_error in error.schema_errors:
-                    message = str(schema_error)
-                    if message == "None for not nullable" or message.startswith(
-                        "None is not "
-                    ):
-                        logger.debug("'None for not nullable' ValidationError ignored.")
-                    else:
-                        schema_errors_to_keep.append(schema_error)
-                if schema_errors_to_keep:
-                    error.schema_errors = tuple(schema_errors_to_keep)
-                    errors_to_keep.append(error)
+    def _validate_response_against_spec(self, response: Response) -> None:
+        try:
+            self.validate_response_vs_spec(
+                request=RequestsOpenAPIRequest(response.request),
+                response=RequestsOpenAPIResponse(response),
+            )
+        except InvalidData as exception:
+            errors: List[InvalidSchemaValue] = exception.__cause__
+            validation_errors: Optional[List[ValidationError]] = getattr(
+                errors, "schema_errors", None
+            )
+            if validation_errors:
+                error_message = "\n".join(
+                    [
+                        f"{list(error.schema_path)}: {error.message}"
+                        for error in validation_errors
+                    ]
+                )
             else:
-                errors_to_keep.append(error)
-        validation_result.errors = errors_to_keep
+                error_message = str(exception)
 
-        if self.response_validation == ValidationLevel.STRICT:
-            validation_result.raise_for_errors()
-        if self.response_validation in [ValidationLevel.WARN, ValidationLevel.INFO]:
-            for validation_error in validation_result.errors:
-                if self.response_validation == ValidationLevel.WARN:
-                    logger.warning(validation_error)
-                else:
-                    logger.info(validation_error)
+            if response.status_code == self.invalid_property_default_response:
+                logger.debug(error_message)
+                return
+            if self.response_validation == ValidationLevel.STRICT:
+                logger.error(error_message)
+                raise exception
+            if self.response_validation == ValidationLevel.WARN:
+                logger.warning(error_message)
+            elif self.response_validation == ValidationLevel.INFO:
+                logger.info(error_message)
 
     @keyword
     def validate_resource_properties(
@@ -718,9 +732,11 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         return None
 
     def _get_response_spec(
-        self, endpoint: str, method: str, status_code: int
+        self, path: str, method: str, status_code: int
     ) -> Dict[str, Any]:
         method = method.lower()
         status = str(status_code)
-        spec = {**self.openapi_spec}["paths"][endpoint][method]["responses"][status]
+        spec: Dict[str, Any] = {**self.openapi_spec}["paths"][path][method][
+            "responses"
+        ][status]
         return spec

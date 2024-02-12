@@ -1,14 +1,14 @@
 *** Settings ***
 Library         OpenApiLibCore
-...                 source=${origin}/openapi.json
-...                 origin=${origin}
+...                 source=${ORIGIN}/openapi.json
+...                 origin=${ORIGIN}
 ...                 base_path=${EMPTY}
 ...                 mappings_path=${root}/tests/user_implemented/custom_user_mappings.py
 Variables       ${root}/tests/variables.py
 
 
 *** Variables ***
-${origin}=      http://localhost:8000
+${ORIGIN}=      http://localhost:8000
 
 
 *** Test Cases ***
@@ -29,6 +29,7 @@ Test Get Json Data With Conflict For Post Request
     ...    method=post
     ...    dto=${request_data.dto}
     ...    conflict_status_code=418
+    Should Not Be Empty    ${invalid_data}
 
 Test Get Json Data With Conflict For Put Request
     ${url}=    Get Valid Url    endpoint=/wagegroups/{wagegroup_id}    method=put

@@ -83,4 +83,5 @@ def get_variables():
         "WAGEGROUP_DTO": wagegroup_dto,
         "EMPLOYEE_DTO": employee_dto,
         "EXTRA_HEADERS": extra_headers,
+        "API_KEY": {"api_key": "Super secret key"},
     }

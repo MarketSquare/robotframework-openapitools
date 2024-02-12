@@ -1,15 +1,15 @@
 *** Settings ***
+Library         String
 Library         OpenApiLibCore
-...                 source=${origin}/openapi.json
-...                 origin=${origin}
+...                 source=${ORIGIN}/openapi.json
+...                 origin=${ORIGIN}
 ...                 base_path=${EMPTY}
 ...                 mappings_path=${root}/tests/user_implemented/custom_user_mappings.py
-Library         String
 Variables       ${root}/tests/variables.py
 
 
 *** Variables ***
-${origin}=      http://localhost:8000
+${ORIGIN}=      http://localhost:8000
 
 
 *** Test Cases ***
@@ -49,7 +49,7 @@ Test Get Invalidated Parameters For Invalid Propery Default Response
     ${invalidated}=    Get Invalidated Parameters
     ...    status_code=422
     ...    request_data=${request_data}
-    Set Test Variable    ${secret_code}    ${invalidated[1].get("secret-code")}
+    ${secret_code}=    Set Variable    ${invalidated[1].get("secret-code")}
     Length Should Be    ${secret_code}    36
 
 Test Get Invalidated Parameters For PropertyValueConstraint
@@ -57,15 +57,15 @@ Test Get Invalidated Parameters For PropertyValueConstraint
     ${invalidated}=    Get Invalidated Parameters
     ...    status_code=401
     ...    request_data=${request_data}
-    Set Test Variable    ${secret_code}    ${invalidated[1].get("secret-code")}
+    ${secret_code}=    Set Variable    ${invalidated[1].get("secret-code")}
     Should Be True    int($secret_code) != 42
 
     ${request_data}=    Get Request Data    endpoint=/secret_message    method=get
     ${invalidated}=    Get Invalidated Parameters
     ...    status_code=403
     ...    request_data=${request_data}
-    Set Test Variable    ${seal}    ${invalidated[1].get("seal")}
-    Should Not Be Empty    seal
+    ${seal}=    Set Variable    ${invalidated[1].get("seal")}
+    Should Not Be Equal    ${seal}    ${NONE}
 
 Test Get Invalidated Parameters Adds Optional Parameter If Not Provided
     ${request_data}=    Get Request Data    endpoint=/secret_message    method=get
@@ -73,7 +73,7 @@ Test Get Invalidated Parameters Adds Optional Parameter If Not Provided
     ${invalidated}=    Get Invalidated Parameters
     ...    status_code=422
     ...    request_data=${request_data}
-    Set Test Variable    ${headers}    ${invalidated[1]}
+    ${headers}=    Set Variable    ${invalidated[1]}
     Length Should Be    ${headers}    1
 
     ${request_data}=    Get Request Data    endpoint=/energy_label/{zipcode}/{home_number}    method=get
@@ -81,5 +81,5 @@ Test Get Invalidated Parameters Adds Optional Parameter If Not Provided
     ${invalidated}=    Get Invalidated Parameters
     ...    status_code=422
     ...    request_data=${request_data}
-    Set Test Variable    ${extension}    ${invalidated[0].get("extension")}
+    ${extension}=    Set Variable    ${invalidated[0].get("extension")}
     Length Should Be    ${extension}    0

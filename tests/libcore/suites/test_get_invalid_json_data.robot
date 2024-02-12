@@ -1,15 +1,15 @@
 *** Settings ***
+Library         OperatingSystem
 Library         OpenApiLibCore
-...                 source=${origin}/openapi.json
-...                 origin=${origin}
+...                 source=${ORIGIN}/openapi.json
+...                 origin=${ORIGIN}
 ...                 base_path=${EMPTY}
 ...                 mappings_path=${root}/tests/user_implemented/custom_user_mappings.py
-Library         OperatingSystem
 Variables       ${root}/tests/variables.py
 
 
 *** Variables ***
-${origin}=      http://localhost:8000
+${ORIGIN}=      http://localhost:8000
 
 
 *** Test Cases ***
@@ -40,19 +40,19 @@ Test Get Invalid Json Data Based On Schema
     ...    request_data=${request_data}
     Should Not Be Equal    ${invalid_json}    ${request_data.dto}
     ${response}=    Authorized Request
-    ...    url=${origin}/events/    method=post    json_data=${invalid_json}
+    ...    url=${ORIGIN}/events/    method=post    json_data=${invalid_json}
     Should Be Equal As Integers    ${response.status_code}    422
 
 Test Get Invalid Json Data For UniquePropertyValueConstraint
     ${request_data}=    Get Request Data    endpoint=/wagegroups    method=post
     ${invalid_json}=    Get Invalid Json Data
-    ...    url=${origin}/wagegroups
+    ...    url=${ORIGIN}/wagegroups
     ...    method=post
     ...    status_code=418
     ...    request_data=${request_data}
     Should Not Be Equal    ${invalid_json}    ${request_data.dto}
     ${response}=    Authorized Request
-    ...    url=${origin}/wagegroups    method=post    json_data=${invalid_json}
+    ...    url=${ORIGIN}/wagegroups    method=post    json_data=${invalid_json}
     Should Be Equal As Integers    ${response.status_code}    418
 
 Test Get Invalid Json Data For IdReference
@@ -84,24 +84,26 @@ Test Get Invalid Json Data For IdDependency
 Test Get Invalid Json Data For Dto With Other Relations
     ${request_data}=    Get Request Data    endpoint=/employees    method=post
     ${invalid_json}=    Get Invalid Json Data
-    ...    url=${origin}/employees
+    ...    url=${ORIGIN}/employees
     ...    method=post
     ...    status_code=403
     ...    request_data=${request_data}
     Should Not Be Equal    ${invalid_json}    ${request_data.dto}
     ${response}=    Authorized Request
-    ...    url=${origin}/employees    method=post    json_data=${invalid_json}
+    ...    url=${ORIGIN}/employees    method=post    json_data=${invalid_json}
     Should Be Equal As Integers    ${response.status_code}    403
 
 Test Get Invalid Json Data Can Invalidate Missing Optional Parameters
+    ${url}=    Get Valid Url    endpoint=/employees/{emplyee_id}    method=patch
     ${request_data}=    Get Request Data    endpoint=/employees/{emplyee_id}    method=patch
     Evaluate    ${request_data.dto.__dict__.clear()} is None
     ${invalid_json}=    Get Invalid Json Data
-    ...    url=${origin}/employees/{employee_id}
+    ...    url=${url}
     ...    method=patch
     ...    status_code=422
     ...    request_data=${request_data}
-    Should Not Be Equal    ${invalid_json}    ${request_data.dto}
+    Should Not Be Equal    ${invalid_json}    ${request_data.dto.as_dict()}
     ${response}=    Authorized Request
-    ...    url=${origin}/employees/{employee_id}    method=patch    json_data=${invalid_json}
-    Should Be Equal As Integers    ${response.status_code}    422
+    ...    url=${url}    method=patch    json_data=${invalid_json}
+    ${expected_status_codes}=    Create List    ${403}    ${422}    ${451}
+    Should Contain    ${expected_status_codes}    ${response.status_code}

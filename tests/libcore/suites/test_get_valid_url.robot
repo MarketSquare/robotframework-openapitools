@@ -1,14 +1,14 @@
 *** Settings ***
 Library         OpenApiLibCore
-...                 source=${origin}/openapi.json
-...                 origin=${origin}
+...                 source=${ORIGIN}/openapi.json
+...                 origin=${ORIGIN}
 ...                 base_path=${EMPTY}
 ...                 mappings_path=${root}/tests/user_implemented/custom_user_mappings.py
 Variables       ${root}/tests/variables.py
 
 
 *** Variables ***
-${origin}=      http://localhost:8000
+${ORIGIN}=      http://localhost:8000
 
 
 *** Test Cases ***
@@ -18,12 +18,12 @@ Test Get Valid Url Raises For Invalid Endpoint
 
 Test Get Valid Url With Unsupported Method
     ${url}=    Get Valid Url    endpoint=/events/    method=patch
-    Should Be Equal    ${url}    ${origin}/events/
+    Should Be Equal    ${url}    ${ORIGIN}/events/
 
 Test Get Valid Url With Id
     ${url}=    Get Valid Url    endpoint=/wagegroups/{wagegroup_id}    method=get
-    Should Contain    container=${url}    item=${origin}/wagegroups/
+    Should Contain    container=${url}    item=${ORIGIN}/wagegroups/
 
 Test Get Valid Url By PathPropertiesContraint
     ${url}=    Get Valid Url    endpoint=/energy_label/{zipcode}/{home_number}    method=get
-    Should Be Equal As Strings    ${url}    ${origin}/energy_label/1111AA/10
+    Should Be Equal As Strings    ${url}    ${ORIGIN}/energy_label/1111AA/10

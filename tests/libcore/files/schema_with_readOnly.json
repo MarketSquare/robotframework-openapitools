@@ -1,0 +1,109 @@
+{
+	"openapi": "3.0.1",
+	"info": {
+		"title": "Test readOnly",
+		"version": "1.0.0"
+	},
+	"servers": [
+	],
+	"paths": {
+		"/api/location": {
+			"post": {
+				"tags": [
+					"Location"
+				],
+				"summary": "Create location",
+				"operationId": "createLocation",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateLocationModel"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/CreateLocationResultModel"
+								}
+							}
+						}
+					},
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/CreateLocationResultModel"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"components": {
+		"schemas": {
+			"CreateLocationModel": {
+				"required": [
+					"locationId",
+					"timezone"
+				],
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "string",
+						"readOnly": true
+					},
+					"locationId": {
+						"type": "integer",
+						"description": "Location must not exist yet",
+						"format": "int64"
+					},
+					"timezone": {
+						"type": "string"
+					}
+				}
+			},
+			"CreateLocationResultModel": {
+				"type": "object",
+				"properties": {
+					"succeeded": {
+						"type": "boolean"
+					},
+					"failures": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/ErrorModelCreateLocationErrorType"
+						}
+					},
+					"result": {
+						"$ref": "#/components/schemas/CreateLocationModel"
+					}
+				}
+			},
+			"ErrorModelCreateLocationErrorType": {
+				"type": "object",
+				"properties": {
+					"key": {
+						"type": "string",
+						"enum": [
+							"MANDATORY_FIELD",
+							"LOCATION_ALREADY_EXISTS"
+						]
+					},
+					"fieldName": {
+						"type": "string"
+					}
+				}
+			}
+		}
+	}
+}

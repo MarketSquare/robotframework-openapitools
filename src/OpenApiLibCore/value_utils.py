@@ -1,13 +1,16 @@
+# mypy: disable-error-code=no-any-return
 """Utility module with functions to handle OpenAPI value types and restrictions."""
 import base64
 import datetime
 from copy import deepcopy
 from logging import getLogger
 from random import choice, randint, uniform
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import faker
 import rstr
+
+JSON = Union[Dict[str, "JSON"], List["JSON"], str, int, float, bool, None]
 
 logger = getLogger(__name__)
 
@@ -17,7 +20,8 @@ IGNORE = object()
 class LocalizedFaker:
     """Class to support setting a locale post-init."""
 
-    def __init__(self):
+    # pylint: disable=missing-function-docstring
+    def __init__(self) -> None:
         self.fake = faker.Faker()
 
     def set_locale(self, locale: Union[str, List[str]]) -> None:
@@ -25,59 +29,59 @@ class LocalizedFaker:
         self.fake = faker.Faker(locale)
 
     @property
-    def date(self):
+    def date(self) -> Callable[[], str]:
         return self.fake.date
 
     @property
-    def date_time(self):
+    def date_time(self) -> Callable[[], datetime.datetime]:
         return self.fake.date_time
 
     @property
-    def password(self):
+    def password(self) -> Callable[[], str]:
         return self.fake.password
 
     @property
-    def binary(self):
+    def binary(self) -> Callable[[], bytes]:
         return self.fake.binary
 
     @property
-    def email(self):
+    def email(self) -> Callable[[], str]:
         return self.fake.safe_email
 
     @property
-    def uuid(self):
+    def uuid(self) -> Callable[[], str]:
         return self.fake.uuid4
 
     @property
-    def uri(self):
+    def uri(self) -> Callable[[], str]:
         return self.fake.uri
 
     @property
-    def url(self):
+    def url(self) -> Callable[[], str]:
         return self.fake.url
 
     @property
-    def hostname(self):
+    def hostname(self) -> Callable[[], str]:
         return self.fake.hostname
 
     @property
-    def ipv4(self):
+    def ipv4(self) -> Callable[[], str]:
         return self.fake.ipv4
 
     @property
-    def ipv6(self):
+    def ipv6(self) -> Callable[[], str]:
         return self.fake.ipv6
 
     @property
-    def name(self):
+    def name(self) -> Callable[[], str]:
         return self.fake.name
 
     @property
-    def text(self):
+    def text(self) -> Callable[[], str]:
         return self.fake.text
 
     @property
-    def description(self):
+    def description(self) -> Callable[[], str]:
         return self.fake.text
 
 
@@ -85,6 +89,7 @@ FAKE = LocalizedFaker()
 
 
 def json_type_name_of_python_type(python_type: Any) -> str:
+    """Return the JSON type name for supported Python types."""
     if python_type == str:
         return "string"
     if python_type == bool:
@@ -97,16 +102,46 @@ def json_type_name_of_python_type(python_type: Any) -> str:
         return "array"
     if python_type == dict:
         return "object"
+    if python_type == type(None):
+        return "null"
     raise ValueError(f"No json type mapping for Python type {python_type} available.")
+
+
+def python_type_by_json_type_name(type_name: str) -> Any:
+    """Return the Python type based on the JSON type name."""
+    if type_name == "string":
+        return str
+    if type_name == "boolean":
+        return bool
+    if type_name == "integer":
+        return int
+    if type_name == "number":
+        return float
+    if type_name == "array":
+        return list
+    if type_name == "object":
+        return dict
+    if type_name == "null":
+        return type(None)
+    raise ValueError(f"No Python type mapping for JSON type '{type_name}' available.")
 
 
 def get_valid_value(value_schema: Dict[str, Any]) -> Any:
     """Return a random value that is valid under the provided value_schema."""
-    if from_enum := value_schema.get("enum", None):
+    value_schema = deepcopy(value_schema)
+
+    if value_schema.get("types"):
+        value_schema = choice(value_schema["types"])
+
+    if (from_const := value_schema.get("const")) is not None:
+        return from_const
+    if from_enum := value_schema.get("enum"):
         return choice(from_enum)
 
     value_type = value_schema["type"]
 
+    if value_type == "null":
+        return None
     if value_type == "boolean":
         return FAKE.fake.boolean()
     if value_type == "integer":
@@ -126,19 +161,33 @@ def get_invalid_value(
     values_from_constraint: Optional[List[Any]] = None,
 ) -> Any:
     """Return a random value that violates the provided value_schema."""
+    value_schema = deepcopy(value_schema)
+
+    if value_schemas := value_schema.get("types"):
+        if len(value_schemas) > 1:
+            value_schemas = [
+                schema for schema in value_schemas if schema["type"] != "null"
+            ]
+        value_schema = choice(value_schemas)
 
     invalid_value: Any = None
     value_type = value_schema["type"]
 
-    if values_from_constraint:
-        if (
+    if not isinstance(current_value, python_type_by_json_type_name(value_type)):
+        current_value = get_valid_value(value_schema=value_schema)
+
+    if (
+        values_from_constraint
+        and (
             invalid_value := get_invalid_value_from_constraint(
                 values_from_constraint=values_from_constraint,
                 value_type=value_type,
             )
-        ) is not None:
-            return invalid_value
-    # if an enum is possible, combine the values from the enum to invalidate the value
+        )
+        is not None
+    ):
+        return invalid_value
+    # If an enum is possible, combine the values from the enum to invalidate the value
     if enum_values := value_schema.get("enum"):
         if (
             invalid_value := get_invalid_value_from_enum(
@@ -146,21 +195,21 @@ def get_invalid_value(
             )
         ) is not None:
             return invalid_value
-    # violate min / max values or length if possible
+    # Violate min / max values or length if possible
     if (
         invalid_value := get_value_out_of_bounds(
             value_schema=value_schema, current_value=current_value
         )
     ) is not None:
         return invalid_value
-    # no value constraints or min / max ranges to violate, so change the data type
+    # No value constraints or min / max ranges to violate, so change the data type
     if value_type == "string":
-        # since int / float / bool can always be cast to sting, change
-        # the string to a nested object
-        # an array gets exploded in query strings, "null" is then often invalid
+        # Since int / float / bool can always be cast to sting, change
+        # the string to a nested object.
+        # An array gets exploded in query strings, "null" is then often invalid
         return [{"invalid": [None, False]}, "null", None, True]
     logger.debug(f"property type changed from {value_type} to random string")
-    return FAKE.fake.uuid4()
+    return FAKE.uuid()
 
 
 def get_random_int(value_schema: Dict[str, Any]) -> int:
@@ -173,12 +222,22 @@ def get_random_int(value_schema: Dict[str, Any]) -> int:
     else:
         min_int = -2147483648
         max_int = 2147483647
+    # OAS 3.0: exclusiveMinimum/Maximum is a bool in combination with minimum/maximum
+    # OAS 3.1: exclusiveMinimum/Maximum is an integer
     minimum = value_schema.get("minimum", min_int)
     maximum = value_schema.get("maximum", max_int)
-    if value_schema.get("exclusiveMinimum", False):
-        minimum += 1
-    if value_schema.get("exclusiveMaximum", False):
-        maximum -= 1
+    if (exclusive_minimum := value_schema.get("exclusiveMinimum")) is not None:
+        if isinstance(exclusive_minimum, bool):
+            if exclusive_minimum:
+                minimum += 1
+        else:
+            minimum = exclusive_minimum + 1
+    if (exclusive_maximum := value_schema.get("exclusiveMaximum")) is not None:
+        if isinstance(exclusive_maximum, bool):
+            if exclusive_maximum:
+                maximum -= 1
+        else:
+            maximum = exclusive_maximum - 1
     return randint(minimum, maximum)
 
 
@@ -198,17 +257,32 @@ def get_random_float(value_schema: Dict[str, Any]) -> float:
             maximum = minimum + 1.0
         if maximum < minimum:
             raise ValueError(f"maximum of {maximum} is less than minimum of {minimum}")
-    # for simplicity's sake, exclude both boundaries if one boundary is exclusive
-    exclusive = value_schema.get("exclusiveMinimum", False) or value_schema.get(
-        "exclusiveMaximum", False
-    )
-    if exclusive:
-        if minimum == maximum:
-            raise ValueError(
-                f"maximum of {maximum} is equal to minimum of {minimum} and "
-                f"exclusiveMinimum or exclusiveMaximum is True"
-            )
-    while exclusive:
+
+    # For simplicity's sake, exclude both boundaries if one boundary is exclusive
+    exclude_boundaries = False
+
+    exclusive_minimum = value_schema.get("exclusiveMinimum", False)
+    exclusive_maximum = value_schema.get("exclusiveMaximum", False)
+    # OAS 3.0: exclusiveMinimum/Maximum is a bool in combination with minimum/maximum
+    # OAS 3.1: exclusiveMinimum/Maximum is an integer or number
+    if not isinstance(exclusive_minimum, bool):
+        exclude_boundaries = True
+        minimum = exclusive_minimum
+    else:
+        exclude_boundaries = exclusive_minimum
+    if not isinstance(exclusive_maximum, bool):
+        exclude_boundaries = True
+        maximum = exclusive_maximum
+    else:
+        exclude_boundaries = exclusive_minimum or exclusive_maximum
+
+    if exclude_boundaries and minimum == maximum:
+        raise ValueError(
+            f"maximum of {maximum} is equal to minimum of {minimum} and "
+            f"exclusiveMinimum or exclusiveMaximum is specified"
+        )
+
+    while exclude_boundaries:
         result = uniform(minimum, maximum)
         if minimum < result < maximum:  # pragma: no cover
             return result
@@ -227,25 +301,25 @@ def get_random_string(value_schema: Dict[str, Any]) -> Union[bytes, str]:
     format_ = value_schema.get("format", "uuid")
     # byte is a special case due to the required encoding
     if format_ == "byte":
-        data = FAKE.fake.uuid4()
+        data = FAKE.uuid()
         return base64.b64encode(data.encode("utf-8"))
-    value = fake_string(format_=format_)
+    value = fake_string(string_format=format_)
     while len(value) < minimum:
         # use fake.name() to ensure the returned string uses the provided locale
-        value = value + FAKE.fake.name()
+        value = value + FAKE.name()
     if len(value) > maximum:
         value = value[:maximum]
     return value
 
 
-def fake_string(format_: str) -> str:
+def fake_string(string_format: str) -> str:
     """
     Generate a random string based on the provided format if the format is supported.
     """
     # format names may contain -, which is invalid in Python naming
-    format_ = format_.replace("-", "_")
-    fake_generator = getattr(FAKE, format_, FAKE.fake.uuid4)
-    value = fake_generator()
+    string_format = string_format.replace("-", "_")
+    fake_generator = getattr(FAKE, string_format, FAKE.uuid)
+    value: str = fake_generator()
     if isinstance(value, datetime.datetime):
         return value.strftime("%Y-%m-%dT%H:%M:%SZ")
     return value
@@ -329,7 +403,7 @@ def get_invalid_value_from_constraint(
     return invalid_value if invalid_value else None
 
 
-def get_invalid_value_from_enum(values: List[Any], value_type: str):
+def get_invalid_value_from_enum(values: List[Any], value_type: str) -> Any:
     """Return a value not in the enum by combining the enum values."""
     if value_type == "string":
         invalid_value: Any = ""
@@ -355,7 +429,6 @@ def get_invalid_value_from_enum(values: List[Any], value_type: str):
         # objects are a special case, since they must be of the same type / class
         # invalid_value.update(value) will end up with the last value in the list,
         # which is a valid value, so another approach is needed
-        # TODO: check if this works for enum with single object
         if value_type == "object":
             for key in invalid_value.keys():
                 invalid_value[key] = value.get(key)
@@ -372,18 +445,24 @@ def get_value_out_of_bounds(value_schema: Dict[str, Any], current_value: Any) ->
     value_type = value_schema["type"]
 
     if value_type in ["integer", "number"]:
-        if minimum := value_schema.get("minimum"):
+        if (minimum := value_schema.get("minimum")) is not None:
+            if value_schema.get("exclusiveMinimum") is True:
+                return minimum
             return minimum - 1
-        if maximum := value_schema.get("maximum"):
+        if (maximum := value_schema.get("maximum")) is not None:
+            if value_schema.get("exclusiveMaximum") is True:
+                return maximum
             return maximum + 1
-        if exclusive_minimum := value_schema.get("exclusiveMinimum"):
+        # In OAS 3.1 exclusveMinimum/Maximum are no longer boolean but instead integer
+        # or number and minimum/maximum should not be used with exclusiveMinimum/Maximum
+        if (exclusive_minimum := value_schema.get("exclusiveMinimum")) is not None:
             return exclusive_minimum
-        if exclusive_maximum := value_schema.get("exclusiveMaximum"):
+        if (exclusive_maximum := value_schema.get("exclusiveMaximum")) is not None:
             return exclusive_maximum
     if value_type == "array":
         if minimum := value_schema.get("minItems", 0) > 0:
             return current_value[0 : minimum - 1]
-        if maximum := value_schema.get("maxItems"):
+        if (maximum := value_schema.get("maxItems")) is not None:
             invalid_value = current_value if current_value else ["x"]
             while len(invalid_value) <= maximum:
                 invalid_value.append(choice(invalid_value))

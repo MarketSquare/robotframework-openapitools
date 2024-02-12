@@ -1,7 +1,7 @@
 *** Settings ***
 Library         OpenApiLibCore
-...                 source=${origin}/openapi.json
-...                 origin=${origin}
+...                 source=${ORIGIN}/openapi.json
+...                 origin=${ORIGIN}
 ...                 base_path=${EMPTY}
 ...                 mappings_path=${root}/tests/user_implemented/custom_user_mappings.py
 ...                 default_id_property_name=identification
@@ -9,17 +9,17 @@ Variables       ${root}/tests/variables.py
 
 
 *** Variables ***
-${origin}=      http://localhost:8000
+${ORIGIN}=      http://localhost:8000
 
 
 *** Test Cases ***
 Test Get Invalidated Url Raises For Endpoint Not In OpenApi Document
     Run Keyword And Expect Error    ValueError: /dummy not found in paths section of the OpenAPI document.
-    ...    Get Invalidated Url    valid_url=${origin}/dummy
+    ...    Get Invalidated Url    valid_url=${ORIGIN}/dummy
 
 Test Get Invalidated Url Raises For Endpoint That Cannot Be Invalidated
     Run Keyword And Expect Error    ValueError: /employees could not be invalidated.
-    ...    Get Invalidated Url    valid_url=${origin}/employees
+    ...    Get Invalidated Url    valid_url=${ORIGIN}/employees
 
 Test Get Invalidated Url For Endpoint Ending With Path Id
     ${url}=    Get Valid Url    endpoint=/employees/{employee_id}    method=get

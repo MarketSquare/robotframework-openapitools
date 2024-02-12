@@ -5,7 +5,7 @@ Library             OpenApiDriver
 ...                     origin=http://localhost:8000
 ...                     base_path=${EMPTY}
 ...                     mappings_path=${ROOT}/tests/user_implemented/custom_user_mappings.py
-...                     response_validation=INFO
+...                     response_validation=STRICT
 ...                     require_body_for_invalid_url=${TRUE}
 ...                     extra_headers=${API_KEY}
 ...                     faker_locale=nl_NL
@@ -15,15 +15,15 @@ Test Template       Validate Test Endpoint Keyword
 
 
 *** Test Cases ***
-Test Endpoint for ${method} on ${endpoint} where ${status_code} is expected
+Test Endpoint for ${method} on ${path} where ${status_code} is expected
 
 
 *** Keywords ***
 Validate Test Endpoint Keyword
-    [Arguments]    ${endpoint}    ${method}    ${status_code}
+    [Arguments]    ${path}    ${method}    ${status_code}
     IF    ${status_code} == 404
-        Test Invalid Url    endpoint=${endpoint}    method=${method}
+        Test Invalid Url    path=${path}    method=${method}
     ELSE
         Test Endpoint
-        ...    endpoint=${endpoint}    method=${method}    status_code=${status_code}
+        ...    path=${path}    method=${method}    status_code=${status_code}
     END

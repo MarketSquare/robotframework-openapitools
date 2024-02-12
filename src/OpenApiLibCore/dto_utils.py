@@ -1,4 +1,5 @@
 """Module for helper methods and classes used by the openapi_executors module."""
+
 from dataclasses import dataclass
 from importlib import import_module
 from logging import getLogger
@@ -29,7 +30,9 @@ class get_dto_class:
     def __init__(self, mappings_module_name: str) -> None:
         try:
             mappings_module = import_module(mappings_module_name)
-            self.dto_mapping: Dict[Tuple[str, str], Type[Dto]] = mappings_module.DTO_MAPPING  # type: ignore[attr-defined]
+            self.dto_mapping: Dict[Tuple[str, str], Type[Dto]] = (
+                mappings_module.DTO_MAPPING
+            )
         except (ImportError, AttributeError, ValueError) as exception:
             if mappings_module_name != "no mapping":
                 logger.error(f"DTO_MAPPING was not imported: {exception}")
@@ -53,13 +56,25 @@ class get_id_property_name:
     def __init__(self, mappings_module_name: str) -> None:
         try:
             mappings_module = import_module(mappings_module_name)
-            self.id_mapping: Dict[str, Union[str, Tuple[str, Callable[[str], str]]]] = mappings_module.ID_MAPPING  # type: ignore[attr-defined]
+            self.id_mapping: Dict[
+                str,
+                Union[
+                    str,
+                    Tuple[
+                        str, Callable[[Union[str, int, float]], Union[str, int, float]]
+                    ],
+                ],
+            ] = mappings_module.ID_MAPPING
         except (ImportError, AttributeError, ValueError) as exception:
             if mappings_module_name != "no mapping":
                 logger.error(f"ID_MAPPING was not imported: {exception}")
             self.id_mapping = {}
 
-    def __call__(self, endpoint: str) -> Union[str, Tuple[str, Callable[[str], str]]]:
+    def __call__(
+        self, endpoint: str
+    ) -> Union[
+        str, Tuple[str, Callable[[Union[str, int, float]], Union[str, int, float]]]
+    ]:
         try:
             return self.id_mapping[endpoint]
         except KeyError:

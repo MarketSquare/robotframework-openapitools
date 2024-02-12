@@ -3,10 +3,12 @@ Module holding the (base) classes that can be used by the user of the OpenApiLib
 to implement custom mappings for dependencies between resources in the API under
 test and constraints / restrictions on properties of the resources.
 """
+
 from abc import ABC
-from dataclasses import asdict, dataclass
+from copy import deepcopy
+from dataclasses import dataclass, fields
 from logging import getLogger
-from random import shuffle
+from random import choice, shuffle
 from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
@@ -16,6 +18,72 @@ logger = getLogger(__name__)
 
 NOT_SET = object()
 SENTINEL = object()
+
+
+def resolve_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Helper function to resolve allOf, anyOf and oneOf instances in a schema.
+
+    The schemas are used to generate values for headers, query parameters and json
+    bodies to be able to make requests.
+    """
+    # Schema is mutable, so deepcopy to prevent mutation of original schema argument
+    resolved_schema = deepcopy(schema)
+
+    # allOf / anyOf / oneOf may be nested, so recursively resolve the dict-typed values
+    for key, value in resolved_schema.items():
+        if isinstance(value, dict):
+            resolved_schema[key] = resolve_schema(value)
+
+    # When handling allOf there should no duplicate keys, so the schema parts can
+    # just be merged after resolving the individual parts
+    if schema_parts := resolved_schema.pop("allOf", None):
+        for schema_part in schema_parts:
+            resolved_part = resolve_schema(schema_part)
+            resolved_schema = merge_schemas(resolved_schema, resolved_part)
+    # Handling anyOf and oneOf requires extra logic to deal with the "type" information.
+    # Some properties / parameters may be of different types and each type may have its
+    # own restrictions e.g. a parameter that accepts an enum value (string) or an
+    # integer value within a certain range.
+    # Since the library needs all this information for different purposes, the
+    # schema_parts cannot be merged, so a helper property / key "types" is introduced.
+    any_of = resolved_schema.pop("anyOf", [])
+    one_of = resolved_schema.pop("oneOf", [])
+    schema_parts = any_of if any_of else one_of
+
+    for schema_part in schema_parts:
+        resolved_part = resolve_schema(schema_part)
+        if isinstance(resolved_part, dict) and "type" in resolved_part.keys():
+            if "types" in resolved_schema.keys():
+                resolved_schema["types"].append(resolved_part)
+            else:
+                resolved_schema["types"] = [resolved_part]
+        else:
+            resolved_schema = merge_schemas(resolved_schema, resolved_part)
+
+    return resolved_schema
+
+
+def merge_schemas(first: Dict[str, Any], second: Dict[str, Any]) -> Dict[str, Any]:
+    """Helper method to merge two schemas, recursively."""
+    merged_schema = deepcopy(first)
+    for key, value in second.items():
+        # for existing keys, merge dict and list values, leave others unchanged
+        if key in merged_schema.keys():
+            if isinstance(value, dict):
+                # if the key holds a dict, merge the values (e.g. 'properties')
+                merged_schema[key].update(value)
+            elif isinstance(value, list):
+                # if the key holds a list, extend the values (e.g. 'required')
+                merged_schema[key].extend(value)
+            else:
+                logger.warning(
+                    f"key '{key}' with value '{merged_schema[key]}' not "
+                    f"updated to '{value}'"
+                )
+        else:
+            merged_schema[key] = value
+    return merged_schema
 
 
 class ResourceRelation(ABC):  # pylint: disable=too-few-public-methods
@@ -131,6 +199,8 @@ class Dto(ABC):
         """Return a data set with one of the properties set to an invalid value or type."""
         properties: Dict[str, Any] = self.as_dict()
 
+        schema = resolve_schema(schema)
+
         relations = self.get_relations_for_error_code(error_code=status_code)
         # filter PathProperyConstraints since in that case no data can be invalidated
         relations = [
@@ -184,6 +254,18 @@ class Dto(ABC):
                 return properties
 
             value_schema = schema["properties"][property_name]
+            value_schema = resolve_schema(value_schema)
+
+            # Filter "type": "null" from the possible types since this indicates an
+            # optional / nullable property that can only be invalidated by sending
+            # invalid data of a non-null type
+            if value_schemas := value_schema.get("types"):
+                if len(value_schemas) > 1:
+                    value_schemas = [
+                        schema for schema in value_schemas if schema["type"] != "null"
+                    ]
+                value_schema = choice(value_schemas)
+
             # there may not be a current_value when invalidating an optional property
             current_value = properties.get(property_name, SENTINEL)
             if current_value is SENTINEL:
@@ -220,4 +302,13 @@ class Dto(ABC):
 
     def as_dict(self) -> Dict[Any, Any]:
         """Return the dict representation of the Dto."""
-        return asdict(self)
+        result = {}
+
+        for field in fields(self):
+            field_name = field.name
+            if field_name not in self.__dict__:
+                continue
+            original_name = field.metadata["original_property_name"]
+            result[original_name] = getattr(self, field_name)
+
+        return result

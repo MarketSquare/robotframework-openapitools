@@ -8,6 +8,7 @@ The following classes and constants are exposed to be used by the library user:
 - Dto, Relation: Base classes that can be used for type annotations.
 - IGNORE: A special constant that can be used as a value in the PropertyValueConstraint.
 """
+
 from importlib.metadata import version
 
 from OpenApiLibCore.dto_base import (
@@ -23,8 +24,19 @@ from OpenApiLibCore.value_utils import IGNORE
 
 from OpenApiDriver.openapidriver import OpenApiDriver
 
-
 try:
-    __version__ = version("robotframework-openapitools")
+    __version__ = version("robotframework-openapidriver")
 except Exception:  # pragma: no cover
     pass
+
+__all__ = [
+    "Dto",
+    "IdDependency",
+    "IdReference",
+    "PathPropertiesConstraint",
+    "PropertyValueConstraint",
+    "Relation",
+    "UniquePropertyValueConstraint",
+    "IGNORE",
+    "OpenApiDriver",
+]
