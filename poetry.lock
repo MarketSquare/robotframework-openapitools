@@ -1340,13 +1340,13 @@ dev = ["flake8", "flake8-docstrings", "mypy", "packaging", "pre-commit", "pytest
 
 [[package]]
 name = "robotframework"
-version = "7.0"
+version = "6.1.1"
 description = "Generic automation framework for acceptance testing and robotic process automation (RPA)"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.6"
 files = [
-    {file = "robotframework-7.0-py3-none-any.whl", hash = "sha256:865f427c4e4ec8c0b71a24dedbdad6668adfecc9fce04d77d02e1b8e54b77f41"},
-    {file = "robotframework-7.0.zip", hash = "sha256:04623f758346c917db182e17591ffa474090560c02ed5a64343902e72b7b4bd5"},
+    {file = "robotframework-6.1.1-py3-none-any.whl", hash = "sha256:ee0d512d557e72ed760dd075525f6226baaab309010a48f9c9bf1f416ca434f7"},
+    {file = "robotframework-6.1.1.zip", hash = "sha256:3fa18f2596a4df2418c4b59abf43248327c15ed38ad8665f6a9a9c75c95d7789"},
 ]
 
 [[package]]
@@ -1838,4 +1838,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "e5f089837311551400e518c7b1e72c6752376e89904bc264c4fdd3d3512a734c"
+content-hash = "5384e80313e85141fdfc39c7b3ba1692a7182f47adf05607993e7bece9ba53d6"
