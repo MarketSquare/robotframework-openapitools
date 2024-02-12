@@ -131,3 +131,6 @@ dmypy.json
 # IDE config
 .vscode/launch.json
 .vscode/settings.json
+
+# default logs location for project
+tests/logs
