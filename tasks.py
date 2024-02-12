@@ -36,7 +36,17 @@ def utests(context: Context) -> None:
         "-m",
         "unittest",
         "discover ",
-        f"{ROOT}/tests/unittests",
+        f"{ROOT}/tests/driver/unittests",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False)
+
+    cmd = [
+        "coverage",
+        "run",
+        "-m",
+        "unittest",
+        "discover ",
+        f"{ROOT}/tests/libcore/unittests",
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
 
@@ -52,7 +62,7 @@ def atests(context: Context) -> None:
         f"--variable=root:{ROOT}",
         f"--outputdir={ROOT}/tests/logs",
         "--loglevel=TRACE:DEBUG",
-        f"{ROOT}/tests/suites",
+        f"{ROOT}/tests",
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
 
