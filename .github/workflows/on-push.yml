@@ -8,8 +8,8 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  schedule:
-    - cron: '15 10 * * *'
+#   schedule:
+#     - cron: '15 10 * * *'
 
 jobs:
   build:
@@ -17,6 +17,7 @@ jobs:
     strategy:
       matrix:
         os: [ "ubuntu-latest", "windows-latest"]
+        python-version: [ 3.8, 3.9, 3.10, 3.11, 3.12]
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python 3.8
@@ -37,46 +38,14 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: matrix.os == 'ubuntu-latest'
       with:
-        name: rfbrowser-wheel
+        name: openapitools-wheel
         path: dist/robotframework_openapitools-*-py3-none-any.whl
 
   testing:
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 10
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - os: windows-latest
-            python-version: "3.8"
-            shard: 1
-          - os: windows-latest
-            python-version: "3.9"
-            shard: 1
-          - os: windows-latest
-            python-version: "3.10"
-            shard: 3
-          - os: windows-latest
-            python-version: "3.11"
-            shard: 4
-          - os: windows-latest
-            python-version: "3.12"
-            shard: 2
-          - os: ubuntu-latest
-            python-version: "3.8"
-            shard: 3
-          - os: ubuntu-latest
-            python-version: "3.9"
-            shard: 4
-          - os: ubuntu-latest
-            python-version: "3.10"
-            shard: 2
-          - os: ubuntu-latest
-            python-version: "3.11"
-            shard: 1
-          - os: ubuntu-latest
-            python-version: "3.12"
-            shard: 1
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
@@ -90,7 +59,7 @@ jobs:
         pip install poetry
         poetry config virtualenvs.create false
         poetry install
-    - name: Check types on Linux with Python 3.12
+    - name: Check types on Linux with latest Python 3.12
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
       run: |
         inv type-check
@@ -98,14 +67,27 @@ jobs:
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
       run: |
         inv lint
-    - name: Start the test server
-      run: |
-        inv start-api
+    - name: Start the test server in the background
+      uses: JarvusInnovations/background-action@v1
+      with:
+        run: |
+          inv start-api
+        wait-on: |
+          http://localhost:8000
+        # IMPORTANT: to use environment variables in wait-on, you must use this form: ${{ env.VAR }}
+        # See wait-on section below for all resource types and prefixes
+        tail: true # true = stderr,stdout
+        # This will allow you to monitor the progress live
+        log-output-resume: stderr
+        # Eliminates previosuly output stderr log entries from post-run output
+        wait-for: 1m
+        log-output: stderr,stdout # same as true
+        log-output-if: failure
     - name: Run tests
       run: |
        inv tests
     - uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
-        name: Test results-${{ matrix.os }}-${{ matrix.shard }}-${{ matrix.python-version }}-${{ matrix.node-version }}
+        name: Test results-${{ matrix.os }}-${{ matrix.python-version }}
         path: zip_results/output
