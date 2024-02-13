@@ -31,6 +31,14 @@ jobs:
         pip install poetry
         poetry config virtualenvs.create false
         poetry install
+    - name: Check types on Linux with latest Python 3.12
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
+      run: |
+        inv type-check
+    - name: Run linting on Linux with Python 3.12
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
+      run: |
+        inv lint
     - name: Create distribution
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.8'
       run: |
@@ -45,6 +53,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
+      matrix:
+        os: [ 'ubuntu-latest', 'windows-latest']
+        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12']
       fail-fast: false
     steps:
     - uses: actions/checkout@v4
@@ -59,14 +70,6 @@ jobs:
         pip install poetry
         poetry config virtualenvs.create false
         poetry install
-    - name: Check types on Linux with latest Python 3.12
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
-      run: |
-        inv type-check
-    - name: Run linting on Linux with Python 3.12
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
-      run: |
-        inv lint
     - name: Start the test server in the background
       uses: JarvusInnovations/background-action@v1
       with:
