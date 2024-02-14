@@ -71,21 +71,8 @@ jobs:
         poetry config virtualenvs.create false
         poetry install
     - name: Start the test server in the background
-      uses: JarvusInnovations/background-action@v1
-      with:
-        run: |
-          inv start-api
-        wait-on: |
-          http://localhost:8000
-        # IMPORTANT: to use environment variables in wait-on, you must use this form: ${{ env.VAR }}
-        # See wait-on section below for all resource types and prefixes
-        tail: true # true = stderr,stdout
-        # This will allow you to monitor the progress live
-        log-output-resume: stderr
-        # Eliminates previosuly output stderr log entries from post-run output
-        wait-for: 1m
-        log-output: stderr,stdout # same as true
-        log-output-if: failure
+      run: |
+        inv start-api &
     - name: Run tests
       run: |
        inv tests
