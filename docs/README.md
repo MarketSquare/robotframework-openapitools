@@ -1,3 +1,6 @@
 # OpenApiTools for Robot Framework
 
-OpenApiDriver, OpenApiLibCore and RoboSwag together in one repo.
+OpenApiTools is a set of libraries centered around the OpenAPI Specification:
+
+- [OpenApiDriver](./driver.md)
+- [OpenApiLibCore](./libcore.md)
