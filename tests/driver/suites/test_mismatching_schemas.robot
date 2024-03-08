@@ -26,7 +26,7 @@ Test Template       Validate Test Endpoint Keyword
 
 
 *** Test Cases ***
-Test Endpoint for ${method} on ${endpoint} where ${status_code} is expected
+Test Endpoint for ${method} on ${path} where ${status_code} is expected
 
 
 *** Keywords ***
