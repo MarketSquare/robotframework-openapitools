@@ -942,12 +942,21 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             return True
 
         endpoint_parts = endpoint.split("/")
+        # if the last part is empty, the path has a trailing `/` that
+        # should be ignored during matching
+        if endpoint_parts[-1] == "":
+            _ = endpoint_parts.pop(-1)
+
+
         spec_endpoints: List[str] = {**self.openapi_spec}["paths"].keys()
 
         candidates: List[str] = []
 
         for spec_endpoint in spec_endpoints:
             spec_endpoint_parts = spec_endpoint.split("/")
+            # ignore trailing `/` the same way as for endpoint_parts
+            if spec_endpoint_parts[-1] == "":
+                _ = spec_endpoint_parts.pop(-1)
             if match_parts(endpoint_parts, spec_endpoint_parts):
                 candidates.append(spec_endpoint)
 
