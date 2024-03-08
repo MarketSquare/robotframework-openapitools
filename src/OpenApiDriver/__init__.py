@@ -11,6 +11,7 @@ The following classes and constants are exposed to be used by the library user:
 
 from importlib.metadata import version
 
+from OpenApiDriver.openapidriver import OpenApiDriver
 from OpenApiLibCore.dto_base import (
     Dto,
     IdDependency,
@@ -21,8 +22,6 @@ from OpenApiLibCore.dto_base import (
     UniquePropertyValueConstraint,
 )
 from OpenApiLibCore.value_utils import IGNORE
-
-from OpenApiDriver.openapidriver import OpenApiDriver
 
 try:
     __version__ = version("robotframework-openapidriver")

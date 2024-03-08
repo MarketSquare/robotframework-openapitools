@@ -15,13 +15,14 @@ from openapi_core.exceptions import OpenAPIError
 from openapi_core.validation.exceptions import ValidationError
 from openapi_core.validation.response.exceptions import InvalidData
 from openapi_core.validation.schemas.exceptions import InvalidSchemaValue
-from OpenApiLibCore import OpenApiLibCore, RequestData, RequestValues, resolve_schema
 from requests import Response
 from requests.auth import AuthBase
 from requests.cookies import RequestsCookieJar as CookieJar
 from robot.api import Failure, SkipExecution
 from robot.api.deco import keyword, library
 from robot.libraries.BuiltIn import BuiltIn
+
+from OpenApiLibCore import OpenApiLibCore, RequestData, RequestValues, resolve_schema
 
 run_keyword = BuiltIn().run_keyword
 
