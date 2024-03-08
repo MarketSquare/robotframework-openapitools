@@ -4,10 +4,14 @@ from robot.libraries.BuiltIn import BuiltIn
 
 class MissingParameter(ValueError):
     def __init__(self, name):
-        super().__init__(f"Missing {name}. Set ${{{name}}} global variable or pass it as {name} named variable.")
+        super().__init__(
+            f"Missing {name}. Set ${{{name}}} global variable or pass it as {name} named variable."
+        )
 
 
-def get_from_kwargs_or_robot(kwargs, name, missing_ok=True):  # TODO pass flag to enforce auth with missing_ok
+def get_from_kwargs_or_robot(
+    kwargs, name, missing_ok=True
+):  # TODO pass flag to enforce auth with missing_ok
     value = kwargs.get(name)
     if value is None:
         value = BuiltIn().get_variable_value(f"${{{name}}}")

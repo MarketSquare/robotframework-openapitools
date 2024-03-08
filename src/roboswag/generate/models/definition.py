@@ -1,6 +1,10 @@
 from typing import List
 
-from roboswag.generate.models.utils import get_python_type, pythonify_name, replace_reserved_name
+from roboswag.generate.models.utils import (
+    get_python_type,
+    pythonify_name,
+    replace_reserved_name,
+)
 
 
 class Property:

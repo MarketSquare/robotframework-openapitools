@@ -41,7 +41,11 @@ class Endpoint:
 
     def get_python_method_signature(self) -> str:
         max_line_length: int = 120
-        args = [str(param) for param in chain(self.path_params, self.headers, self.query) if param]
+        args = [
+            str(param)
+            for param in chain(self.path_params, self.headers, self.query)
+            if param
+        ]
         if self.body:
             args.append(f"{self.body}")
         args.append(f"exp_status={self.exp_status}")
@@ -53,7 +57,9 @@ class Endpoint:
         for index, arg in enumerate(args):
             if not arg:
                 continue
-            if len(line) + len(arg) + 2 > max_line_length - (2 if last_index == index else 0):
+            if len(line) + len(arg) + 2 > max_line_length - (
+                2 if last_index == index else 0
+            ):
                 method_sig += line
                 line = ",\n" + prefix * " " + arg
             else:

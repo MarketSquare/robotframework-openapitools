@@ -5,7 +5,11 @@ from typing import Dict, Optional
 from prance import ResolvingParser
 from prance.convert import convert_spec
 
-from roboswag.generate.models.definition import Definition, Property, get_definitions_from_swagger
+from roboswag.generate.models.definition import (
+    Definition,
+    Property,
+    get_definitions_from_swagger,
+)
 from roboswag.generate.models.endpoint import Endpoint
 from roboswag.generate.models.parameter import Parameter
 from roboswag.generate.models.response import Response
@@ -36,7 +40,12 @@ def get_body(params, method_body):
         if not schema:
             return None
         return Parameter(
-            "body", default="None", param_type=None, description=None, required=None, schema=schema  # TODO
+            "body",
+            default="None",
+            param_type=None,
+            description=None,
+            required=None,
+            schema=schema,  # TODO
         )
 
 
@@ -111,10 +120,14 @@ class APIModel:
                     params[param["in"]].append(
                         Parameter(
                             param["name"],
-                            default="None" if param["in"] != "path" else None,  # TODO Retrieve default value
-                            param_type=get_python_type(param["type"], param.get("format"))
-                            if param.get("type")
-                            else None,
+                            default=(
+                                "None" if param["in"] != "path" else None
+                            ),  # TODO Retrieve default value
+                            param_type=(
+                                get_python_type(param["type"], param.get("format"))
+                                if param.get("type")
+                                else None
+                            ),
                             description=param.get("description"),
                             required=param.get("required"),
                             schema=get_schema(param),
@@ -164,9 +177,15 @@ class APIModel:
             for prop_name, prop_body in def_body.get("properties", {}).items():
                 prop_type = prop_body.get("type", "")
                 prop_format = prop_body.get("format", "")
-                properties.append(Property(prop_name, prop_type=get_python_type(prop_type, prop_format)))
+                properties.append(
+                    Property(
+                        prop_name, prop_type=get_python_type(prop_type, prop_format)
+                    )
+                )
 
-            definition = Definition(def_name, def_type=def_type, properties=properties, required=def_req)
+            definition = Definition(
+                def_name, def_type=def_type, properties=properties, required=def_req
+            )
             self.definitions[def_name] = definition
 
     def parse_authentication(self, swagger):

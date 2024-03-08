@@ -5,7 +5,10 @@ from typing import Any, Optional
 import black
 from jinja2 import Template
 
-from roboswag.generate.models.api import get_definitions_from_swagger, parse_swagger_specification
+from roboswag.generate.models.api import (
+    get_definitions_from_swagger,
+    parse_swagger_specification,
+)
 
 
 class LibraryGenerator:
@@ -42,7 +45,9 @@ class LibraryGenerator:
         swagger_version = self.swagger.get("openapi") or self.swagger.get("swagger")
         api_init_template = self.parent_dir / "templates" / "api_init.jinja"
         with open(api_init_template) as f:
-            template = Template(f.read()).render(swagger_version=swagger_version, infos=self.swagger["info"])
+            template = Template(f.read()).render(
+                swagger_version=swagger_version, infos=self.swagger["info"]
+            )
         init_file = self.output_dir / "__init__.py"
         with open(init_file, "w") as f:
             f.write(template)
@@ -82,7 +87,9 @@ class LibraryGenerator:
         for definition in self.api_model.definitions.values():
             models_template = self.parent_dir / "templates" / "models.jinja"
             with open(models_template) as f:
-                template = Template(f.read()).render(class_name=definition.name, properties=definition.properties)
+                template = Template(f.read()).render(
+                    class_name=definition.name, properties=definition.properties
+                )
             model_file = models_dir / f"{definition.name}.py"
             with open(model_file, "w") as f:
                 f.write(template)
@@ -104,7 +111,9 @@ class LibraryGenerator:
 
 
 def blackify_file(source):
-    black.format_file_in_place(source, fast=True, mode=black.FileMode(), write_back=black.WriteBack.YES)
+    black.format_file_in_place(
+        source, fast=True, mode=black.FileMode(), write_back=black.WriteBack.YES
+    )
 
 
 def generate_libraries(source: str, output_dir: Optional[Path], authentication: Any):

@@ -35,10 +35,14 @@ class APIModel:
         if headers is not None:
             self.session.headers.update(headers)
 
-    def send_request(self, method, url, status=None, headers=None, body=None, query=None, **kwargs):
+    def send_request(
+        self, method, url, status=None, headers=None, body=None, query=None, **kwargs
+    ):
         headers = self.trim_empty(headers)
         query = self.trim_empty(query)
-        auth = self.authentication(**kwargs) if self.authentication is not None else None
+        auth = (
+            self.authentication(**kwargs) if self.authentication is not None else None
+        )
         content_type = kwargs.get("content-type", self.content_type)
         if content_type is not None:
             headers["Content-Type"] = content_type
@@ -56,7 +60,9 @@ class APIModel:
         self.logger.log_request(resp)
         self.logger.log_response(resp)
         if status is not None:
-            assert resp.status_code == status, f"Expected return status: {status} but received: {resp.status_code}"
+            assert (
+                resp.status_code == status
+            ), f"Expected return status: {status} but received: {resp.status_code}"
         return resp
 
     def post(self, *args, **kwargs):

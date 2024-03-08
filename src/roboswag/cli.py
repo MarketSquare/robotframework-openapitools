@@ -3,10 +3,9 @@ from typing import Optional
 
 import rich_click as click
 
+from roboswag import __version__ as version
 from roboswag.auth import AUTH_BACKENDS
 from roboswag.generate import generate_libraries
-from roboswag import __version__ as version
-
 
 CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
@@ -15,7 +14,9 @@ class AuthBackend(click.ParamType):
     name = "auth"
 
     def convert(self, value, param, ctx):
-        backends = {backend.lower(): auth_class for backend, auth_class in AUTH_BACKENDS.items()}
+        backends = {
+            backend.lower(): auth_class for backend, auth_class in AUTH_BACKENDS.items()
+        }
         normalized = value.casefold()
         if normalized in backends:
             return backends[normalized]

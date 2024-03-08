@@ -2,7 +2,15 @@ from roboswag.generate.models.utils import pythonify_name
 
 
 class Parameter:
-    def __init__(self, name: str, default=None, param_type=None, description=None, required=None, schema=None) -> None:
+    def __init__(
+        self,
+        name: str,
+        default=None,
+        param_type=None,
+        description=None,
+        required=None,
+        schema=None,
+    ) -> None:
         self.name: str = name
         self.python_name: str = pythonify_name(name)
         self.default = default
