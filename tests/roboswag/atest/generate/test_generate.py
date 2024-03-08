@@ -20,7 +20,8 @@ def test_yaml_v3():
 
 @pytest.mark.parametrize("dir_exists", [False, True])
 @pytest.mark.parametrize(
-    "output_option, output_directory", [("-o", "output_directory"), ("--output-dir", "nested/subdirs/output_dir")]
+    "output_option, output_directory",
+    [("-o", "output_directory"), ("--output-dir", "nested/subdirs/output_dir")],
 )
 def test_generate_to_output_dir(tmp_path, dir_exists, output_directory, output_option):
     spec = TEST_DATA_DIR / "yaml_v3" / "spec.yaml"

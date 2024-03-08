@@ -1,5 +1,8 @@
 *** Settings ***
-Library  ..${/}results${/}no_tags${/}RoboswagTestAPI${/}endpoints${/}Items.py    http://127.0.0.1:8000
+Library         ${ROOT}/results/no_tags/RoboswagTestAPI/endpoints/Items.py
+...                 http://127.0.0.1:8000
+
+Test Tags       roboswag
 
 
 *** Test Cases ***

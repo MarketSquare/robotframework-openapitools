@@ -53,5 +53,7 @@ def test_validate_invalid_schema(validator, valid_response):
 
 def test_validate_invalid_response(validator, invalid_response):
     # TODO: Custom exception from Roboswag (with error stack on debug only)
-    with pytest.raises(jsonschema.exceptions.ValidationError, match="'123' is not of type 'integer'"):
+    with pytest.raises(
+        jsonschema.exceptions.ValidationError, match="'123' is not of type 'integer'"
+    ):
         validator.schema(invalid_response, VALID_SCHEMA)
