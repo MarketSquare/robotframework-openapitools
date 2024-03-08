@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2024-03-08T15:16:25+00:00" specversion="5" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapidriver.py" lineno="352">
-<version>0.1.0</version>
+<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2024-03-08T16:26:38+00:00" specversion="5" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapidriver.py" lineno="352">
+<version>0.1.1</version>
 <doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;</doc>
 <tags>
 </tags>

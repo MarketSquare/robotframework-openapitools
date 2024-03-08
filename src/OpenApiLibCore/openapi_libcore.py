@@ -947,7 +947,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         if endpoint_parts[-1] == "":
             _ = endpoint_parts.pop(-1)
 
-
         spec_endpoints: List[str] = {**self.openapi_spec}["paths"].keys()
 
         candidates: List[str] = []
