@@ -6,7 +6,7 @@ from importlib.metadata import version
 from invoke.context import Context
 from invoke.tasks import task
 
-from OpenApiLibCore import openapi_libcore
+# from OpenApiLibCore import openapi_libcore
 
 ROOT = pathlib.Path(__file__).parent.resolve().as_posix()
 VERSION = version("robotframework-openapitools")
@@ -62,6 +62,7 @@ def atests(context: Context) -> None:
         f"--variable=root:{ROOT}",
         f"--outputdir={ROOT}/tests/logs",
         "--loglevel=TRACE:DEBUG",
+        "--exclude=roboswag",
         f"{ROOT}/tests",
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
@@ -86,14 +87,14 @@ def lint(context: Context) -> None:
     subprocess.run(f"pylint {ROOT}/src/OpenApiDriver", shell=True, check=False)
     subprocess.run(f"pylint {ROOT}/src/OpenApiLibCore", shell=True, check=False)
     subprocess.run(f"pylint {ROOT}/src/roboswag", shell=True, check=False)
-    subprocess.run(f"robocop {ROOT}/tests/suites", shell=True, check=False)
+    subprocess.run(f"robocop {ROOT}/tests", shell=True, check=False)
 
 
 @task
 def format_code(context: Context) -> None:
     subprocess.run(f"black {ROOT}", shell=True, check=False)
     subprocess.run(f"isort {ROOT}", shell=True, check=False)
-    subprocess.run(f"robotidy {ROOT}/tests/suites", shell=True, check=False)
+    subprocess.run(f"robotidy {ROOT}/tests", shell=True, check=False)
 
 
 @task
@@ -159,10 +160,12 @@ def libspec(context: Context) -> None:
 @task
 def readme(context: Context) -> None:
     front_matter = """---\n---\n"""
+
+
 #     with open(f"{ROOT}/docs/README.md", "w", encoding="utf-8") as readme_file:
 #         doc_string = openapi_libcore.__doc__
-        # readme_file.write(front_matter)
-        # readme_file.write(str(doc_string).replace("\\", "\\\\").replace("\\\\*", "\\*"))
+# readme_file.write(front_matter)
+# readme_file.write(str(doc_string).replace("\\", "\\\\").replace("\\\\*", "\\*"))
 
 
 @task(format_code, libdoc, libspec, readme)
