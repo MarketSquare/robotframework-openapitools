@@ -2,7 +2,7 @@
 Variables           ${ROOT}/tests/variables.py
 Library             OpenApiDriver
 ...                     source=http://localhost:8000/openapi.json
-...                     origin=http://localhost:8000
+...                     origin=${EMPTY}
 ...                     base_path=${EMPTY}
 ...                     mappings_path=${ROOT}/tests/user_implemented/custom_user_mappings.py
 ...                     response_validation=STRICT
@@ -11,6 +11,7 @@ Library             OpenApiDriver
 ...                     faker_locale=nl_NL
 ...                     default_id_property_name=identification
 
+Suite Setup         Update Origin
 Test Template       Validate Test Endpoint Keyword
 
 
@@ -27,3 +28,6 @@ Validate Test Endpoint Keyword
         Test Endpoint
         ...    path=${path}    method=${method}    status_code=${status_code}
     END
+
+Update Origin
+    Set Origin    http://localhost:8000

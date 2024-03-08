@@ -1,6 +1,5 @@
-from typing import Dict, Tuple
+from typing import Dict
 
-from openapi_core import Spec
 from prance import ResolvingParser
 
-PARSER_CACHE: Dict[str, Tuple[ResolvingParser, Spec]] = {}
+PARSER_CACHE: Dict[str, ResolvingParser] = {}

@@ -494,50 +494,12 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         === proxies ===
         A dictionary of 'protocol': 'proxy url' to use for all requests.
         """
-        try:
-
-            def recursion_limit_handler(
-                limit: int, refstring: str, recursions: Any
-            ) -> Any:
-                return recursion_default
-
-            # Since parsing of the OAS and creating the Spec can take a long time,
-            # they are cached. This is done by storing them in an imported module that
-            # will have a global scope due to how Python works. This ensures that in a
-            # Suite of Suites where multiple Suites use the same `source`, that OAS is
-            # only parsed / loaded once.
-            parser, validation_spec = PARSER_CACHE.get(source, (None, None))
-            if parser is None:
-                parser = ResolvingParser(
-                    source,
-                    backend="openapi-spec-validator",
-                    recursion_limit=recursion_limit,
-                    recursion_limit_handler=recursion_limit_handler,
-                )
-
-                if parser.specification is None:  # pragma: no cover
-                    BuiltIn().fatal_error(
-                        "Source was loaded, but no specification was present after parsing."
-                    )
-
-                validation_spec = Spec.from_dict(parser.specification)
-                PARSER_CACHE[source] = (parser, validation_spec)
-
-            self._openapi_spec: Dict[str, Any] = parser.specification
-            self.validation_spec = validation_spec
-
-        except ResolutionError as exception:
-            BuiltIn().fatal_error(
-                f"ResolutionError while trying to load openapi spec: {exception}"
-            )
-        except ValidationError as exception:
-            BuiltIn().fatal_error(
-                f"ValidationError while trying to load openapi spec: {exception}"
-            )
-
+        self._source = source
+        self._origin = origin
+        self._base_path = base_path
+        self._recursion_limit = recursion_limit
+        self._recursion_default = recursion_default
         self.session = Session()
-        self.origin = origin
-        self.base_url = f"{self.origin}{base_path}"
         # only username and password, security_token or auth object should be provided
         # if multiple are provided, username and password take precedence
         self.security_token = security_token
@@ -582,6 +544,83 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         # update the globally available DEFAULT_ID_PROPERTY_NAME to the provided value
         DEFAULT_ID_PROPERTY_NAME.id_property_name = default_id_property_name
 
+    @property
+    def origin(self) -> str:
+        return self._origin
+
+    @keyword
+    def set_origin(self, origin: str) -> None:
+        """
+        Update the `origin` after the library is imported.
+
+        This can be done during the `Suite setup` when using DataDriver in situations
+        where the OpenAPI document is available on disk but the target host address is
+        not known before the test starts.
+
+        In combination with OpenApiLibCore, the `origin` can be used at any point to
+        target another server that hosts an API that complies to the same OAS.
+        """
+        self._origin = origin
+
+    @property
+    def base_url(self) -> str:
+        return f"{self.origin}{self._base_path}"
+
+    @cached_property
+    def validation_spec(self) -> Spec:
+        return Spec.from_dict(self.openapi_spec)
+
+    @property
+    def openapi_spec(self) -> Dict[str, Any]:
+        """Return a deepcopy of the parsed openapi document."""
+        # protect the parsed openapi spec from being mutated by reference
+        return deepcopy(self._openapi_spec)
+
+    @cached_property
+    def _openapi_spec(self) -> Dict[str, Any]:
+        parser = self._load_parser()
+        return parser.specification
+
+    def _load_parser(self) -> ResolvingParser:
+        try:
+
+            def recursion_limit_handler(
+                limit: int, refstring: str, recursions: Any
+            ) -> Any:
+                return self._recursion_default
+
+            # Since parsing of the OAS and creating the Spec can take a long time,
+            # they are cached. This is done by storing them in an imported module that
+            # will have a global scope due to how the Python import system works. This
+            # ensures that in a Suite of Suites where multiple Suites use the same
+            # `source`, that OAS is only parsed / loaded once.
+            parser = PARSER_CACHE.get(self._source, None)
+            if parser is None:
+                parser = ResolvingParser(
+                    self._source,
+                    backend="openapi-spec-validator",
+                    recursion_limit=self._recursion_limit,
+                    recursion_limit_handler=recursion_limit_handler,
+                )
+
+                if parser.specification is None:  # pragma: no cover
+                    BuiltIn().fatal_error(
+                        "Source was loaded, but no specification was present after parsing."
+                    )
+
+                PARSER_CACHE[self._source] = parser
+
+            return parser
+
+        except ResolutionError as exception:
+            BuiltIn().fatal_error(
+                f"ResolutionError while trying to load openapi spec: {exception}"
+            )
+        except ValidationError as exception:
+            BuiltIn().fatal_error(
+                f"ValidationError while trying to load openapi spec: {exception}"
+            )
+
     def validate_response_vs_spec(
         self, request: RequestsOpenAPIRequest, response: RequestsOpenAPIResponse
     ) -> None:
@@ -594,12 +633,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             request=request,
             response=response,
         )
-
-    @property
-    def openapi_spec(self) -> Dict[str, Any]:
-        """Return a deepcopy of the parsed openapi document."""
-        # protect the parsed openapi spec from being mutated by reference
-        return deepcopy(self._openapi_spec)
 
     @keyword
     def get_valid_url(self, endpoint: str, method: str) -> str:
