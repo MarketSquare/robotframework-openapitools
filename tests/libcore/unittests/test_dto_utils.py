@@ -14,7 +14,9 @@ from OpenApiLibCore import (
 )
 
 unittest_folder = pathlib.Path(__file__).parent.resolve()
-mappings_path = unittest_folder.parent / "user_implemented" / "custom_user_mappings.py"
+mappings_path = (
+    unittest_folder.parent.parent / "user_implemented" / "custom_user_mappings.py"
+)
 
 
 class TestDefaultDto(unittest.TestCase):
@@ -33,6 +35,8 @@ class TestGetDtoClass(unittest.TestCase):
             sys.path.append(mappings_folder)
             cls.mappings_module_name = mappings_path.stem
             print(f"added {mappings_folder} to path")
+        else:
+            assert False, "The mappings_path is not a file."
 
     @classmethod
     def tearDownClass(cls) -> None:
