@@ -2,6 +2,7 @@
 
 import json as _json
 from enum import Enum
+from logging import getLogger
 from pathlib import Path
 from random import choice
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -20,11 +21,13 @@ from requests.cookies import RequestsCookieJar as CookieJar
 from robot.api import Failure, SkipExecution
 from robot.api.deco import keyword, library
 from robot.libraries.BuiltIn import BuiltIn
-from robot.api import logger
 
 from OpenApiLibCore import OpenApiLibCore, RequestData, RequestValues, resolve_schema
 
 run_keyword = BuiltIn().run_keyword
+
+
+logger = getLogger(__name__)
 
 
 class ValidationLevel(str, Enum):
@@ -357,7 +360,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                     )
                 # if the path supports GET, 404 is expected, if not 405 is expected
                 if get_response.status_code not in [404, 405]:
-                    logger.warn(
+                    logger.warning(
                         f"Unexpected response after deleting resource: Status_code "
                         f"{get_response.status_code} was received after trying to get {request_values.url} "
                         f"after sucessfully deleting it."
@@ -396,7 +399,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
 
         request_method = response.request.method
         if request_method is None:
-            logger.warn(
+            logger.warning(
                 f"Could not validate response for path {path}; no method found "
                 f"on the request property of the provided response."
             )
@@ -412,7 +415,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         mime_type_from_response, _, _ = content_type_from_response.partition(";")
 
         if not response_spec.get("content"):
-            logger.warn(
+            logger.warning(
                 "The response cannot be validated: 'content' not specified in the OAS."
             )
             return None
@@ -510,7 +513,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                 logger.error(error_message)
                 raise exception
             if self.response_validation == ValidationLevel.WARN:
-                logger.warn(error_message)
+                logger.warning(error_message)
             elif self.response_validation == ValidationLevel.INFO:
                 logger.info(error_message)
 
@@ -614,7 +617,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
 
         python_type = type_mapping.get(expected_type, None)
         if python_type is None:
-            logger.warn(
+            logger.warning(
                 f"Additonal properties were not validated: "
                 f"type '{expected_type}' is not supported."
             )
@@ -690,7 +693,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                     )
 
         if response.request.body is None:
-            logger.warn(
+            logger.warning(
                 "Could not validate send response; the body of the request property "
                 "on the provided response was None."
             )
