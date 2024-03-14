@@ -157,6 +157,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         default_id_property_name: str = "id",
         faker_locale: Optional[Union[str, List[str]]] = None,
         require_body_for_invalid_url: bool = False,
+        send_empty_body: bool = True,
         recursion_limit: int = 1,
         recursion_default: Any = {},
         username: str = "",
@@ -254,6 +255,10 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
          processes the request body before checking if the requested resource exists, set
          this parameter to True.
 
+         === send_empty_body ===
+         If set to true, the request that would generate an empty body will not
+         send a body at all. Else it sends an empty body `{}`
+
          == Parsing parameters ==
 
          === recursion_limit ===
@@ -324,6 +329,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
             default_id_property_name=default_id_property_name,
             faker_locale=faker_locale,
             require_body_for_invalid_url=require_body_for_invalid_url,
+            send_empty_body=send_empty_body,
             recursion_limit=recursion_limit,
             recursion_default=recursion_default,
             username=username,
