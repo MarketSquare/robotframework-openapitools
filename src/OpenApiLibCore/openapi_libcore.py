@@ -201,6 +201,7 @@ class RequestData:
     parameters: List[Dict[str, Any]] = field(default_factory=list)
     params: Dict[str, Any] = field(default_factory=dict)
     headers: Dict[str, Any] = field(default_factory=dict)
+    has_body: bool = True
 
     def __post_init__(self) -> None:
         # prevent modification by reference
@@ -845,6 +846,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                 parameters=parameters,
                 params=params,
                 headers=headers,
+                has_body=False
             )
         content_schema = resolve_schema(self.get_content_schema(body_spec))
         dto_data = self.get_json_data_for_dto_class(

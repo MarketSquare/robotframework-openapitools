@@ -55,7 +55,6 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         default_id_property_name: str = "id",
         faker_locale: Optional[Union[str, List[str]]] = None,
         require_body_for_invalid_url: bool = False,
-        send_empty_body: bool = True,
         recursion_limit: int = 1,
         recursion_default: Any = {},
         username: str = "",
@@ -91,7 +90,6 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         self.disable_server_validation = disable_server_validation
         self.require_body_for_invalid_url = require_body_for_invalid_url
         self.invalid_property_default_response = invalid_property_default_response
-        self.send_empty_body = send_empty_body
 
     @keyword
     def test_unauthorized(self, path: str, method: str) -> None:
@@ -174,8 +172,8 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         request_data: RequestData = self.get_request_data(method=method, endpoint=path)
         params = request_data.params
         headers = request_data.headers
-        dict_data = request_data.dto.as_dict()
-        json_data = dict_data if dict_data or self.send_empty_body else None
+        if request_data.has_body:
+            json_data = request_data.dto.as_dict()
         # when patching, get the original data to check only patched data has changed
         if method == "PATCH":
             original_data = self.get_original_data(url=url)
