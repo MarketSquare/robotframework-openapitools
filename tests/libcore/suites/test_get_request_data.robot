@@ -21,6 +21,7 @@ Test Get Request Data For Invalid Method On Endpoint
     Should Be Equal    ${request_data.parameters}    ${list}
     Should Be Equal    ${request_data.params}    ${dict}
     Should Be Equal    ${request_data.headers}    ${dict}
+    Should Not Be True    ${request_data.has_body}
 
 Test Get Request Data For Endpoint With RequestBody
     ${request_data}=    Get Request Data    endpoint=/employees    method=post
@@ -36,6 +37,7 @@ Test Get Request Data For Endpoint With RequestBody
     Should Be Equal    ${request_data.parameters}    ${list}
     Should Be Equal    ${request_data.params}    ${dict}
     Should Be Equal    ${request_data.headers}    ${dict}
+    Should Be True    ${request_data.has_body}
 
 Test Get Request Data For Endpoint Without RequestBody But With DtoClass
     ${request_data}=    Get Request Data    endpoint=/wagegroups/{wagegroup_id}    method=delete
@@ -45,6 +47,7 @@ Test Get Request Data For Endpoint Without RequestBody But With DtoClass
     Should Not Be Empty    ${request_data.parameters}
     Should Be Equal    ${request_data.params}    ${dict}
     Should Be Equal    ${request_data.headers}    ${dict}
+    Should Not Be True    ${request_data.has_body}
 
 # Test Get Request Data For Endpoint With RequestBody With Only Ignored Properties
 #    ${request_data}=    Get Request Data    endpoint=/wagegroups/{wagegroup_id}    method=delete
@@ -55,3 +58,4 @@ Test Get Request Data For Endpoint Without RequestBody But With DtoClass
 #    Should Not Be Empty    ${request_data.parameters}
 #    Should Be Equal    ${request_data.params}    ${dict}
 #    Should Be Equal    ${request_data.headers}    ${dict}
+#    Should Be True    ${request_data.has_body}

@@ -846,7 +846,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                 parameters=parameters,
                 params=params,
                 headers=headers,
-                has_body=False
+                has_body=False,
             )
         content_schema = resolve_schema(self.get_content_schema(body_spec))
         dto_data = self.get_json_data_for_dto_class(
