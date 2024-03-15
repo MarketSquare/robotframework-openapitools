@@ -1,6 +1,6 @@
 [tool.poetry]
 name="robotframework-openapitools"
-version = "0.1.1"
+version = "0.1.2"
 description = "A set of Robot Framework libraries to test APIs for which the OAS is available."
 license = "Apache-2.0"
 authors = [
@@ -36,7 +36,7 @@ requests = "^2.31.0"
 prance = {version = "^23", extras = ["CLI"]}
 Faker = ">=23.1.0"
 rstr = "^3.2.0"
-openapi-core = "^0.18.0"
+openapi-core = "^0.19.0"
 rich_click = "^1.7.0"
 black = ">=24.1.0"
 Jinja2 = "^3.1.2"
