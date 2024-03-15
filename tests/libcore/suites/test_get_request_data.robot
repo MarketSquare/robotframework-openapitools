@@ -36,7 +36,7 @@ Test Get Request Data For Endpoint With RequestBody
     Should Not Be Empty    ${request_data.dto_schema}
     Should Be Equal    ${request_data.parameters}    ${list}
     Should Be Equal    ${request_data.params}    ${dict}
-    &{expected_headers}=  Create Dictionary  content-type=application/json
+    &{expected_headers}=    Create Dictionary    content-type=application/json
     Should Be Equal    ${request_data.headers}    ${expected_headers}
     Should Be True    ${request_data.has_body}
 
