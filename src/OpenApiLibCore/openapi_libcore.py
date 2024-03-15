@@ -119,6 +119,7 @@ data types and properties. The following list details the most important ones:
 """
 
 import json as _json
+import re
 import sys
 from copy import deepcopy
 from dataclasses import Field, dataclass, field, make_dataclass
@@ -852,6 +853,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                 has_body=False,
             )
         content_schema = resolve_schema(self.get_content_schema(body_spec))
+        headers.update({"content-type": self.get_content_type(body_spec)})
         dto_data = self.get_json_data_for_dto_class(
             schema=content_schema,
             dto_class=dto_class,
@@ -919,18 +921,31 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         headers = self.get_parameter_data(header_params, parameter_relations)
         return parameters, params, headers
 
-    @staticmethod
-    def get_content_schema(body_spec: Dict[str, Any]) -> Dict[str, Any]:
+    @classmethod
+    def get_content_schema(cls, body_spec: Dict[str, Any]) -> Dict[str, Any]:
         """Get the content schema from the requestBody spec."""
-        content_types = body_spec["content"].keys()
-        if "application/json" not in content_types:
-            # At present no supported for other types.
-            raise NotImplementedError(
-                f"Only content type 'application/json' is supported. "
-                f"Content types definded in the spec are '{content_types}'."
-            )
-        content_schema = body_spec["content"]["application/json"]["schema"]
+        content_type = cls.get_content_type(body_spec)
+        content_schema = body_spec["content"][content_type]["schema"]
         return resolve_schema(content_schema)
+
+    @staticmethod
+    def get_content_type(body_spec: Dict[str, Any]) -> str:
+        """Get and validate the first supported content type from the requested body spec
+
+        Should be application/json like content type,
+        e.g "application/json;charset=utf-8" or "application/merge-patch+json"
+        """
+        content_types: List[str] = body_spec["content"].keys()
+        json_regex = r"application/([a-z\-]+\+)?json(;\s?charset=(.+))?"
+        for content_type in content_types:
+            if re.search(json_regex, content_type):
+                return content_type
+
+        # At present no supported for other types.
+        raise NotImplementedError(
+            f"Only content types like 'application/json' are supported. "
+            f"Content types definded in the spec are '{content_types}'."
+        )
 
     def get_parametrized_endpoint(self, endpoint: str) -> str:
         """
