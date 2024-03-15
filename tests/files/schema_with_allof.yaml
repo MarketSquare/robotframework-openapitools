@@ -43,7 +43,7 @@ paths:
       requestBody:
         description: this is a description
         content:
-          application/json:
+          application/hal+json:
             schema:
               allOf:
                 - $ref: '#/components/schemas/MediaMetadata'

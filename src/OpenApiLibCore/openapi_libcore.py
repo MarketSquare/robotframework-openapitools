@@ -583,6 +583,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         parser = self._load_parser()
         return parser.specification
 
+    def read_paths(self) -> Dict[str, Any]:
+        return self.openapi_spec["paths"]
+
     def _load_parser(self) -> ResolvingParser:
         try:
 

@@ -16,6 +16,7 @@ Test Get Request Data For Schema With allOf
     ${dict}=    Create Dictionary
     ${list}=    Create List
     ${list_of_dict}=    Create List    ${dict}
+    ${expected_headers}=    Create Dictionary    content-type=application/hal+json
     Length Should Be    ${request_data.dto.isan}    36
     Length Should Be    ${request_data.dto.published}    10
     Should Be Equal    ${request_data.dto.tags}    ${list_of_dict}
@@ -23,4 +24,4 @@ Test Get Request Data For Schema With allOf
     Length Should Be    ${request_data.dto_schema.get("properties")}    4
     Should Be Equal    ${request_data.parameters}    ${list}
     Should Be Equal    ${request_data.params}    ${dict}
-    Should Be Equal    ${request_data.headers}    ${dict}
+    Should Be Equal    ${request_data.headers}    ${expected_headers}
