@@ -337,11 +337,11 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
             proxies=proxies,
         )
 
-        paths = self.openapi_spec["paths"]
+        read_paths_method = self.read_paths
         DataDriver.__init__(
             self,
             reader_class=OpenApiReader,
-            paths=paths,
+            read_paths_method=read_paths_method,
             included_paths=included_paths,
             ignored_paths=ignored_paths,
             ignored_responses=ignored_responses,

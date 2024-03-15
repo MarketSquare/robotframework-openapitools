@@ -33,7 +33,8 @@ class OpenApiReader(AbstractReaderClass):
     def get_data_from_source(self) -> List[TestCaseData]:
         test_data: List[TestCaseData] = []
 
-        paths = getattr(self, "paths")
+        read_paths_method = getattr(self, "read_paths_method")
+        paths: Dict[str, Any] = read_paths_method()
         self._filter_paths(paths)
 
         ignored_responses_ = [
