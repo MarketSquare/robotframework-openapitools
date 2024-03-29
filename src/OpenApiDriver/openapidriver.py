@@ -168,6 +168,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         extra_headers: Optional[Dict[str, str]] = None,
         cookies: Optional[Union[Dict[str, str], CookieJar]] = None,
         proxies: Optional[Dict[str, str]] = None,
+        log_suite_variables: bool = False,
     ):
         """
          == Base parameters ==
@@ -245,6 +246,11 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
          === faker_locale ===
          A locale string or list of locale strings to pass to the Faker library to be
          used in generation of string data for supported format types.
+
+        === log_suite_variables ===
+        By setting this boolean to True, all performed requests and response will
+        be available in suite variable OPENAPI_DRIVER_REQUESTS and all created data
+        in OPENAPI_DRIVER_CREATED_DATA (default False)
 
          === require_body_for_invalid_url ===
          When a request is made against an invalid url, this usually is because of a "404" request;
@@ -335,6 +341,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
             extra_headers=extra_headers,
             cookies=cookies,
             proxies=proxies,
+            log_suite_variables=log_suite_variables,
         )
 
         read_paths_method = self.read_paths

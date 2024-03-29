@@ -66,6 +66,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         extra_headers: Optional[Dict[str, str]] = None,
         cookies: Optional[Union[Dict[str, str], CookieJar]] = None,
         proxies: Optional[Dict[str, str]] = None,
+        log_suite_variables: bool = False,
     ) -> None:
         super().__init__(
             source=source,
@@ -85,6 +86,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             extra_headers=extra_headers,
             cookies=cookies,
             proxies=proxies,
+            log_suite_variables=log_suite_variables,
         )
         self.response_validation = response_validation
         self.disable_server_validation = disable_server_validation
