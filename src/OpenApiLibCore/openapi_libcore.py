@@ -524,7 +524,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         self.cookies = cookies
         self.proxies = proxies
         self.invalid_property_default_response = invalid_property_default_response
-        self.log_suite_varariables = log_suite_variables
+        self.log_suite_variables = log_suite_variables
         if mappings_path and str(mappings_path) != ".":
             mappings_path = Path(mappings_path)
             if not mappings_path.is_file():
@@ -554,7 +554,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         DEFAULT_ID_PROPERTY_NAME.id_property_name = default_id_property_name
 
     def append_to_suite_variable(self, var_name: str, value: Any) -> None:
-        if self.log_suite_varariables:
+        if self.log_suite_variables:
             builtin = BuiltIn()
             var_list: List[Any] = builtin.get_variable_value(f"${{{var_name}}}", [])
             var_list.append(value)
