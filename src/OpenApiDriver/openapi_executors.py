@@ -259,7 +259,11 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             request_data = self.get_request_data(method=method, endpoint=path)
             params = request_data.get_required_params()
             headers = request_data.get_required_headers()
-            json_data = request_data.get_required_properties_dict()
+            json_data = (
+                request_data.get_required_properties_dict()
+                if request_data.has_body
+                else None
+            )
             original_data = None
             if method == "PATCH":
                 original_data = self.get_original_data(url=url)
