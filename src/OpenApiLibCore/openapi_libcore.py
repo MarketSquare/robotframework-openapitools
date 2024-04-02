@@ -552,6 +552,10 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             FAKE.set_locale(locale=faker_locale)
         # update the globally available DEFAULT_ID_PROPERTY_NAME to the provided value
         DEFAULT_ID_PROPERTY_NAME.id_property_name = default_id_property_name
+        if self.log_suite_variables:
+            builtin = BuiltIn()
+            builtin.set_suite_variable("${OPENAPI_DRIVER_REQUESTS}", [])
+            builtin.set_suite_variable("${OPENAPI_DRIVER_CREATED_DATA}", [])
 
     def append_to_suite_variable(self, var_name: str, value: Any) -> None:
         if self.log_suite_variables:
