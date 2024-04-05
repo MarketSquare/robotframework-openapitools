@@ -1,6 +1,6 @@
 [tool.poetry]
 name="robotframework-openapitools"
-version = "0.1.2"
+version = "0.1.3"
 description = "A set of Robot Framework libraries to test APIs for which the OAS is available."
 license = "Apache-2.0"
 authors = [
