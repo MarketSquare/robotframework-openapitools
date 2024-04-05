@@ -131,7 +131,7 @@ from random import choice
 from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 from uuid import uuid4
 
-from openapi_core import Spec, validate_response
+from openapi_core import Config, OpenAPI, Spec
 from openapi_core.contrib.requests import (
     RequestsOpenAPIRequest,
     RequestsOpenAPIResponse,
@@ -633,10 +633,14 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         Validate the reponse for a given request against the OpenAPI Spec that is
         loaded during library initialization.
         """
-        _ = validate_response(
-            spec=self.validation_spec,
-            request=request,
-            response=response,
+        if response.content_type == "application/json":
+            config = None
+        else:
+            extra_deserializer = {response.content_type: _json.loads}
+            config = Config(extra_media_type_deserializers=extra_deserializer)
+
+        OpenAPI(spec=self.validation_spec, config=config).validate_response(
+            request, response
         )
 
     @keyword
