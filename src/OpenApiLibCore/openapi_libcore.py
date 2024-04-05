@@ -1084,7 +1084,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
             property_type = properties_schema.get("type")
             if property_type is None:
-                property_types = properties_schema.get("type")
+                property_types = properties_schema.get("types")
                 if property_types is None:
                     if properties_schema.get("properties") is not None:
                         nested_data = self.get_json_data_for_dto_class(
