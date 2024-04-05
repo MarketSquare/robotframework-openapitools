@@ -1083,8 +1083,17 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             properties_schema = schema["properties"][property_name]
 
             property_type = properties_schema.get("type")
-            if not property_type:
-                selected_type_schema = choice(properties_schema["types"])
+            if property_type is None:
+                property_types = properties_schema.get("type")
+                if property_types is None:
+                    if properties_schema.get("properties") is not None:
+                        nested_data = self.get_json_data_for_dto_class(
+                            schema=properties_schema,
+                            dto_class=DefaultDto,
+                        )
+                        json_data[property_name] = nested_data
+                        continue
+                selected_type_schema = choice(property_types)
                 property_type = selected_type_schema["type"]
             if properties_schema.get("readOnly", False):
                 continue
