@@ -127,7 +127,7 @@ from functools import cached_property
 from itertools import zip_longest
 from logging import getLogger
 from pathlib import Path
-from random import choice
+from random import choice, sample
 from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 from uuid import uuid4
 
@@ -357,6 +357,33 @@ class RequestData:
             if key in required_properties:
                 required_properties_dict[key] = value
         return required_properties_dict
+
+    def get_minimal_body_dict(self) -> Dict[str, Any]:
+        required_properties_dict = self.get_required_properties_dict()
+
+        min_properties = self.dto_schema.get("minProperties", 0)
+        number_of_optional_properties_to_add = min_properties - len(
+            required_properties_dict
+        )
+
+        if number_of_optional_properties_to_add < 1:
+            return required_properties_dict
+
+        optional_properties_dict = {
+            k: v
+            for k, v in self.dto.as_dict().items()
+            if k not in required_properties_dict
+        }
+        optional_properties_to_keep = sample(
+            sorted(optional_properties_dict), number_of_optional_properties_to_add
+        )
+        optional_properties_dict = {
+            k: v
+            for k, v in optional_properties_dict.items()
+            if k in optional_properties_to_keep
+        }
+
+        return {**required_properties_dict, **optional_properties_dict}
 
     def get_required_params(self) -> Dict[str, str]:
         """Get the params dict containing only the required query parameters."""
@@ -1083,7 +1110,27 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
         json_data: Dict[str, Any] = {}
 
+        property_names = []
         for property_name in schema.get("properties", []):
+            if constrained_values := get_constrained_values(property_name):
+                # do not add properties that are configured to be ignored
+                if IGNORE in constrained_values:
+                    continue
+            property_names.append(property_name)
+
+        max_properties = schema.get("maxProperties")
+        if max_properties and len(property_names) > max_properties:
+            required_properties = schema.get("required", [])
+            number_of_optional_properties = max_properties - len(required_properties)
+            optional_properties = [
+                name for name in property_names if name not in required_properties
+            ]
+            selected_optional_properties = sample(
+                optional_properties, number_of_optional_properties
+            )
+            property_names = required_properties + selected_optional_properties
+
+        for property_name in property_names:
             properties_schema = schema["properties"][property_name]
 
             property_type = properties_schema.get("type")
@@ -1102,9 +1149,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             if properties_schema.get("readOnly", False):
                 continue
             if constrained_values := get_constrained_values(property_name):
-                # do not add properties that are configured to be ignored
-                if IGNORE in constrained_values:
-                    continue
                 json_data[property_name] = choice(constrained_values)
                 continue
             if (
@@ -1131,6 +1175,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                 json_data[property_name] = [array_data]
                 continue
             json_data[property_name] = value_utils.get_valid_value(properties_schema)
+
         return json_data
 
     @keyword

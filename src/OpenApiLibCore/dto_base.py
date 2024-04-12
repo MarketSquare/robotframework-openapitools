@@ -77,7 +77,7 @@ def merge_schemas(first: Dict[str, Any], second: Dict[str, Any]) -> Dict[str, An
                 # if the key holds a list, extend the values (e.g. 'required')
                 merged_schema[key].extend(value)
             else:
-                logger.warning(
+                logger.debug(
                     f"key '{key}' with value '{merged_schema[key]}' not "
                     f"updated to '{value}'"
                 )
