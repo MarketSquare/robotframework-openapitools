@@ -109,7 +109,25 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             url=url,
             verify=False,
         )
-        assert response.status_code == 401
+        if response.status_code != 401:
+            raise AssertionError(f"Response {response.status_code} was not 401.")
+
+    @keyword
+    def test_forbidden(self, path: str, method: str) -> None:
+        """
+        Perform a request for `method` on the `path`, with the provided authorization.
+
+        This keyword only passes if the response code is 403: Forbidden.
+
+        For this keyword to pass, the authorization parameters used to initialize the
+        library should grant insufficient access rights to the target endpoint.
+        > Note: No headers or (json) body are send with the request. For security
+        reasons, the access rights validation should be checked first.
+        """
+        url: str = run_keyword("get_valid_url", path, method)
+        response: Response = run_keyword("authorized_request", url, method)
+        if response.status_code != 403:
+            raise AssertionError(f"Response {response.status_code} was not 403.")
 
     @keyword
     def test_invalid_url(

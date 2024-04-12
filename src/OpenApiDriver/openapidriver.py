@@ -357,6 +357,7 @@ class DocumentationGenerator(OpenApiDriver):
         """Curated keywords for libdoc and libspec."""
         return [
             "test_unauthorized",
+            "test_forbidden",
             "test_invalid_url",
             "test_endpoint",
         ]  # pragma: no cover
