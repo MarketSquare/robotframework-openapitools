@@ -144,11 +144,12 @@ def get_events(
 
 
 # deliberate trailing /
-@app.post("/events/", status_code=201, response_model=Event)
-def post_event(event: Event) -> Event:
-    event.details.append(Detail(detail=str(datetime.datetime.now())))
-    EVENTS.append(event)
-    return event
+@app.post("/events/", status_code=201, response_model=List[Event])
+def post_events(events: List[Event]) -> List[Event]:
+    for event in events:
+        event.details.append(Detail(detail=str(datetime.datetime.now())))
+        EVENTS.append(event)
+    return events
 
 
 @app.get(
