@@ -110,9 +110,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             verify=False,
         )
         if response.status_code != 401:
-            raise AssertionError(
-                f"Response {response.status_code} was not 401."
-            )
+            raise AssertionError(f"Response {response.status_code} was not 401.")
 
     @keyword
     def test_forbidden(self, path: str, method: str) -> None:
@@ -129,9 +127,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         url: str = run_keyword("get_valid_url", path, method)
         response: Response = run_keyword("authorized_request", url, method)
         if response.status_code != 403:
-            raise AssertionError(
-                f"Response {response.status_code} was not 403."
-            )
+            raise AssertionError(f"Response {response.status_code} was not 403.")
 
     @keyword
     def test_invalid_url(

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2024-04-05T14:47:49+00:00" specversion="5" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapidriver.py" lineno="352">
+<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2024-04-12T12:51:58+00:00" specversion="5" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapidriver.py" lineno="352">
 <version>0.1.3</version>
 <doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;</doc>
 <tags>
@@ -199,7 +199,7 @@
 </init>
 </inits>
 <keywords>
-<kw name="Test Endpoint" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="157">
+<kw name="Test Endpoint" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="175">
 <arguments repr="path: str, method: str, status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
@@ -219,7 +219,23 @@
 &lt;p&gt;The keyword calls other keywords to generate the neccesary data to perform the desired operation and validate the response against the openapi document.&lt;/p&gt;</doc>
 <shortdoc>Validate that performing the `method` operation on `path` results in a `status_code` response.</shortdoc>
 </kw>
-<kw name="Test Invalid Url" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="115">
+<kw name="Test Forbidden" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="116">
+<arguments repr="path: str, method: str">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
+<name>path</name>
+<type name="str" typedoc="string">str</type>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
+<name>method</name>
+<type name="str" typedoc="string">str</type>
+</arg>
+</arguments>
+<doc>&lt;p&gt;Perform a request for &lt;span class="name"&gt;method&lt;/span&gt; on the &lt;a href="#type-Path" class="name"&gt;path&lt;/a&gt;, with the provided authorization.&lt;/p&gt;
+&lt;p&gt;This keyword only passes if the response code is 403: Forbidden.&lt;/p&gt;
+&lt;p&gt;For this keyword to pass, the authorization parameters used to initialize the library should grant insufficient access rights to the target endpoint. &amp;gt; Note: No headers or (json) body are send with the request. For security reasons, the access rights validation should be checked first.&lt;/p&gt;</doc>
+<shortdoc>Perform a request for `method` on the `path`, with the provided authorization.</shortdoc>
+</kw>
+<kw name="Test Invalid Url" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="133">
 <arguments repr="path: str, method: str, expected_status_code: int = 404">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
@@ -361,6 +377,7 @@
 <usages>
 <usage>__init__</usage>
 <usage>Test Endpoint</usage>
+<usage>Test Forbidden</usage>
 <usage>Test Invalid Url</usage>
 <usage>Test Unauthorized</usage>
 </usages>
