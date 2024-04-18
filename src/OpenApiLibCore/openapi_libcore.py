@@ -128,7 +128,18 @@ from itertools import zip_longest
 from logging import getLogger
 from pathlib import Path
 from random import choice, sample
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 from uuid import uuid4
 
 from openapi_core import Config, OpenAPI, Spec
@@ -597,7 +608,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
     @cached_property
     def validation_spec(self) -> Spec:
-        return Spec.from_dict(self.openapi_spec)
+        _, validation_spec, _ = self._load_specs_and_validator()
+        return validation_spec
 
     @property
     def openapi_spec(self) -> Dict[str, Any]:
@@ -607,13 +619,43 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
     @cached_property
     def _openapi_spec(self) -> Dict[str, Any]:
-        parser = self._load_parser()
+        parser, _, _ = self._load_specs_and_validator()
         return parser.specification
 
-    def read_paths(self) -> Dict[str, Any]:
-        return self.openapi_spec["paths"]
+    @cached_property
+    def response_validator(
+        self,
+    ) -> Callable[[RequestsOpenAPIRequest, RequestsOpenAPIResponse], None]:
+        _, _, response_validator = self._load_specs_and_validator()
+        return response_validator
 
-    def _load_parser(self) -> ResolvingParser:
+    def _get_json_types_from_spec(self, spec: Dict[str, Any]) -> Set[str]:
+        json_types: Set[str] = set(self._get_json_types(spec))
+        return {json_type for json_type in json_types if json_type is not None}
+
+    def _get_json_types(self, item: Any) -> Generator[str, None, None]:
+        if isinstance(item, dict):
+            content_dict = item.get("content")
+            if content_dict is None:
+                for value in item.values():
+                    yield from self._get_json_types(value)
+
+            else:
+                for content_type in content_dict:
+                    if "json" in content_type:
+                        yield content_type
+
+        if isinstance(item, list):
+            for list_item in item:
+                yield from self._get_json_types(list_item)
+
+    def _load_specs_and_validator(
+        self,
+    ) -> Tuple[
+        ResolvingParser,
+        Spec,
+        Callable[[RequestsOpenAPIRequest, RequestsOpenAPIResponse], None],
+    ]:
         try:
 
             def recursion_limit_handler(
@@ -626,7 +668,10 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             # will have a global scope due to how the Python import system works. This
             # ensures that in a Suite of Suites where multiple Suites use the same
             # `source`, that OAS is only parsed / loaded once.
-            parser = PARSER_CACHE.get(self._source, None)
+            parser, validation_spec, response_validator = PARSER_CACHE.get(
+                self._source, (None, None, None)
+            )
+
             if parser is None:
                 parser = ResolvingParser(
                     self._source,
@@ -640,9 +685,25 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                         "Source was loaded, but no specification was present after parsing."
                     )
 
-                PARSER_CACHE[self._source] = parser
+                validation_spec = Spec.from_dict(parser.specification)
 
-            return parser
+                json_types_from_spec: Set[str] = self._get_json_types_from_spec(
+                    parser.specification
+                )
+                extra_deserializers = {
+                    json_type: _json.loads for json_type in json_types_from_spec
+                }
+                config = Config(extra_media_type_deserializers=extra_deserializers)
+                openapi = OpenAPI(spec=validation_spec, config=config)
+                response_validator = openapi.validate_response
+
+                PARSER_CACHE[self._source] = (
+                    parser,
+                    validation_spec,
+                    response_validator,
+                )
+
+            return parser, validation_spec, response_validator
 
         except ResolutionError as exception:
             BuiltIn().fatal_error(
@@ -660,15 +721,10 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         Validate the reponse for a given request against the OpenAPI Spec that is
         loaded during library initialization.
         """
-        if response.content_type == "application/json":
-            config = None
-        else:
-            extra_deserializer = {response.content_type: _json.loads}
-            config = Config(extra_media_type_deserializers=extra_deserializer)
+        self.response_validator(request=request, response=response)
 
-        OpenAPI(spec=self.validation_spec, config=config).validate_response(
-            request, response
-        )
+    def read_paths(self) -> Dict[str, Any]:
+        return self.openapi_spec["paths"]
 
     @keyword
     def get_valid_url(self, endpoint: str, method: str) -> str:
