@@ -23,7 +23,12 @@ from OpenApiLibCore.dto_base import (
     resolve_schema,
 )
 from OpenApiLibCore.dto_utils import DefaultDto
-from OpenApiLibCore.openapi_libcore import OpenApiLibCore, RequestData, RequestValues
+from OpenApiLibCore.openapi_libcore import (
+    OpenApiLibCore,
+    RequestData,
+    RequestValues,
+    ValidationLevel,
+)
 from OpenApiLibCore.value_utils import IGNORE
 
 try:
@@ -43,6 +48,7 @@ __all__ = [
     "OpenApiLibCore",
     "RequestData",
     "RequestValues",
+    "ValidationLevel",
     "resolve_schema",
     "IGNORE",
 ]
