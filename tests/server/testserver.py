@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Union
 from uuid import uuid4
 
 from fastapi import FastAPI, Header, HTTPException, Path, Query, Response
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 API_KEY = "OpenApiLibCore"
@@ -310,10 +311,20 @@ def get_employee(employee_id: str) -> EmployeeDetails:
 @app.patch(
     "/employees/{employee_id}",
     status_code=200,
-    response_model=EmployeeDetails,
-    responses={404: {"model": Detail}},
+    responses={
+        404: {"model": Detail},
+        200: {
+            "description": "A JSON boolean response",
+            "content": {
+                "application/json": {
+                    "schema": {"type": "boolean"},
+                },
+            },
+        },
+    },
+    response_class=JSONResponse,
 )
-def patch_employee(employee_id: str, employee: EmployeeUpdate) -> EmployeeDetails:
+def patch_employee(employee_id: str, employee: EmployeeUpdate) -> JSONResponse:
     if employee_id not in EMPLOYEES.keys():
         raise HTTPException(status_code=404, detail="Employee not found")
     stored_employee_data = EMPLOYEES[employee_id]
@@ -337,7 +348,7 @@ def patch_employee(employee_id: str, employee: EmployeeUpdate) -> EmployeeDetail
 
     updated_employee = stored_employee_data.model_copy(update=employee_update_data)
     EMPLOYEES[employee_id] = updated_employee
-    return updated_employee
+    return JSONResponse(content=True)
 
 
 @app.get("/available_employees", status_code=200, response_model=List[EmployeeDetails])
