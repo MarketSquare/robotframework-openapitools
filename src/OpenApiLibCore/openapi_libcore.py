@@ -150,7 +150,7 @@ from openapi_core.contrib.requests import (
 )
 from openapi_core.exceptions import OpenAPIError
 from openapi_core.validation.exceptions import ValidationError
-from openapi_core.validation.response.exceptions import InvalidData
+from openapi_core.validation.response.exceptions import ResponseValidationError
 from openapi_core.validation.schemas.exceptions import InvalidSchemaValue
 from prance import ResolvingParser
 from prance.util.url import ResolutionError
@@ -1841,7 +1841,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                 request=RequestsOpenAPIRequest(response.request),
                 response=RequestsOpenAPIResponse(response),
             )
-        except InvalidData as exception:
+        except ResponseValidationError as exception:
             errors: List[InvalidSchemaValue] = exception.__cause__
             validation_errors: Optional[List[ValidationError]] = getattr(
                 errors, "schema_errors", None
