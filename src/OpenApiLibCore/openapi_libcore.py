@@ -1738,8 +1738,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
         try:
             self._validate_response_against_spec(response)
-        except OpenAPIError:
-            raise Failure("Response did not pass schema validation.")
+        except OpenAPIError as exception:
+            raise Failure(f"Response did not pass schema validation: {exception}")
 
         request_method = response.request.method
         if request_method is None:
