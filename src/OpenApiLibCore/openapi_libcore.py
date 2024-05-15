@@ -658,7 +658,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             else:
                 for content_type in content_dict:
                     if "json" in content_type:
-                        yield content_type
+                        content_type_without_charset, _, _ = content_type.partition(";")
+                        yield content_type_without_charset
 
         if isinstance(item, list):
             for list_item in item:
