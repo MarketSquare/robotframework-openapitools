@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2024-05-15T18:47:16+00:00" specversion="5" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapidriver.py" lineno="352">
-<version>0.2.2</version>
+<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2024-06-20T15:30:31+00:00" specversion="6" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapidriver.py" lineno="352">
+<version>0.2.3</version>
 <doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;</doc>
 <tags>
 </tags>
@@ -9,126 +9,192 @@
 <arguments repr="source: str, origin: str = , base_path: str = , included_paths: Iterable[str] | None = None, ignored_paths: Iterable[str] | None = None, ignored_responses: Iterable[int] | None = None, ignored_testcases: Iterable[Tuple[str, str, int]] | None = None, response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, mappings_path: str | Path = , invalid_property_default_response: int = 422, default_id_property_name: str = id, faker_locale: str | List[str] | None = None, require_body_for_invalid_url: bool = False, recursion_limit: int = 1, recursion_default: Any = {}, username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, cert: str | Tuple[str, str] | None = None, verify_tls: bool | str | None = True, extra_headers: Dict[str, str] | None = None, cookies: Dict[str, str] | RequestsCookieJar | None = None, proxies: Dict[str, str] | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="source: str">
 <name>source</name>
-<type name="str" typedoc="string">str</type>
+<type name="str" typedoc="string"/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="origin: str = ">
 <name>origin</name>
-<type name="str" typedoc="string">str</type>
+<type name="str" typedoc="string"/>
 <default/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="base_path: str = ">
 <name>base_path</name>
-<type name="str" typedoc="string">str</type>
+<type name="str" typedoc="string"/>
 <default/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="included_paths: Iterable[str] | None = None">
 <name>included_paths</name>
-<type name="Union" union="true">Iterable[str] | None<type name="Iterable">Iterable[str]<type name="str" typedoc="string">str</type></type><type name="None" typedoc="None">None</type></type>
+<type name="Union" union="true">
+<type name="Iterable">
+<type name="str" typedoc="string"/>
+</type>
+<type name="None" typedoc="None"/>
+</type>
 <default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_paths: Iterable[str] | None = None">
 <name>ignored_paths</name>
-<type name="Union" union="true">Iterable[str] | None<type name="Iterable">Iterable[str]<type name="str" typedoc="string">str</type></type><type name="None" typedoc="None">None</type></type>
+<type name="Union" union="true">
+<type name="Iterable">
+<type name="str" typedoc="string"/>
+</type>
+<type name="None" typedoc="None"/>
+</type>
 <default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_responses: Iterable[int] | None = None">
 <name>ignored_responses</name>
-<type name="Union" union="true">Iterable[int] | None<type name="Iterable">Iterable[int]<type name="int" typedoc="integer">int</type></type><type name="None" typedoc="None">None</type></type>
+<type name="Union" union="true">
+<type name="Iterable">
+<type name="int" typedoc="integer"/>
+</type>
+<type name="None" typedoc="None"/>
+</type>
 <default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_testcases: Iterable[Tuple[str, str, int]] | None = None">
 <name>ignored_testcases</name>
-<type name="Union" union="true">Iterable[Tuple[str, str, int]] | None<type name="Iterable">Iterable[Tuple[str, str, int]]<type name="Tuple" typedoc="tuple">Tuple[str, str, int]<type name="str" typedoc="string">str</type><type name="str" typedoc="string">str</type><type name="int" typedoc="integer">int</type></type></type><type name="None" typedoc="None">None</type></type>
+<type name="Union" union="true">
+<type name="Iterable">
+<type name="Tuple" typedoc="tuple">
+<type name="str" typedoc="string"/>
+<type name="str" typedoc="string"/>
+<type name="int" typedoc="integer"/>
+</type>
+</type>
+<type name="None" typedoc="None"/>
+</type>
 <default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="response_validation: ValidationLevel = WARN">
 <name>response_validation</name>
-<type name="ValidationLevel" typedoc="ValidationLevel">ValidationLevel</type>
+<type name="ValidationLevel" typedoc="ValidationLevel"/>
 <default>WARN</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="disable_server_validation: bool = True">
 <name>disable_server_validation</name>
-<type name="bool" typedoc="boolean">bool</type>
+<type name="bool" typedoc="boolean"/>
 <default>True</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="mappings_path: str | Path = ">
 <name>mappings_path</name>
-<type name="Union" union="true">str | Path<type name="str" typedoc="string">str</type><type name="Path" typedoc="Path">Path</type></type>
+<type name="Union" union="true">
+<type name="str" typedoc="string"/>
+<type name="Path" typedoc="Path"/>
+</type>
 <default/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="invalid_property_default_response: int = 422">
 <name>invalid_property_default_response</name>
-<type name="int" typedoc="integer">int</type>
+<type name="int" typedoc="integer"/>
 <default>422</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="default_id_property_name: str = id">
 <name>default_id_property_name</name>
-<type name="str" typedoc="string">str</type>
+<type name="str" typedoc="string"/>
 <default>id</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="faker_locale: str | List[str] | None = None">
 <name>faker_locale</name>
-<type name="Union" union="true">str | List[str] | None<type name="str" typedoc="string">str</type><type name="List" typedoc="list">List[str]<type name="str" typedoc="string">str</type></type><type name="None" typedoc="None">None</type></type>
+<type name="Union" union="true">
+<type name="str" typedoc="string"/>
+<type name="List" typedoc="list">
+<type name="str" typedoc="string"/>
+</type>
+<type name="None" typedoc="None"/>
+</type>
 <default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="require_body_for_invalid_url: bool = False">
 <name>require_body_for_invalid_url</name>
-<type name="bool" typedoc="boolean">bool</type>
+<type name="bool" typedoc="boolean"/>
 <default>False</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="recursion_limit: int = 1">
 <name>recursion_limit</name>
-<type name="int" typedoc="integer">int</type>
+<type name="int" typedoc="integer"/>
 <default>1</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="recursion_default: Any = {}">
 <name>recursion_default</name>
-<type name="Any" typedoc="Any">Any</type>
+<type name="Any" typedoc="Any"/>
 <default>{}</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="username: str = ">
 <name>username</name>
-<type name="str" typedoc="string">str</type>
+<type name="str" typedoc="string"/>
 <default/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="password: str = ">
 <name>password</name>
-<type name="str" typedoc="string">str</type>
+<type name="str" typedoc="string"/>
 <default/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="security_token: str = ">
 <name>security_token</name>
-<type name="str" typedoc="string">str</type>
+<type name="str" typedoc="string"/>
 <default/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="auth: AuthBase | None = None">
 <name>auth</name>
-<type name="Union" union="true">AuthBase | None<type name="AuthBase">AuthBase</type><type name="None" typedoc="None">None</type></type>
+<type name="Union" union="true">
+<type name="AuthBase"/>
+<type name="None" typedoc="None"/>
+</type>
 <default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="cert: str | Tuple[str, str] | None = None">
 <name>cert</name>
-<type name="Union" union="true">str | Tuple[str, str] | None<type name="str" typedoc="string">str</type><type name="Tuple" typedoc="tuple">Tuple[str, str]<type name="str" typedoc="string">str</type><type name="str" typedoc="string">str</type></type><type name="None" typedoc="None">None</type></type>
+<type name="Union" union="true">
+<type name="str" typedoc="string"/>
+<type name="Tuple" typedoc="tuple">
+<type name="str" typedoc="string"/>
+<type name="str" typedoc="string"/>
+</type>
+<type name="None" typedoc="None"/>
+</type>
 <default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="verify_tls: bool | str | None = True">
 <name>verify_tls</name>
-<type name="Union" union="true">bool | str | None<type name="bool" typedoc="boolean">bool</type><type name="str" typedoc="string">str</type><type name="None" typedoc="None">None</type></type>
+<type name="Union" union="true">
+<type name="bool" typedoc="boolean"/>
+<type name="str" typedoc="string"/>
+<type name="None" typedoc="None"/>
+</type>
 <default>True</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="extra_headers: Dict[str, str] | None = None">
 <name>extra_headers</name>
-<type name="Union" union="true">Dict[str, str] | None<type name="Dict" typedoc="dictionary">Dict[str, str]<type name="str" typedoc="string">str</type><type name="str" typedoc="string">str</type></type><type name="None" typedoc="None">None</type></type>
+<type name="Union" union="true">
+<type name="Dict" typedoc="dictionary">
+<type name="str" typedoc="string"/>
+<type name="str" typedoc="string"/>
+</type>
+<type name="None" typedoc="None"/>
+</type>
 <default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="cookies: Dict[str, str] | RequestsCookieJar | None = None">
 <name>cookies</name>
-<type name="Union" union="true">Dict[str, str] | RequestsCookieJar | None<type name="Dict" typedoc="dictionary">Dict[str, str]<type name="str" typedoc="string">str</type><type name="str" typedoc="string">str</type></type><type name="RequestsCookieJar" typedoc="dictionary">RequestsCookieJar</type><type name="None" typedoc="None">None</type></type>
+<type name="Union" union="true">
+<type name="Dict" typedoc="dictionary">
+<type name="str" typedoc="string"/>
+<type name="str" typedoc="string"/>
+</type>
+<type name="RequestsCookieJar" typedoc="dictionary"/>
+<type name="None" typedoc="None"/>
+</type>
 <default>None</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="proxies: Dict[str, str] | None = None">
 <name>proxies</name>
-<type name="Union" union="true">Dict[str, str] | None<type name="Dict" typedoc="dictionary">Dict[str, str]<type name="str" typedoc="string">str</type><type name="str" typedoc="string">str</type></type><type name="None" typedoc="None">None</type></type>
+<type name="Union" union="true">
+<type name="Dict" typedoc="dictionary">
+<type name="str" typedoc="string"/>
+<type name="str" typedoc="string"/>
+</type>
+<type name="None" typedoc="None"/>
+</type>
 <default>None</default>
 </arg>
 </arguments>
@@ -203,15 +269,15 @@
 <arguments repr="path: str, method: str, status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
-<type name="str" typedoc="string">str</type>
+<type name="str" typedoc="string"/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
 <name>method</name>
-<type name="str" typedoc="string">str</type>
+<type name="str" typedoc="string"/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="status_code: int">
 <name>status_code</name>
-<type name="int" typedoc="integer">int</type>
+<type name="int" typedoc="integer"/>
 </arg>
 </arguments>
 <doc>&lt;p&gt;Validate that performing the &lt;span class="name"&gt;method&lt;/span&gt; operation on &lt;a href="#type-Path" class="name"&gt;path&lt;/a&gt; results in a &lt;span class="name"&gt;status_code&lt;/span&gt; response.&lt;/p&gt;
@@ -223,11 +289,11 @@
 <arguments repr="path: str, method: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
-<type name="str" typedoc="string">str</type>
+<type name="str" typedoc="string"/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
 <name>method</name>
-<type name="str" typedoc="string">str</type>
+<type name="str" typedoc="string"/>
 </arg>
 </arguments>
 <doc>&lt;p&gt;Perform a request for &lt;span class="name"&gt;method&lt;/span&gt; on the &lt;a href="#type-Path" class="name"&gt;path&lt;/a&gt;, with the provided authorization.&lt;/p&gt;
@@ -239,15 +305,15 @@
 <arguments repr="path: str, method: str, expected_status_code: int = 404">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
-<type name="str" typedoc="string">str</type>
+<type name="str" typedoc="string"/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
 <name>method</name>
-<type name="str" typedoc="string">str</type>
+<type name="str" typedoc="string"/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="expected_status_code: int = 404">
 <name>expected_status_code</name>
-<type name="int" typedoc="integer">int</type>
+<type name="int" typedoc="integer"/>
 <default>404</default>
 </arg>
 </arguments>
@@ -261,11 +327,11 @@
 <arguments repr="path: str, method: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
-<type name="str" typedoc="string">str</type>
+<type name="str" typedoc="string"/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
 <name>method</name>
-<type name="str" typedoc="string">str</type>
+<type name="str" typedoc="string"/>
 </arg>
 </arguments>
 <doc>&lt;p&gt;Perform a request for &lt;span class="name"&gt;method&lt;/span&gt; on the &lt;a href="#type-Path" class="name"&gt;path&lt;/a&gt;, with no authorization.&lt;/p&gt;
@@ -274,19 +340,6 @@
 <shortdoc>Perform a request for `method` on the `path`, with no authorization.</shortdoc>
 </kw>
 </keywords>
-<datatypes>
-<enums>
-<enum name="ValidationLevel">
-<doc>&lt;p&gt;The available levels for the response_validation parameter.&lt;/p&gt;</doc>
-<members>
-<member name="DISABLED" value="DISABLED"/>
-<member name="INFO" value="INFO"/>
-<member name="WARN" value="WARN"/>
-<member name="STRICT" value="STRICT"/>
-</members>
-</enum>
-</enums>
-</datatypes>
 <typedocs>
 <type name="Any" type="Standard">
 <doc>&lt;p&gt;Any value is accepted. No conversion is done.&lt;/p&gt;</doc>
