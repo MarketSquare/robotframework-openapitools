@@ -52,9 +52,13 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             source=source,
             origin=origin,
             base_path=base_path,
+            response_validation=response_validation,
+            disable_server_validation=disable_server_validation,
             mappings_path=mappings_path,
             default_id_property_name=default_id_property_name,
+            invalid_property_default_response=invalid_property_default_response,
             faker_locale=faker_locale,
+            require_body_for_invalid_url=require_body_for_invalid_url,
             recursion_limit=recursion_limit,
             recursion_default=recursion_default,
             username=username,
@@ -67,10 +71,6 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             cookies=cookies,
             proxies=proxies,
         )
-        self.response_validation = response_validation
-        self.disable_server_validation = disable_server_validation
-        self.require_body_for_invalid_url = require_body_for_invalid_url
-        self.invalid_property_default_response = invalid_property_default_response
 
     @keyword
     def test_unauthorized(self, path: str, method: str) -> None:

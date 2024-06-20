@@ -149,6 +149,7 @@ from openapi_core.contrib.requests import (
     RequestsOpenAPIResponse,
 )
 from openapi_core.exceptions import OpenAPIError
+from openapi_core.templating.paths.exceptions import ServerNotFound
 from openapi_core.validation.exceptions import ValidationError
 from openapi_core.validation.response.exceptions import ResponseValidationError
 from openapi_core.validation.schemas.exceptions import InvalidSchemaValue
@@ -157,7 +158,7 @@ from prance.util.url import ResolutionError
 from requests import Response, Session
 from requests.auth import AuthBase, HTTPBasicAuth
 from requests.cookies import RequestsCookieJar as CookieJar
-from robot.api import Failure
+from robot.api.exceptions import Failure
 from robot.api.deco import keyword, library
 from robot.libraries.BuiltIn import BuiltIn
 
@@ -440,10 +441,13 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         source: str,
         origin: str = "",
         base_path: str = "",
+        response_validation: ValidationLevel = ValidationLevel.WARN,
+        disable_server_validation: bool = True,
         mappings_path: Union[str, Path] = "",
         invalid_property_default_response: int = 422,
         default_id_property_name: str = "id",
         faker_locale: Optional[Union[str, List[str]]] = None,
+        require_body_for_invalid_url: bool = False,
         recursion_limit: int = 1,
         recursion_default: Any = {},
         username: str = "",
@@ -470,6 +474,25 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         section in the openapi document.
         E.g. ``/petshop/v2``.
 
+        == Test case execution ==
+
+        === response_validation ===
+         By default, a ``WARN`` is logged when the Response received after a Request does not
+         comply with the schema as defined in the openapi document for the given operation. The
+         following values are supported:
+
+         - ``DISABLED``: All Response validation errors will be ignored
+         - ``INFO``: Any Response validation erros will be logged at ``INFO`` level
+         - ``WARN``: Any Response validation erros will be logged at ``WARN`` level
+         - ``STRICT``: The Test Case will fail on any Response validation errors
+
+         === disable_server_validation ===
+         If enabled by setting this parameter to ``True``, the Response validation will also
+         include possible errors for Requests made to a server address that is not defined in
+         the list of servers in the openapi document. This generally means that if there is a
+         mismatch, every Test Case will raise this error. Note that ``localhost`` and
+         ``127.0.0.1`` are not considered the same by Response validation.
+
         == API-specific configurations ==
 
         === mappings_path ===
@@ -495,6 +518,14 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         === faker_locale ===
         A locale string or list of locale strings to pass to the Faker library to be
         used in generation of string data for supported format types.
+
+        === require_body_for_invalid_url ===
+         When a request is made against an invalid url, this usually is because of a "404" request;
+         a request for a resource that does not exist. Depending on API implementation, when a
+         request with a missing or invalid request body is made on a non-existent resource,
+         either a 404 or a 422 or 400 Response is normally returned. If the API being tested
+         processes the request body before checking if the requested resource exists, set
+         this parameter to True.
 
         == Parsing parameters ==
 
@@ -552,6 +583,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         self._source = source
         self._origin = origin
         self._base_path = base_path
+        self.response_validation = response_validation
+        self.disable_server_validation = disable_server_validation
         self._recursion_limit = recursion_limit
         self._recursion_default = recursion_default
         self.session = Session()
@@ -596,8 +629,10 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             )
         if faker_locale:
             FAKE.set_locale(locale=faker_locale)
+        self.require_body_for_invalid_url = require_body_for_invalid_url
         # update the globally available DEFAULT_ID_PROPERTY_NAME to the provided value
         DEFAULT_ID_PROPERTY_NAME.id_property_name = default_id_property_name
+        self._server_validation_warning_logged = False
 
     @property
     def origin(self) -> str:
@@ -1841,7 +1876,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                 request=RequestsOpenAPIRequest(response.request),
                 response=RequestsOpenAPIResponse(response),
             )
-        except ResponseValidationError as exception:
+        except (ResponseValidationError, ServerNotFound) as exception:
             errors: List[InvalidSchemaValue] = exception.__cause__
             validation_errors: Optional[List[ValidationError]] = getattr(
                 errors, "schema_errors", None
@@ -1856,6 +1891,16 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             else:
                 error_message = str(exception)
 
+            if isinstance(exception, ServerNotFound):
+                if not self._server_validation_warning_logged:
+                    logger.warning(
+                        f"ServerNotFound was raised during response validation. "
+                        f"Due to this, no full response validation will be performed."
+                        f"\nThe original error was: {error_message}"
+                    )
+                    self._server_validation_warning_logged = True
+                if self.disable_server_validation:
+                    return
             if response.status_code == self.invalid_property_default_response:
                 logger.debug(error_message)
                 return
