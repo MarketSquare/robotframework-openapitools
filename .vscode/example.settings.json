@@ -1,5 +1,4 @@
 {
-    "robotcode.robot.variables": {
-        "ROOT": "/workspaces/robotframework-openapitools"
-    }
+    "debugpy.debugJustMyCode": false,
+    "robotcode.debug.attachPython": true
 }

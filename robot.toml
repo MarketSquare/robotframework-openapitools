@@ -1,0 +1,5 @@
+outputdir = "tests/logs"
+log-level = "TRACE:INFO"
+
+[variables]
+ROOT = "/workspaces/robotframework-openapitools"
