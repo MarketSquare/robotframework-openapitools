@@ -1,4 +1,4 @@
-outputdir = "tests/logs"
+output-dir = "tests/logs"
 log-level = "TRACE:INFO"
 
 [variables]
