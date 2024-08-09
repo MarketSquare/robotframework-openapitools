@@ -86,5 +86,5 @@ def get_variables():
         "EMPLOYEE_DTO": employee_dto,
         "EXTRA_HEADERS": extra_headers,
         "API_KEY": {"api_key": "Super secret key"},
-        "DIGEST_AUTH": HTTPDigestAuth(username="Jane", password="Joe")
+        "DIGEST_AUTH": HTTPDigestAuth(username="Jane", password="Joe"),
     }

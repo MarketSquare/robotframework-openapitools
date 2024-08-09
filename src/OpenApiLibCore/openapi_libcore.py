@@ -158,8 +158,8 @@ from prance.util.url import ResolutionError
 from requests import Response, Session
 from requests.auth import AuthBase, HTTPBasicAuth
 from requests.cookies import RequestsCookieJar as CookieJar
-from robot.api.exceptions import Failure
 from robot.api.deco import keyword, library
+from robot.api.exceptions import Failure
 from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore import value_utils
@@ -659,7 +659,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
         After calling this keyword, subsequent requests will use the provided token.
         """
-        self.security_token=security_token
+        self.security_token = security_token
 
     @keyword
     def set_basic_auth(self, username: str, password: str) -> None:
