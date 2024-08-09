@@ -134,7 +134,7 @@ from OpenApiDriver.openapi_executors import OpenApiExecutors, ValidationLevel
 from OpenApiDriver.openapi_reader import OpenApiReader
 
 
-@library(scope="TEST SUITE", doc_format="ROBOT")
+@library(scope="SUITE", doc_format="ROBOT")
 class OpenApiDriver(OpenApiExecutors, DataDriver):
     """
     Visit the [https://github.com/MarketSquare/robotframework-openapidriver | library page]

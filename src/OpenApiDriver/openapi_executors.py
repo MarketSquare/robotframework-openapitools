@@ -20,7 +20,7 @@ run_keyword = BuiltIn().run_keyword
 logger = getLogger(__name__)
 
 
-@library(scope="TEST SUITE", doc_format="ROBOT")
+@library(scope="SUITE", doc_format="ROBOT")
 class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-attributes
     """Main class providing the keywords and core logic to perform endpoint validations."""
 
