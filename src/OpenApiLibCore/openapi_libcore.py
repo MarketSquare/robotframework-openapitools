@@ -427,7 +427,7 @@ class RequestData:
         return {k: v for k, v in self.headers.items() if k in required_parameters}
 
 
-@library(scope="TEST SUITE", doc_format="ROBOT")
+@library(scope="SUITE", doc_format="ROBOT")
 class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
     """
     Main class providing the keywords and core logic to interact with an OpenAPI server.
