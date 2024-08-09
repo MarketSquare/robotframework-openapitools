@@ -1646,9 +1646,16 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         params: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
         json_data: Optional[JSON] = None,
+        data: Any = None,
+        files: Any = None,
     ) -> Response:
         """
         Perform a request using the security token or authentication set in the library.
+
+        `json_data`, `data` and `files` are passed to `requests.request`s `json`,
+        `data` and `files` parameters unaltered.
+        See the requests documentation for details:
+        https://requests.readthedocs.io/en/latest/api/#requests.request
 
         > Note: provided username / password or auth objects take precedence over token
             based security
@@ -1667,6 +1674,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             params=params,
             headers=headers,
             json=json_data,
+            data=data,
+            files=files,
             cookies=self.cookies,
             auth=self.auth,
             proxies=self.proxies,
