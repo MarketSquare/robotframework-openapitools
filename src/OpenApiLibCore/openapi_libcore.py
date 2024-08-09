@@ -592,7 +592,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         # if multiple are provided, username and password take precedence
         self.security_token = security_token
         self.auth = auth
-        if username and password:
+        if username:
             self.auth = HTTPBasicAuth(username, password)
         # Robot Framework does not allow users to create tuples and requests
         # does not accept lists, so perform the conversion here
@@ -641,7 +641,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
     @keyword
     def set_origin(self, origin: str) -> None:
         """
-        Update the `origin` after the library is imported.
+        Set the `origin` after the library is imported.
 
         This can be done during the `Suite setup` when using DataDriver in situations
         where the OpenAPI document is available on disk but the target host address is
@@ -651,6 +651,47 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         target another server that hosts an API that complies to the same OAS.
         """
         self._origin = origin
+
+    @keyword
+    def set_security_token(self, security_token: str) -> None:
+        """
+        Set the `security_token` after the library is imported.
+
+        After calling this keyword, subsequent requests will use the provided token.
+        """
+        self.security_token=security_token
+
+    @keyword
+    def set_basic_auth(self, username: str, password: str) -> None:
+        """
+        Set the `username` and `password` used for basic
+        authentication after the library is imported.
+
+        After calling this keyword, subsequent requests
+        will use the provided credentials.
+        """
+        if username:
+            self.auth = HTTPBasicAuth(username, password)
+
+    @keyword
+    def set_auth(self, auth: AuthBase) -> None:
+        """
+        Set the `auth` used for authentication after the library is imported.
+
+        After calling this keyword, subsequent requests
+        will use the provided `auth` instance.
+        """
+        self.auth = auth
+
+    @keyword
+    def set_extra_headers(self, extra_headers: Dict[str, str]) -> None:
+        """
+        Set the `extra_headers` used in requests after the library is imported.
+
+        After calling this keyword, subsequent requests
+        will use the provided `extra_headers`.
+        """
+        self.extra_headers = extra_headers
 
     @property
     def base_url(self) -> str:
