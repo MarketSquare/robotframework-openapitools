@@ -29,7 +29,7 @@ include = ["*.libspec"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-robotframework = ">=6.0.0, !=7.0.0"
+robotframework = {version = ">=6.0.0, !=7.0.0", allow-prereleases = false }
 robotframework-datadriver = ">=1.10.0"
 requests = "^2.31.0"
 prance = {version = "^23", extras = ["CLI"]}
