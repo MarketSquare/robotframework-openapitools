@@ -1873,6 +1873,11 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             response_spec["content"][content_type]["schema"]
         )
 
+        response_types = response_schema.get("types")
+        if response_types:
+            # In case of oneOf / anyOf there can be multiple possible response types
+            # which makes generic validation too complex
+            return None
         response_type = response_schema.get("type", "undefined")
         if response_type not in ["object", "array"]:
             self._validate_value_type(value=json_response, expected_type=response_type)
