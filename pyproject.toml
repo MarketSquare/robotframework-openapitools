@@ -31,14 +31,14 @@ include = ["*.libspec"]
 python = "^3.8"
 robotframework = {version = ">=6.0.0, !=7.0.0", allow-prereleases = false }
 robotframework-datadriver = ">=1.10.0"
-requests = "^2.31.0"
-prance = {version = "^23", extras = ["CLI"]}
+requests = ">=2.31.0"
+prance = {version = ">=23", extras = ["CLI"]}
 Faker = ">=23.1.0"
-rstr = "^3.2.0"
-openapi-core = "^0.19.0"
-rich_click = "^1.7.0"
+rstr = ">=3.2.0"
+openapi-core = ">=0.19.0"
+rich_click = ">=1.7.0"
 black = ">=24.1.0"
-Jinja2 = "^3.1.2"
+Jinja2 = ">=3.1.2"
 
 [tool.poetry.group.dev.dependencies]
 invoke = ">=2.2.0"
