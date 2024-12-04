@@ -80,7 +80,7 @@ class EmployeeDto(Dto):
                 property_name="parttime_day",
                 values=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
                 treat_as_mandatory=True,
-            )
+            ),
         ]
         return relations
 
