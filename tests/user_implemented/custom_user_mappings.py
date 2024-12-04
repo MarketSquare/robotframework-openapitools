@@ -89,7 +89,11 @@ class EnergyLabelDto(Dto):
     @staticmethod
     def get_relations() -> List[Relation]:
         relations: List[Relation] = [
-            PathPropertiesConstraint(path="/energy_label/1111AA/10"),
+            PathPropertiesConstraint(
+                path="/energy_label/1111AA/10",
+                invalid_value="/energy_label/0123AA",
+                invalid_value_error_code=422,
+            ),
         ]
         return relations
 

@@ -99,6 +99,8 @@ class PathPropertiesConstraint(ResourceRelation):
 
     path: str
     property_name: str = "id"
+    invalid_value: Any = NOT_SET
+    invalid_value_error_code: int = 422
     error_code: int = 404
 
 
@@ -191,6 +193,14 @@ class Dto(ABC):
         ]
         return relations
 
+    def get_body_relations_for_error_code(self, error_code: int) -> List[Relation]:
+        """
+        Return the list of Relations associated with the given error_code that are
+        applicable to the body / payload of the request.
+        """
+        all_relations = self.get_relations_for_error_code(error_code=error_code)
+        return [r for r in all_relations if not isinstance(r, PathPropertiesConstraint)]
+
     def get_invalidated_data(
         self,
         schema: Dict[str, Any],
@@ -208,7 +218,7 @@ class Dto(ABC):
             r for r in relations if not isinstance(r, PathPropertiesConstraint)
         ]
         property_names = [r.property_name for r in relations]
-        if status_code == invalid_property_default_code:
+        if status_code == invalid_property_default_code and schema.get("properties"):
             # add all properties defined in the schema, including optional properties
             property_names.extend((schema["properties"].keys()))
         if not property_names:

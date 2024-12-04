@@ -1353,13 +1353,32 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         return json_data
 
     @keyword
-    def get_invalidated_url(self, valid_url: str) -> Optional[str]:
+    def get_invalidated_url(
+        self,
+        valid_url: str,
+        path: str = "",
+        method: str = "",
+        expected_status_code: int = 404,
+    ) -> Optional[str]:
         """
         Return an url with all the path parameters in the `valid_url` replaced by a
-        random UUID.
+        random UUID if no PathPropertiesConstraint is mapped for the `path`, `method`
+        and `expected_status_code`.
+        If a PathPropertiesConstraint is mapped, the `invalid_value` is returned.
 
         Raises ValueError if the valid_url cannot be invalidated.
         """
+        dto_class = self.get_dto_class(endpoint=path, method=method)
+        relations = dto_class.get_relations()
+        paths = [
+            p.invalid_value
+            for p in relations
+            if isinstance(p, PathPropertiesConstraint)
+            and p.invalid_value_error_code == expected_status_code
+        ]
+        if paths:
+            url = f"{self.base_url}{choice(paths)}"
+            return url
         parameterized_endpoint = self.get_parameterized_endpoint_from_url(valid_url)
         parameterized_url = self.base_url + parameterized_endpoint
         valid_url_parts = list(reversed(valid_url.split("/")))
@@ -1403,6 +1422,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         """
         method = method.lower()
         data_relations = request_data.dto.get_relations_for_error_code(status_code)
+        data_relations = [
+            r for r in data_relations if not isinstance(r, PathPropertiesConstraint)
+        ]
         if not data_relations:
             if not request_data.dto_schema:
                 raise ValueError(

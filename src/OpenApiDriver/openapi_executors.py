@@ -118,8 +118,9 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         Perform a request for the provided 'path' and 'method' where the url for
         the `path` is invalidated.
 
-        This keyword will be `SKIPPED` if the path contains no parts that
-        can be invalidated.
+        This keyword will be `SKIPPED` if the path contains no parts
+        that can be invalidated and there is no mapping for a
+        PathPropertiesConstraint for the `expected_status_code`.
 
         The optional `expected_status_code` parameter (default: 404) can be set to the
         expected status code for APIs that do not return a 404 on invalid urls.
@@ -131,7 +132,11 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         """
         valid_url: str = run_keyword("get_valid_url", path, method)
 
-        if not (url := run_keyword("get_invalidated_url", valid_url)):
+        if not (
+            url := run_keyword(
+                "get_invalidated_url", valid_url, path, method, expected_status_code
+            )
+        ):
             raise SkipExecution(
                 f"Path {path} does not contain resource references that "
                 f"can be invalidated."
@@ -194,7 +199,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             }
             invalidation_keywords = []
 
-            if request_data.dto.get_relations_for_error_code(status_code):
+            if request_data.dto.get_body_relations_for_error_code(status_code):
                 invalidation_keywords.append("get_invalid_json_data")
             if request_data.dto.get_parameter_relations_for_error_code(status_code):
                 invalidation_keywords.append("get_invalidated_parameters")
