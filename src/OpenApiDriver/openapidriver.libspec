@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2024-08-09T12:54:30+00:00" specversion="6" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapidriver.py" lineno="352">
-<version>0.3.0</version>
+<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2024-12-04T12:16:37+00:00" specversion="6" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapidriver.py" lineno="352">
+<version>0.4.0</version>
 <doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;</doc>
 <tags>
 </tags>
@@ -265,7 +265,7 @@
 </init>
 </inits>
 <keywords>
-<kw name="Test Endpoint" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="156">
+<kw name="Test Endpoint" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="161">
 <arguments repr="path: str, method: str, status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
@@ -318,7 +318,7 @@
 </arg>
 </arguments>
 <doc>&lt;p&gt;Perform a request for the provided 'path' and 'method' where the url for the &lt;a href="#type-Path" class="name"&gt;path&lt;/a&gt; is invalidated.&lt;/p&gt;
-&lt;p&gt;This keyword will be &lt;span class="name"&gt;SKIPPED&lt;/span&gt; if the path contains no parts that can be invalidated.&lt;/p&gt;
+&lt;p&gt;This keyword will be &lt;span class="name"&gt;SKIPPED&lt;/span&gt; if the path contains no parts that can be invalidated and there is no mapping for a PathPropertiesConstraint for the &lt;span class="name"&gt;expected_status_code&lt;/span&gt;.&lt;/p&gt;
 &lt;p&gt;The optional &lt;span class="name"&gt;expected_status_code&lt;/span&gt; parameter (default: 404) can be set to the expected status code for APIs that do not return a 404 on invalid urls.&lt;/p&gt;
 &lt;p&gt;&amp;gt; Note: Depending on API design, the url may be validated before or after validation of headers, query parameters and / or (json) body. By default, no parameters are send with the request. The &lt;span class="name"&gt;require_body_for_invalid_url&lt;/span&gt; parameter can be set to &lt;span class="name"&gt;True&lt;/span&gt; if needed.&lt;/p&gt;</doc>
 <shortdoc>Perform a request for the provided 'path' and 'method' where the url for the `path` is invalidated.</shortdoc>
