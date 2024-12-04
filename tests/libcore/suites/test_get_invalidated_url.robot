@@ -39,3 +39,13 @@ Test Get Invalidated Url For Endpoint With Multiple Path Ids
     ${invalidated}=    Get Invalidated Url    valid_url=${url}
     Should Not Be Equal    ${url}    ${invalidated}
     Should Start With    ${invalidated}    http://localhost:8000/energy_label/1111AA/
+
+Test Get Invalidated Url For PathPropertiesConstraint Invalid Value Status Code
+    ${url}=    Get Valid Url    endpoint=/energy_label/{zipcode}/{home_number}    method=get
+    ${invalidated}=    Get Invalidated Url
+    ...    valid_url=${url}
+    ...    path=/energy_label/{zipcode}/{home_number}
+    ...    method=get
+    ...    expected_status_code=422
+    Should Not Be Equal    ${url}    ${invalidated}
+    Should Start With    ${invalidated}    http://localhost:8000/energy_label/0123AA

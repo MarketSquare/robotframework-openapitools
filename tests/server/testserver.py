@@ -156,12 +156,15 @@ def post_event(event: Event) -> Event:
     "/energy_label/{zipcode}/{home_number}",
     status_code=200,
     response_model=Message,
+    responses={422: {"model": Detail}},
 )
 def get_energy_label(
     zipcode: str = Path(..., min_length=6, max_length=6),
     home_number: int = Path(..., ge=1),
     extension: Optional[str] = Query(" ", min_length=1, max_length=9),
 ) -> Message:
+    if zipcode.startswith("0"):
+        raise HTTPException(status_code=422, detail="Zipcode is not valid.")
     if not (labels_for_zipcode := ENERGY_LABELS.get(zipcode)):
         return Message(message=EnergyLabel.X)
     if not (labels_for_home_number := labels_for_zipcode.get(home_number)):
