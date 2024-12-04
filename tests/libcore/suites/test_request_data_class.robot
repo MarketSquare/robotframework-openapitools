@@ -60,8 +60,9 @@ Test Get Required Properties Dict
     Should Contain    ${request_data.dto.as_dict()}    parttime_day
     Should Not Be Empty    ${request_data.dto.name}
     ${required_properties}=    Set Variable    ${request_data.get_required_properties_dict()}
-    Should Not Contain    ${required_properties}    parttime_day
     Should Contain    ${required_properties}    name
+    # parttime_day is configured with treat_as_mandatory=True
+    Should Contain    ${required_properties}    parttime_day
 
 Test Get Required Params
     ${request_data}=    Get Request Data    endpoint=/available_employees    method=get

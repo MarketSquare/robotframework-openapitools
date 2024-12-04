@@ -76,10 +76,11 @@ Test Get Invalidated Parameters Adds Optional Parameter If Not Provided
     ${headers}=    Set Variable    ${invalidated[1]}
     Length Should Be    ${headers}    1
 
+Test Get Invalidated Parameters Adds Optional Parameter If treat_as_mandatory Is True
     ${request_data}=    Get Request Data    endpoint=/energy_label/{zipcode}/{home_number}    method=get
     Evaluate    ${request_data.params.clear()} is None
     ${invalidated}=    Get Invalidated Parameters
     ...    status_code=422
     ...    request_data=${request_data}
     ${extension}=    Set Variable    ${invalidated[0].get("extension")}
-    Length Should Be    ${extension}    0
+    Length Should Be    ${extension}    20

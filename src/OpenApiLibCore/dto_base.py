@@ -111,6 +111,7 @@ class PropertyValueConstraint(ResourceRelation):
     invalid_value: Any = NOT_SET
     invalid_value_error_code: int = 422
     error_code: int = 422
+    treat_as_mandatory: bool = False
 
 
 @dataclass
@@ -210,15 +211,13 @@ class Dto(ABC):
         if status_code == invalid_property_default_code:
             # add all properties defined in the schema, including optional properties
             property_names.extend((schema["properties"].keys()))
-            # remove duplicates
-            property_names = list(set(property_names))
         if not property_names:
             raise ValueError(
                 f"No property can be invalidated to cause status_code {status_code}"
             )
-        # shuffle the property_names so different properties on the Dto are invalidated
-        # when rerunning the test
-        shuffle(property_names)
+        # Remove duplicates, then shuffle the property_names so different properties on
+        # the Dto are invalidated when rerunning the test.
+        shuffle(list(set(property_names)))
         for property_name in property_names:
             # if possible, invalidate a constraint but send otherwise valid data
             id_dependencies = [

@@ -76,6 +76,11 @@ class EmployeeDto(Dto):
                 invalid_value_error_code=403,
                 error_code=422,
             ),
+            PropertyValueConstraint(
+                property_name="parttime_day",
+                values=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                treat_as_mandatory=True,
+            )
         ]
         return relations
 
@@ -85,6 +90,17 @@ class EnergyLabelDto(Dto):
     def get_relations() -> List[Relation]:
         relations: List[Relation] = [
             PathPropertiesConstraint(path="/energy_label/1111AA/10"),
+        ]
+        return relations
+
+    @staticmethod
+    def get_parameter_relations() -> List[Relation]:
+        relations: List[Relation] = [
+            PropertyValueConstraint(
+                property_name="extension",
+                values=["E", "boven", "A4.1"],
+                treat_as_mandatory=True,
+            )
         ]
         return relations
 
