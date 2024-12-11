@@ -1,6 +1,6 @@
 [tool.poetry]
 name="robotframework-openapitools"
-version = "0.4.0"
+version = "1.0.0"
 description = "A set of Robot Framework libraries to test APIs for which the OAS is available."
 license = "Apache-2.0"
 authors = [
@@ -28,7 +28,7 @@ packages = [
 include = ["*.libspec"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.10"
 robotframework = {version = ">=6.0.0, !=7.0.0", allow-prereleases = false }
 robotframework-datadriver = ">=1.10.0"
 requests = ">=2.31.0"
