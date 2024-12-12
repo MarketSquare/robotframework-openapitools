@@ -1,6 +1,6 @@
 # pylint: disable="missing-class-docstring", "missing-function-docstring"
 import unittest
-from typing import Any, List
+from typing import Any
 
 from OpenApiLibCore import IGNORE, value_utils
 
@@ -105,7 +105,7 @@ class TestInvalidValueFromConstraint(unittest.TestCase):
         self.assertIsInstance(value, float)
 
     def test_array(self) -> None:
-        values: List[Any] = [[42]]
+        values: list[Any] = [[42]]
         value = value_utils.get_invalid_value_from_constraint(
             values_from_constraint=values,
             value_type="array",

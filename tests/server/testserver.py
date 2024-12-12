@@ -2,7 +2,6 @@
 import datetime
 from enum import Enum
 from sys import float_info
-from typing import Dict, List, Optional, Union
 from uuid import uuid4
 
 from fastapi import FastAPI, Header, HTTPException, Path, Query, Response
@@ -57,13 +56,13 @@ class Detail(BaseModel):
 
 class Event(BaseModel, extra="forbid"):
     message: Message
-    details: List[Detail]
+    details: list[Detail]
 
 
 class WageGroup(BaseModel):
     wagegroup_id: str
-    hourly_rate: Union[float, int] = Field(alias="hourly-rate")
-    overtime_percentage: Optional[int] = DEPRECATED
+    hourly_rate: float | int = Field(alias="hourly-rate")
+    overtime_percentage: int | None = DEPRECATED
 
 
 class EmployeeDetails(BaseModel):
@@ -72,28 +71,28 @@ class EmployeeDetails(BaseModel):
     employee_number: int
     wagegroup_id: str
     date_of_birth: datetime.date
-    parttime_day: Optional[WeekDay] = None
+    parttime_day: WeekDay | None = None
 
 
 class Employee(BaseModel):
     name: str
     wagegroup_id: str
     date_of_birth: datetime.date
-    parttime_day: Optional[WeekDay] = None
+    parttime_day: WeekDay | None = None
 
 
 class EmployeeUpdate(BaseModel):
-    name: Optional[str] = None
-    employee_number: Optional[int] = None
-    wagegroup_id: Optional[str] = None
-    date_of_birth: Optional[datetime.date] = None
-    parttime_day: Optional[WeekDay] = None
+    name: str | None = None
+    employee_number: int | None = None
+    wagegroup_id: str | None = None
+    date_of_birth: datetime.date | None = None
+    parttime_day: WeekDay | None = None
 
 
-WAGE_GROUPS: Dict[str, WageGroup] = {}
-EMPLOYEES: Dict[str, EmployeeDetails] = {}
+WAGE_GROUPS: dict[str, WageGroup] = {}
+EMPLOYEES: dict[str, EmployeeDetails] = {}
 EMPLOYEE_NUMBERS = iter(range(1, 1000))
-ENERGY_LABELS: Dict[str, Dict[int, Dict[str, EnergyLabel]]] = {
+ENERGY_LABELS: dict[str, dict[int, dict[str, EnergyLabel]]] = {
     "1111AA": {
         10: {
             "": EnergyLabel.A,
@@ -101,7 +100,7 @@ ENERGY_LABELS: Dict[str, Dict[int, Dict[str, EnergyLabel]]] = {
         },
     }
 }
-EVENTS: List[Event] = [
+EVENTS: list[Event] = [
     Event(message=Message(message="Hello?"), details=[Detail(detail="First post")]),
     Event(message=Message(message="First!"), details=[Detail(detail="Second post")]),
 ]
@@ -132,12 +131,12 @@ def get_message(
 
 
 # deliberate trailing /
-@app.get("/events/", status_code=200, response_model=List[Event])
+@app.get("/events/", status_code=200, response_model=list[Event])
 def get_events(
-    search_strings: Optional[List[str]] = Query(default=[]),
-) -> List[Event]:
+    search_strings: list[str] = Query(default=[]),
+) -> list[Event]:
     if search_strings:
-        result: List[Event] = []
+        result: list[Event] = []
         for search_string in search_strings:
             result.extend([e for e in EVENTS if search_string in e.message.message])
         return result
@@ -161,7 +160,7 @@ def post_event(event: Event) -> Event:
 def get_energy_label(
     zipcode: str = Path(..., min_length=6, max_length=6),
     home_number: int = Path(..., ge=1),
-    extension: Optional[str] = Query(" ", min_length=1, max_length=9),
+    extension: str = Query(" ", min_length=1, max_length=9),
 ) -> Message:
     if zipcode.startswith("0"):
         raise HTTPException(status_code=422, detail="Zipcode is not valid.")
@@ -254,10 +253,10 @@ def delete_wagegroup(wagegroup_id: str) -> None:
 @app.get(
     "/wagegroups/{wagegroup_id}/employees",
     status_code=200,
-    response_model=List[EmployeeDetails],
+    response_model=list[EmployeeDetails],
     responses={404: {"model": Detail}},
 )
-def get_employees_in_wagegroup(wagegroup_id: str) -> List[EmployeeDetails]:
+def get_employees_in_wagegroup(wagegroup_id: str) -> list[EmployeeDetails]:
     if wagegroup_id not in WAGE_GROUPS:
         raise HTTPException(status_code=404, detail="Wage group not found.")
     return [e for e in EMPLOYEES.values() if e.wagegroup_id == wagegroup_id]
@@ -284,7 +283,7 @@ def post_employee(employee: Employee) -> EmployeeDetails:
     new_employee = EmployeeDetails(
         identification=uuid4().hex,
         employee_number=next(EMPLOYEE_NUMBERS),
-        **employee.dict(),
+        **employee.model_dump(),
     )
     EMPLOYEES[new_employee.identification] = new_employee
     return new_employee
@@ -293,9 +292,9 @@ def post_employee(employee: Employee) -> EmployeeDetails:
 @app.get(
     "/employees",
     status_code=200,
-    response_model=List[EmployeeDetails],
+    response_model=list[EmployeeDetails],
 )
-def get_employees() -> List[EmployeeDetails]:
+def get_employees() -> list[EmployeeDetails]:
     return list(EMPLOYEES.values())
 
 
@@ -354,8 +353,8 @@ def patch_employee(employee_id: str, employee: EmployeeUpdate) -> JSONResponse:
     return JSONResponse(content=True)
 
 
-@app.get("/available_employees", status_code=200, response_model=List[EmployeeDetails])
-def get_available_employees(weekday: WeekDay = Query(...)) -> List[EmployeeDetails]:
+@app.get("/available_employees", status_code=200, response_model=list[EmployeeDetails])
+def get_available_employees(weekday: WeekDay = Query(...)) -> list[EmployeeDetails]:
     return [
         e for e in EMPLOYEES.values() if getattr(e, "parttime_day", None) != weekday
     ]

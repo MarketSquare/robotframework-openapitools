@@ -5,12 +5,12 @@ import datetime
 from copy import deepcopy
 from logging import getLogger
 from random import choice, randint, uniform
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable
 
 import faker
 import rstr
 
-JSON = Union[Dict[str, "JSON"], List["JSON"], str, int, float, bool, None]
+JSON = dict[str, "JSON"] | list["JSON"] | str | int | float | bool | None
 
 logger = getLogger(__name__)
 
@@ -24,7 +24,7 @@ class LocalizedFaker:
     def __init__(self) -> None:
         self.fake = faker.Faker()
 
-    def set_locale(self, locale: Union[str, List[str]]) -> None:
+    def set_locale(self, locale: str | list[str]) -> None:
         """Update the fake attribute with a Faker instance with the provided locale."""
         self.fake = faker.Faker(locale)
 
@@ -126,7 +126,7 @@ def python_type_by_json_type_name(type_name: str) -> Any:
     raise ValueError(f"No Python type mapping for JSON type '{type_name}' available.")
 
 
-def get_valid_value(value_schema: Dict[str, Any]) -> Any:
+def get_valid_value(value_schema: dict[str, Any]) -> Any:
     """Return a random value that is valid under the provided value_schema."""
     value_schema = deepcopy(value_schema)
 
@@ -156,9 +156,9 @@ def get_valid_value(value_schema: Dict[str, Any]) -> Any:
 
 
 def get_invalid_value(
-    value_schema: Dict[str, Any],
+    value_schema: dict[str, Any],
     current_value: Any,
-    values_from_constraint: Optional[List[Any]] = None,
+    values_from_constraint: list[Any] | None = None,  # FIXME: default empty list?
 ) -> Any:
     """Return a random value that violates the provided value_schema."""
     value_schema = deepcopy(value_schema)
@@ -212,7 +212,7 @@ def get_invalid_value(
     return FAKE.uuid()
 
 
-def get_random_int(value_schema: Dict[str, Any]) -> int:
+def get_random_int(value_schema: dict[str, Any]) -> int:
     """Generate a random int within the min/max range of the schema, if specified."""
     # Use int32 integers if "format" does not specify int64
     property_format = value_schema.get("format", "int32")
@@ -241,7 +241,7 @@ def get_random_int(value_schema: Dict[str, Any]) -> int:
     return randint(minimum, maximum)
 
 
-def get_random_float(value_schema: Dict[str, Any]) -> float:
+def get_random_float(value_schema: dict[str, Any]) -> float:
     """Generate a random float within the min/max range of the schema, if specified."""
     # Python floats are already double precision, so no check for "format"
     minimum = value_schema.get("minimum")
@@ -289,15 +289,14 @@ def get_random_float(value_schema: Dict[str, Any]) -> float:
     return uniform(minimum, maximum)
 
 
-def get_random_string(value_schema: Dict[str, Any]) -> Union[bytes, str]:
+def get_random_string(value_schema: dict[str, Any]) -> bytes | str:
     """Generate a random string within the min/max length in the schema, if specified."""
     # if a pattern is provided, format and min/max length can be ignored
     if pattern := value_schema.get("pattern"):
         return rstr.xeger(pattern)
     minimum = value_schema.get("minLength", 0)
     maximum = value_schema.get("maxLength", 36)
-    if minimum > maximum:
-        maximum = minimum
+    maximum = max(minimum, maximum)
     format_ = value_schema.get("format", "uuid")
     # byte is a special case due to the required encoding
     if format_ == "byte":
@@ -325,12 +324,11 @@ def fake_string(string_format: str) -> str:
     return value
 
 
-def get_random_array(value_schema: Dict[str, Any]) -> List[Any]:
+def get_random_array(value_schema: dict[str, Any]) -> list[Any]:
     """Generate a list with random elements as specified by the schema."""
     minimum = value_schema.get("minItems", 0)
     maximum = value_schema.get("maxItems", 1)
-    if minimum > maximum:
-        maximum = minimum
+    maximum = max(minimum, maximum)
     items_schema = value_schema["items"]
     value = []
     for _ in range(maximum):
@@ -340,7 +338,7 @@ def get_random_array(value_schema: Dict[str, Any]) -> List[Any]:
 
 
 def get_invalid_value_from_constraint(
-    values_from_constraint: List[Any], value_type: str
+    values_from_constraint: list[Any], value_type: str
 ) -> Any:
     """
     Return a value of the same type as the values in the values_from_constraints that
@@ -403,7 +401,7 @@ def get_invalid_value_from_constraint(
     return invalid_value if invalid_value else None
 
 
-def get_invalid_value_from_enum(values: List[Any], value_type: str) -> Any:
+def get_invalid_value_from_enum(values: list[Any], value_type: str) -> Any:
     """Return a value not in the enum by combining the enum values."""
     if value_type == "string":
         invalid_value: Any = ""
@@ -437,7 +435,7 @@ def get_invalid_value_from_enum(values: List[Any], value_type: str) -> Any:
     return invalid_value
 
 
-def get_value_out_of_bounds(value_schema: Dict[str, Any], current_value: Any) -> Any:
+def get_value_out_of_bounds(value_schema: dict[str, Any], current_value: Any) -> Any:
     """
     Return a value just outside the value or length range if specified in the
     provided schema, otherwise None is returned.

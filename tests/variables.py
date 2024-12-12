@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Any
 
 from requests.auth import HTTPDigestAuth
 
@@ -16,8 +16,8 @@ from OpenApiLibCore import (
 
 class WagegroupDto(Dto):
     @staticmethod
-    def get_relations() -> List[Relation]:
-        relations: List[Relation] = [
+    def get_relations() -> list[Relation]:
+        relations: list[Relation] = [
             UniquePropertyValueConstraint(
                 property_name="id",
                 value="Teapot",
@@ -44,8 +44,8 @@ class WagegroupDto(Dto):
 
 class EmployeeDto(Dto):
     @staticmethod
-    def get_relations() -> List[Relation]:
-        relations: List[Relation] = [
+    def get_relations() -> list[Relation]:
+        relations: list[Relation] = [
             IdDependency(
                 property_name="wagegroup_id",
                 get_path="/wagegroups",
@@ -62,7 +62,7 @@ class EmployeeDto(Dto):
         return relations
 
 
-def get_variables():
+def get_variables() -> dict[str, Any]:
     """Automatically called by Robot Framework to load variables."""
     id_reference = IdReference(
         property_name="wagegroup_id",
@@ -77,7 +77,7 @@ def get_variables():
     wagegroup_dto = WagegroupDto
     employee_dto = EmployeeDto
     default_dto = DefaultDto
-    extra_headers: Dict[str, str] = {"foo": "bar", "eggs": "bacon"}
+    extra_headers: dict[str, str] = {"foo": "bar", "eggs": "bacon"}
     return {
         "ID_REFERENCE": id_reference,
         "INVALID_ID_REFERENCE": invalid_id_reference,

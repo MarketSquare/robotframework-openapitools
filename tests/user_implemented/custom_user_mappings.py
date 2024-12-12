@@ -1,5 +1,5 @@
 # pylint: disable=invalid-name
-from typing import Dict, List, Tuple, Type
+from typing import Type
 
 from OpenApiLibCore import (
     IGNORE,
@@ -15,8 +15,8 @@ from OpenApiLibCore import (
 
 class WagegroupDto(Dto):
     @staticmethod
-    def get_relations() -> List[Relation]:
-        relations: List[Relation] = [
+    def get_relations() -> list[Relation]:
+        relations: list[Relation] = [
             UniquePropertyValueConstraint(
                 property_name="id",
                 value="Teapot",
@@ -44,8 +44,8 @@ class WagegroupDto(Dto):
 
 class WagegroupDeleteDto(Dto):
     @staticmethod
-    def get_relations() -> List[Relation]:
-        relations: List[Relation] = [
+    def get_relations() -> list[Relation]:
+        relations: list[Relation] = [
             UniquePropertyValueConstraint(
                 property_name="id",
                 value="Teapot",
@@ -62,8 +62,8 @@ class WagegroupDeleteDto(Dto):
 
 class EmployeeDto(Dto):
     @staticmethod
-    def get_relations() -> List[Relation]:
-        relations: List[Relation] = [
+    def get_relations() -> list[Relation]:
+        relations: list[Relation] = [
             IdDependency(
                 property_name="wagegroup_id",
                 get_path="/wagegroups",
@@ -87,8 +87,8 @@ class EmployeeDto(Dto):
 
 class EnergyLabelDto(Dto):
     @staticmethod
-    def get_relations() -> List[Relation]:
-        relations: List[Relation] = [
+    def get_relations() -> list[Relation]:
+        relations: list[Relation] = [
             PathPropertiesConstraint(
                 path="/energy_label/1111AA/10",
                 invalid_value="/energy_label/0123AA",
@@ -98,8 +98,8 @@ class EnergyLabelDto(Dto):
         return relations
 
     @staticmethod
-    def get_parameter_relations() -> List[Relation]:
-        relations: List[Relation] = [
+    def get_parameter_relations() -> list[Relation]:
+        relations: list[Relation] = [
             PropertyValueConstraint(
                 property_name="extension",
                 values=["E", "boven", "A4.1"],
@@ -111,8 +111,8 @@ class EnergyLabelDto(Dto):
 
 class MessageDto(Dto):
     @staticmethod
-    def get_parameter_relations() -> List[Relation]:
-        relations: List[Relation] = [
+    def get_parameter_relations() -> list[Relation]:
+        relations: list[Relation] = [
             PropertyValueConstraint(
                 property_name="secret-code",  # note: property name converted by FastAPI
                 values=[42],
@@ -127,7 +127,7 @@ class MessageDto(Dto):
         return relations
 
 
-DTO_MAPPING: Dict[Tuple[str, str], Type[Dto]] = {
+DTO_MAPPING: dict[tuple[str, str], Type[Dto]] = {
     ("/wagegroups", "post"): WagegroupDto,
     ("/wagegroups/{wagegroup_id}", "delete"): WagegroupDeleteDto,
     ("/wagegroups/{wagegroup_id}", "put"): WagegroupDto,
@@ -138,7 +138,7 @@ DTO_MAPPING: Dict[Tuple[str, str], Type[Dto]] = {
 }
 
 # NOTE: "/available_employees": "identification" is not mapped for testing purposes
-ID_MAPPING: Dict[str, str] = {
+ID_MAPPING: dict[str, str] = {
     "/employees": "identification",
     "/employees/{employee_id}": "identification",
     "/wagegroups": "wagegroup_id",

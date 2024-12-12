@@ -3,7 +3,7 @@
 from logging import getLogger
 from pathlib import Path
 from random import choice
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 from requests import Response
 from requests.auth import AuthBase
@@ -31,22 +31,22 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         base_path: str = "",
         response_validation: ValidationLevel = ValidationLevel.WARN,
         disable_server_validation: bool = True,
-        mappings_path: Union[str, Path] = "",
+        mappings_path: str | Path = "",
         invalid_property_default_response: int = 422,
         default_id_property_name: str = "id",
-        faker_locale: Optional[Union[str, List[str]]] = None,
+        faker_locale: str | list[str] | None = None,  # FIXME: default empty string?
         require_body_for_invalid_url: bool = False,
         recursion_limit: int = 1,
         recursion_default: Any = {},
         username: str = "",
         password: str = "",
         security_token: str = "",
-        auth: Optional[AuthBase] = None,
-        cert: Optional[Union[str, Tuple[str, str]]] = None,
-        verify_tls: Optional[Union[bool, str]] = True,
-        extra_headers: Optional[Dict[str, str]] = None,
-        cookies: Optional[Union[Dict[str, str], CookieJar]] = None,
-        proxies: Optional[Dict[str, str]] = None,
+        auth: AuthBase | None = None,
+        cert: str | tuple[str, str] | None = None,  # FIXME: default empty string?
+        verify_tls: bool | str = True,
+        extra_headers: dict[str, str] | None = None,  # FIXME: default empty dict?
+        cookies: dict[str, str] | CookieJar | None = None,  # FIXME: default empty dict?
+        proxies: dict[str, str] | None = None,  # FIXME: default empty dict?
     ) -> None:
         super().__init__(
             source=source,
@@ -169,7 +169,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         The keyword calls other keywords to generate the neccesary data to perform
         the desired operation and validate the response against the openapi document.
         """
-        json_data: Optional[Dict[str, Any]] = None
+        json_data: dict[str, Any] | None = None
         original_data = None
 
         url: str = run_keyword("get_valid_url", path, method)
@@ -283,7 +283,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                 original_data,
             )
 
-    def get_original_data(self, url: str) -> Optional[Dict[str, Any]]:
+    def get_original_data(self, url: str) -> dict[str, Any] | None:
         """
         Attempt to GET the current data for the given url and return it.
 

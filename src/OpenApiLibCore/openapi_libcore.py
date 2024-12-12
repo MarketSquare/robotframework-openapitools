@@ -129,18 +129,7 @@ from itertools import zip_longest
 from logging import getLogger
 from pathlib import Path
 from random import choice, sample
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generator,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import Any, Callable, Generator
 from uuid import uuid4
 
 from openapi_core import Config, OpenAPI, Spec
@@ -215,20 +204,20 @@ class RequestValues:
 
     url: str
     method: str
-    params: Optional[Dict[str, Any]]
-    headers: Optional[Dict[str, str]]
-    json_data: Optional[Dict[str, Any]]
+    params: dict[str, Any] | None  # FIXME: default empty dict?
+    headers: dict[str, str] | None  # FIXME: default empty dict?
+    json_data: dict[str, Any] | None  # FIXME: default empty dict?
 
 
 @dataclass
 class RequestData:
     """Helper class to manage parameters used when making requests."""
 
-    dto: Union[Dto, DefaultDto] = field(default_factory=DefaultDto)
-    dto_schema: Dict[str, Any] = field(default_factory=dict)
-    parameters: List[Dict[str, Any]] = field(default_factory=list)
-    params: Dict[str, Any] = field(default_factory=dict)
-    headers: Dict[str, Any] = field(default_factory=dict)
+    dto: Dto | DefaultDto = field(default_factory=DefaultDto)
+    dto_schema: dict[str, Any] = field(default_factory=dict)
+    parameters: list[dict[str, Any]] = field(default_factory=list)
+    params: dict[str, Any] = field(default_factory=dict)
+    headers: dict[str, Any] = field(default_factory=dict)
     has_body: bool = True
 
     def __post_init__(self) -> None:
@@ -263,7 +252,7 @@ class RequestData:
         return any(map(is_optional_param, self.params))
 
     @cached_property
-    def params_that_can_be_invalidated(self) -> Set[str]:
+    def params_that_can_be_invalidated(self) -> set[str]:
         """
         The query parameters that can be invalidated by violating data
         restrictions, data type or by not providing them in a request.
@@ -327,7 +316,7 @@ class RequestData:
         return any(map(is_optional_header, self.headers))
 
     @cached_property
-    def headers_that_can_be_invalidated(self) -> Set[str]:
+    def headers_that_can_be_invalidated(self) -> set[str]:
         """
         The header parameters that can be invalidated by violating data
         restrictions or by not providing them in a request.
@@ -376,7 +365,7 @@ class RequestData:
                     result.add(header["name"])
         return result
 
-    def get_required_properties_dict(self) -> Dict[str, Any]:
+    def get_required_properties_dict(self) -> dict[str, Any]:
         """Get the json-compatible dto data containing only the required properties."""
         relations = self.dto.get_relations()
         mandatory_properties = [
@@ -384,16 +373,16 @@ class RequestData:
             for relation in relations
             if getattr(relation, "treat_as_mandatory", False)
         ]
-        required_properties: List[str] = self.dto_schema.get("required", [])
+        required_properties: list[str] = self.dto_schema.get("required", [])
         required_properties.extend(mandatory_properties)
 
-        required_properties_dict: Dict[str, Any] = {}
+        required_properties_dict: dict[str, Any] = {}
         for key, value in (self.dto.as_dict()).items():
             if key in required_properties:
                 required_properties_dict[key] = value
         return required_properties_dict
 
-    def get_minimal_body_dict(self) -> Dict[str, Any]:
+    def get_minimal_body_dict(self) -> dict[str, Any]:
         required_properties_dict = self.get_required_properties_dict()
 
         min_properties = self.dto_schema.get("minProperties", 0)
@@ -420,7 +409,7 @@ class RequestData:
 
         return {**required_properties_dict, **optional_properties_dict}
 
-    def get_required_params(self) -> Dict[str, str]:
+    def get_required_params(self) -> dict[str, str]:
         """Get the params dict containing only the required query parameters."""
         relations = self.dto.get_parameter_relations()
         mandatory_properties = [
@@ -436,7 +425,7 @@ class RequestData:
         required_parameters.extend(mandatory_parameters)
         return {k: v for k, v in self.params.items() if k in required_parameters}
 
-    def get_required_headers(self) -> Dict[str, str]:
+    def get_required_headers(self) -> dict[str, str]:
         """Get the headers dict containing only the required headers."""
         relations = self.dto.get_parameter_relations()
         mandatory_properties = [
@@ -469,22 +458,22 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         base_path: str = "",
         response_validation: ValidationLevel = ValidationLevel.WARN,
         disable_server_validation: bool = True,
-        mappings_path: Union[str, Path] = "",
+        mappings_path: str | Path = "",
         invalid_property_default_response: int = 422,
         default_id_property_name: str = "id",
-        faker_locale: Optional[Union[str, List[str]]] = None,
+        faker_locale: str | list[str] | None= None,  # FIXME: default empty list / str?
         require_body_for_invalid_url: bool = False,
         recursion_limit: int = 1,
         recursion_default: Any = {},
         username: str = "",
         password: str = "",
         security_token: str = "",
-        auth: Optional[AuthBase] = None,
-        cert: Optional[Union[str, Tuple[str, str]]] = None,
-        verify_tls: Optional[Union[bool, str]] = True,
-        extra_headers: Optional[Dict[str, str]] = None,
-        cookies: Optional[Union[Dict[str, str], CookieJar]] = None,
-        proxies: Optional[Dict[str, str]] = None,
+        auth: AuthBase | None = None,
+        cert: str | tuple[str, str] | None = None,
+        verify_tls: bool | str = True,
+        extra_headers: dict[str, str] | None = None,  # FIXME: default empty dict?
+        cookies: dict[str, str] | CookieJar | None = None,  # FIXME: default empty dict?
+        proxies: dict[str, str] | None = None,  # FIXME: default empty dict?
     ) -> None:
         """
         == Base parameters ==
@@ -710,7 +699,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         self.auth = auth
 
     @keyword
-    def set_extra_headers(self, extra_headers: Dict[str, str]) -> None:
+    def set_extra_headers(self, extra_headers: dict[str, str]) -> None:
         """
         Set the `extra_headers` used in requests after the library is imported.
 
@@ -729,13 +718,13 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         return validation_spec
 
     @property
-    def openapi_spec(self) -> Dict[str, Any]:
+    def openapi_spec(self) -> dict[str, Any]:
         """Return a deepcopy of the parsed openapi document."""
         # protect the parsed openapi spec from being mutated by reference
         return deepcopy(self._openapi_spec)
 
     @cached_property
-    def _openapi_spec(self) -> Dict[str, Any]:
+    def _openapi_spec(self) -> dict[str, Any]:
         parser, _, _ = self._load_specs_and_validator()
         return parser.specification
 
@@ -746,8 +735,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         _, _, response_validator = self._load_specs_and_validator()
         return response_validator
 
-    def _get_json_types_from_spec(self, spec: Dict[str, Any]) -> Set[str]:
-        json_types: Set[str] = set(self._get_json_types(spec))
+    def _get_json_types_from_spec(self, spec: dict[str, Any]) -> set[str]:
+        json_types: set[str] = set(self._get_json_types(spec))
         return {json_type for json_type in json_types if json_type is not None}
 
     def _get_json_types(self, item: Any) -> Generator[str, None, None]:
@@ -769,7 +758,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
     def _load_specs_and_validator(
         self,
-    ) -> Tuple[
+    ) -> tuple[
         ResolvingParser,
         Spec,
         Callable[[RequestsOpenAPIRequest, RequestsOpenAPIResponse], None],
@@ -805,7 +794,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
                 validation_spec = Spec.from_dict(parser.specification)
 
-                json_types_from_spec: Set[str] = self._get_json_types_from_spec(
+                json_types_from_spec: set[str] = self._get_json_types_from_spec(
                     parser.specification
                 )
                 extra_deserializers = {
@@ -841,7 +830,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         """
         self.response_validator(request=request, response=response)
 
-    def read_paths(self) -> Dict[str, Any]:
+    def read_paths(self) -> dict[str, Any]:
         return self.openapi_spec["paths"]
 
     @keyword
@@ -876,7 +865,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             if part.startswith("{") and part.endswith("}"):
                 type_endpoint_parts = endpoint_parts[slice(index)]
                 type_endpoint = "/".join(type_endpoint_parts)
-                existing_id: Union[str, int, float] = run_keyword(
+                existing_id: str | int | float = run_keyword(
                     "get_valid_id_for_endpoint", type_endpoint, method
                 )
                 endpoint_parts[index] = str(existing_id)
@@ -887,7 +876,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
     @keyword
     def get_valid_id_for_endpoint(
         self, endpoint: str, method: str
-    ) -> Union[str, int, float]:
+    ) -> str | int | float:
         """
         Support keyword that returns the `id` for an existing resource at `endpoint`.
 
@@ -895,9 +884,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         (POST) if possible.
         """
 
-        def dummy_transformer(
-            valid_id: Union[str, int, float]
-        ) -> Union[str, int, float]:
+        def dummy_transformer(valid_id: str | int | float) -> str | int | float:
             return valid_id
 
         method = method.lower()
@@ -956,11 +943,11 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         # instead of a newly created resource. In this case, the send_json must be
         # in the array of the 'array_item' property on {id}
         send_path: str = response.request.path_url
-        response_href: Optional[str] = response_data.get("href", None)
+        response_href: str = response_data.get("href", "")
         if response_href and (send_path not in response_href) and send_json:
             try:
                 property_to_check = send_path.replace(response_href, "")[1:]
-                item_list: List[Dict[str, Any]] = response_data[property_to_check]
+                item_list: list[dict[str, Any]] = response_data[property_to_check]
                 # Use the (mandatory) id to get the POSTed resource from the list
                 [valid_id] = [
                     item[id_property]
@@ -981,7 +968,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         return id_transformer(valid_id)
 
     @keyword
-    def get_ids_from_url(self, url: str) -> List[str]:
+    def get_ids_from_url(self, url: str) -> list[str]:
         """
         Perform a GET request on the `url` and return the list of resource
         `ids` from the response.
@@ -996,7 +983,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             request_data.get_required_headers(),
         )
         response.raise_for_status()
-        response_data: Union[Dict[str, Any], List[Dict[str, Any]]] = response.json()
+        response_data: dict[str, Any] | list[dict[str, Any]] = response.json()
 
         # determine the property name to use
         mapping = self.get_id_property_name(endpoint=endpoint)
@@ -1006,7 +993,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             id_property, _ = mapping
 
         if isinstance(response_data, list):
-            valid_ids: List[str] = [item[id_property] for item in response_data]
+            valid_ids: list[str] = [item[id_property] for item in response_data]
             return valid_ids
         # if the response is an object (dict), check if it's hal+json
         if embedded := response_data.get("_embedded"):
@@ -1094,13 +1081,11 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
     @staticmethod
     def get_fields_from_dto_data(
-        content_schema: Dict[str, Any], dto_data: Dict[str, Any]
-    ):
-        # FIXME: annotation is not Pyhon 3.8-compatible
-        # ) -> List[Union[str, Tuple[str, Type[Any]], Tuple[str, Type[Any], Field[Any]]]]:
+        content_schema: dict[str, Any], dto_data: dict[str, Any]
+    ) -> list[str | tuple[str, type[Any]] | tuple[str, type[Any], Field[Any]]]:
         """Get a dataclasses fields list based on the content_schema and dto_data."""
-        fields: List[
-            Union[str, Tuple[str, Type[Any]], Tuple[str, Type[Any], Field[Any]]]
+        fields: list[
+            str | tuple[str, type[Any]] | tuple[str, type[Any], Field[Any]]
         ] = []
         for key, value in dto_data.items():
             required_properties = content_schema.get("required", [])
@@ -1115,8 +1100,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         return fields
 
     def get_request_parameters(
-        self, dto_class: Union[Dto, Type[Dto]], method_spec: Dict[str, Any]
-    ) -> Tuple[List[Dict[str, Any]], Dict[str, Any], Dict[str, str]]:
+        self, dto_class: Dto | type[Dto], method_spec: dict[str, Any]
+    ) -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, str]]:
         """Get the methods parameter spec and params and headers with valid data."""
         parameters = method_spec.get("parameters", [])
         parameter_relations = dto_class.get_parameter_relations()
@@ -1127,20 +1112,20 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         return parameters, params, headers
 
     @classmethod
-    def get_content_schema(cls, body_spec: Dict[str, Any]) -> Dict[str, Any]:
+    def get_content_schema(cls, body_spec: dict[str, Any]) -> dict[str, Any]:
         """Get the content schema from the requestBody spec."""
         content_type = cls.get_content_type(body_spec)
         content_schema = body_spec["content"][content_type]["schema"]
         return resolve_schema(content_schema)
 
     @staticmethod
-    def get_content_type(body_spec: Dict[str, Any]) -> str:
+    def get_content_type(body_spec: dict[str, Any]) -> str:
         """Get and validate the first supported content type from the requested body spec
 
         Should be application/json like content type,
         e.g "application/json;charset=utf-8" or "application/merge-patch+json"
         """
-        content_types: List[str] = body_spec["content"].keys()
+        content_types: list[str] = body_spec["content"].keys()
         json_regex = r"application/([a-z\-]+\+)?json(;\s?charset=(.+))?"
         for content_type in content_types:
             if re.search(json_regex, content_type):
@@ -1158,7 +1143,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         document from a (partially) resolved endpoint.
         """
 
-        def match_parts(parts: List[str], spec_parts: List[str]) -> bool:
+        def match_parts(parts: list[str], spec_parts: list[str]) -> bool:
             for part, spec_part in zip_longest(parts, spec_parts, fillvalue="Filler"):
                 if part == "Filler" or spec_part == "Filler":
                     return False
@@ -1172,9 +1157,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         if endpoint_parts[-1] == "":
             _ = endpoint_parts.pop(-1)
 
-        spec_endpoints: List[str] = {**self.openapi_spec}["paths"].keys()
+        spec_endpoints: list[str] = {**self.openapi_spec}["paths"].keys()
 
-        candidates: List[str] = []
+        candidates: list[str] = []
 
         for spec_endpoint in spec_endpoints:
             spec_endpoint_parts = spec_endpoint.split("/")
@@ -1204,11 +1189,11 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
     @staticmethod
     def get_parameter_data(
-        parameters: List[Dict[str, Any]],
-        parameter_relations: List[Relation],
-    ) -> Dict[str, str]:
+        parameters: list[dict[str, Any]],
+        parameter_relations: list[Relation],
+    ) -> dict[str, str]:
         """Generate a valid list of key-value pairs for all parameters."""
-        result: Dict[str, str] = {}
+        result: dict[str, str] = {}
         value: Any = None
         for parameter in parameters:
             parameter_name = parameter["name"]
@@ -1231,15 +1216,15 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
     @keyword
     def get_json_data_for_dto_class(
         self,
-        schema: Dict[str, Any],
-        dto_class: Union[Dto, Type[Dto]],
+        schema: dict[str, Any],
+        dto_class: Dto | type[Dto],
         operation_id: str = "",
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any]:
         """
         Generate a valid (json-compatible) dict for all the `dto_class` properties.
         """
 
-        def get_constrained_values(property_name: str) -> List[Any]:
+        def get_constrained_values(property_name: str) -> list[Any]:
             relations = dto_class.get_relations()
             values_list = [
                 c.values
@@ -1254,7 +1239,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
         def get_dependent_id(
             property_name: str, operation_id: str
-        ) -> Optional[Union[str, int, float]]:
+        ) -> str | int | float | None:
             relations = dto_class.get_relations()
             # multiple get paths are possible based on the operation being performed
             id_get_paths = [
@@ -1282,7 +1267,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             logger.debug(f"get_dependent_id for {id_get_path} returned {valid_id}")
             return valid_id
 
-        json_data: Dict[str, Any] = {}
+        json_data: dict[str, Any] = {}
 
         property_names = []
         for property_name in schema.get("properties", []):
@@ -1359,7 +1344,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         path: str = "",
         method: str = "",
         expected_status_code: int = 404,
-    ) -> Optional[str]:
+    ) -> str:
         """
         Return an url with all the path parameters in the `valid_url` replaced by a
         random UUID if no PathPropertiesConstraint is mapped for the `path`, `method`
@@ -1412,7 +1397,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         method: str,
         status_code: int,
         request_data: RequestData,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Return `json_data` based on the `dto` on the `request_data` that will cause
         the provided `status_code` for the `method` operation on the `url`.
@@ -1461,7 +1446,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         self,
         status_code: int,
         request_data: RequestData,
-    ) -> Tuple[Dict[str, Any], Dict[str, str]]:
+    ) -> tuple[dict[str, Any], dict[str, str]]:
         """
         Returns a version of `params, headers` as present on `request_data` that has
         been modified to cause the provided `status_code`.
@@ -1601,11 +1586,11 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
     @staticmethod
     def ensure_parameter_in_parameters(
         parameter_to_invalidate: str,
-        params: Dict[str, Any],
-        headers: Dict[str, str],
-        parameter_data: Dict[str, Any],
-        values_from_constraint: List[Any],
-    ) -> Tuple[Dict[str, Any], Dict[str, str]]:
+        params: dict[str, Any],
+        headers: dict[str, str],
+        parameter_data: dict[str, Any],
+        values_from_constraint: list[Any],
+    ) -> tuple[dict[str, Any], dict[str, str]]:
         """
         Returns the params, headers tuple with parameter_to_invalidate with a valid
         value to params or headers if not originally present.
@@ -1678,7 +1663,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
     @keyword
     def get_json_data_with_conflict(
         self, url: str, method: str, dto: Dto, conflict_status_code: int
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Return `json_data` based on the `UniquePropertyValueConstraint` that must be
         returned by the `get_relations` implementation on the `dto` for the given
@@ -1732,9 +1717,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         self,
         url: str,
         method: str,
-        params: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None,
-        json_data: Optional[JSON] = None,
+        params: dict[str, Any] | None= None,  # FIXME: default empty dict?
+        headers: dict[str, str] | None = None,  # FIXME: default empty dict?
+        json_data: JSON | None= None,  # FIXME: default empty dict?
         data: Any = None,
         files: Any = None,
     ) -> Response:
@@ -1780,7 +1765,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         path: str,
         status_code: int,
         request_values: RequestValues,
-        original_data: Optional[Dict[str, Any]] = None,
+        original_data: dict[str, Any] | None = None,  # FIXME: default empty dict?
     ) -> None:
         """
         This keyword first calls the Authorized Request keyword, then the Validate
@@ -1853,7 +1838,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         self,
         path: str,
         response: Response,
-        original_data: Optional[Dict[str, Any]] = None,
+        original_data: dict[str, Any] |  None = None,  # FIXME: default emtpy dict?
     ) -> None:
         """
         Validate the `response` by performing the following validations:
@@ -1962,7 +1947,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             run_keyword("validate_send_response", response, original_data)
         return None
 
-    def _assert_href_is_valid(self, href: str, json_response: Dict[str, Any]) -> None:
+    def _assert_href_is_valid(self, href: str, json_response: dict[str, Any]) -> None:
         url = f"{self.origin}{href}"
         path = url.replace(self.base_url, "")
         request_data = self.get_request_data(endpoint=path, method="GET")
@@ -1980,9 +1965,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                 response=RequestsOpenAPIResponse(response),
             )
         except (ResponseValidationError, ServerNotFound) as exception:
-            errors: List[InvalidSchemaValue] = exception.__cause__
-            validation_errors: Optional[List[ValidationError]] = getattr(
-                errors, "schema_errors", None
+            errors: list[InvalidSchemaValue] = exception.__cause__
+            validation_errors: list[ValidationError] = getattr(
+                errors, "schema_errors", []
             )
             if validation_errors:
                 error_message = "\n".join(
@@ -2017,7 +2002,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
     @keyword
     def validate_resource_properties(
-        self, resource: Dict[str, Any], schema: Dict[str, Any]
+        self, resource: dict[str, Any], schema: dict[str, Any]
     ) -> None:
         """
         Validate that the `resource` does not contain any properties that are not
@@ -2102,7 +2087,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
     @staticmethod
     def _validate_type_of_extra_properties(
-        extra_properties: Dict[str, Any], expected_type: str
+        extra_properties: dict[str, Any], expected_type: str
     ) -> None:
         type_mapping = {
             "string": str,
@@ -2135,7 +2120,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
     @staticmethod
     @keyword
     def validate_send_response(
-        response: Response, original_data: Optional[Dict[str, Any]] = None
+        response: Response, original_data: dict[str, Any] | None = None  # FIXME: default empty dict?
     ) -> None:
         """
         Validate that each property that was send that is in the response has the value
@@ -2145,7 +2130,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         """
 
         def validate_list_response(
-            send_list: List[Any], received_list: List[Any]
+            send_list: list[Any], received_list: list[Any]
         ) -> None:
             for item in send_list:
                 if item not in received_list:
@@ -2157,7 +2142,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                     )
 
         def validate_dict_response(
-            send_dict: Dict[str, Any], received_dict: Dict[str, Any]
+            send_dict: dict[str, Any], received_dict: dict[str, Any]
         ) -> None:
             for send_property_name, send_property_value in send_dict.items():
                 # sometimes, a property in the request is not in the response, e.g. a password
@@ -2212,7 +2197,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             if response_data.get(property_to_check) and isinstance(
                 response_data[property_to_check], list
             ):
-                item_list: List[Dict[str, Any]] = response_data[property_to_check]
+                item_list: list[dict[str, Any]] = response_data[property_to_check]
                 # Use the (mandatory) id to get the POSTed resource from the list
                 [response_data] = [
                     item for item in item_list if item["id"] == send_json["id"]
@@ -2235,10 +2220,10 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
     def _get_response_spec(
         self, path: str, method: str, status_code: int
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         method = method.lower()
         status = str(status_code)
-        spec: Dict[str, Any] = {**self.openapi_spec}["paths"][path][method][
+        spec: dict[str, Any] = {**self.openapi_spec}["paths"][path][method][
             "responses"
         ][status]
         return spec

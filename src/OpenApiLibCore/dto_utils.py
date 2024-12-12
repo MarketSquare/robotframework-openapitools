@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from importlib import import_module
 from logging import getLogger
-from typing import Callable, Dict, Tuple, Type, Union
+from typing import Callable, Type
 
 from OpenApiLibCore.dto_base import Dto
 
@@ -30,7 +30,7 @@ class get_dto_class:
     def __init__(self, mappings_module_name: str) -> None:
         try:
             mappings_module = import_module(mappings_module_name)
-            self.dto_mapping: Dict[Tuple[str, str], Type[Dto]] = (
+            self.dto_mapping: dict[tuple[str, str], Type[Dto]] = (
                 mappings_module.DTO_MAPPING
             )
         except (ImportError, AttributeError, ValueError) as exception:
@@ -56,14 +56,10 @@ class get_id_property_name:
     def __init__(self, mappings_module_name: str) -> None:
         try:
             mappings_module = import_module(mappings_module_name)
-            self.id_mapping: Dict[
+            self.id_mapping: dict[
                 str,
-                Union[
-                    str,
-                    Tuple[
-                        str, Callable[[Union[str, int, float]], Union[str, int, float]]
-                    ],
-                ],
+                str
+                | tuple[str, tuple[Callable[[str | int | float], str | int | float]]],
             ] = mappings_module.ID_MAPPING
         except (ImportError, AttributeError, ValueError) as exception:
             if mappings_module_name != "no mapping":
@@ -72,9 +68,7 @@ class get_id_property_name:
 
     def __call__(
         self, endpoint: str
-    ) -> Union[
-        str, Tuple[str, Callable[[Union[str, int, float]], Union[str, int, float]]]
-    ]:
+    ) -> str | tuple[str, tuple[Callable[[str | int | float], str | int | float]]]:
         try:
             return self.id_mapping[endpoint]
         except KeyError:
