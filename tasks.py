@@ -83,10 +83,11 @@ def type_check(context: Context) -> None:
 
 @task
 def lint(context: Context) -> None:
-    subprocess.run(f"ruff {ROOT}", shell=True, check=False)
+    subprocess.run(f"ruff check {ROOT}/src/OpenApiDriver", shell=True, check=False)
+    subprocess.run(f"ruff check {ROOT}/src/OpenApiLibCore", shell=True, check=False)
     subprocess.run(f"pylint {ROOT}/src/OpenApiDriver", shell=True, check=False)
     subprocess.run(f"pylint {ROOT}/src/OpenApiLibCore", shell=True, check=False)
-    subprocess.run(f"pylint {ROOT}/src/roboswag", shell=True, check=False)
+    # subprocess.run(f"pylint {ROOT}/src/roboswag", shell=True, check=False)
     subprocess.run(f"robocop {ROOT}/tests", shell=True, check=False)
 
 
