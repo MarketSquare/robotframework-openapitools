@@ -8,15 +8,15 @@ from OpenApiLibCore import (
     IdReference,
     PathPropertiesConstraint,
     PropertyValueConstraint,
-    Relation,
+    ResourceRelation,
     UniquePropertyValueConstraint,
 )
 
 
 class WagegroupDto(Dto):
     @staticmethod
-    def get_relations() -> list[Relation]:
-        relations: list[Relation] = [
+    def get_relations() -> list[ResourceRelation]:
+        relations: list[ResourceRelation] = [
             UniquePropertyValueConstraint(
                 property_name="id",
                 value="Teapot",
@@ -44,8 +44,8 @@ class WagegroupDto(Dto):
 
 class WagegroupDeleteDto(Dto):
     @staticmethod
-    def get_relations() -> list[Relation]:
-        relations: list[Relation] = [
+    def get_relations() -> list[ResourceRelation]:
+        relations: list[ResourceRelation] = [
             UniquePropertyValueConstraint(
                 property_name="id",
                 value="Teapot",
@@ -62,8 +62,8 @@ class WagegroupDeleteDto(Dto):
 
 class EmployeeDto(Dto):
     @staticmethod
-    def get_relations() -> list[Relation]:
-        relations: list[Relation] = [
+    def get_relations() -> list[ResourceRelation]:
+        relations: list[ResourceRelation] = [
             IdDependency(
                 property_name="wagegroup_id",
                 get_path="/wagegroups",
@@ -87,8 +87,8 @@ class EmployeeDto(Dto):
 
 class EnergyLabelDto(Dto):
     @staticmethod
-    def get_relations() -> list[Relation]:
-        relations: list[Relation] = [
+    def get_relations() -> list[ResourceRelation]:
+        relations: list[ResourceRelation] = [
             PathPropertiesConstraint(
                 path="/energy_label/1111AA/10",
                 invalid_value="/energy_label/0123AA",
@@ -98,8 +98,8 @@ class EnergyLabelDto(Dto):
         return relations
 
     @staticmethod
-    def get_parameter_relations() -> list[Relation]:
-        relations: list[Relation] = [
+    def get_parameter_relations() -> list[ResourceRelation]:
+        relations: list[ResourceRelation] = [
             PropertyValueConstraint(
                 property_name="extension",
                 values=["E", "boven", "A4.1"],
@@ -111,8 +111,8 @@ class EnergyLabelDto(Dto):
 
 class MessageDto(Dto):
     @staticmethod
-    def get_parameter_relations() -> list[Relation]:
-        relations: list[Relation] = [
+    def get_parameter_relations() -> list[ResourceRelation]:
+        relations: list[ResourceRelation] = [
             PropertyValueConstraint(
                 property_name="secret-code",  # note: property name converted by FastAPI
                 values=[42],

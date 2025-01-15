@@ -159,7 +159,7 @@ from OpenApiLibCore.dto_base import (
     IdReference,
     PathPropertiesConstraint,
     PropertyValueConstraint,
-    Relation,
+    ResourceRelation,
     UniquePropertyValueConstraint,
     resolve_schema,
 )
@@ -461,7 +461,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         mappings_path: str | Path = "",
         invalid_property_default_response: int = 422,
         default_id_property_name: str = "id",
-        faker_locale: str | list[str] | None= None,  # FIXME: default empty list / str?
+        faker_locale: str | list[str] = "",
         require_body_for_invalid_url: bool = False,
         recursion_limit: int = 1,
         recursion_default: Any = {},
@@ -471,9 +471,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         auth: AuthBase | None = None,
         cert: str | tuple[str, str] | None = None,
         verify_tls: bool | str = True,
-        extra_headers: dict[str, str] | None = None,  # FIXME: default empty dict?
-        cookies: dict[str, str] | CookieJar | None = None,  # FIXME: default empty dict?
-        proxies: dict[str, str] | None = None,  # FIXME: default empty dict?
+        extra_headers: dict[str, str] = {},
+        cookies: dict[str, str] | CookieJar = {},
+        proxies: dict[str, str] = {},
     ) -> None:
         """
         == Base parameters ==
@@ -1190,7 +1190,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
     @staticmethod
     def get_parameter_data(
         parameters: list[dict[str, Any]],
-        parameter_relations: list[Relation],
+        parameter_relations: list[ResourceRelation],
     ) -> dict[str, str]:
         """Generate a valid list of key-value pairs for all parameters."""
         result: dict[str, str] = {}
@@ -1717,9 +1717,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         self,
         url: str,
         method: str,
-        params: dict[str, Any] | None= None,  # FIXME: default empty dict?
-        headers: dict[str, str] | None = None,  # FIXME: default empty dict?
-        json_data: JSON | None= None,  # FIXME: default empty dict?
+        params: dict[str, Any] = {},
+        headers: dict[str, str] = {},
+        json_data: JSON = {},
         data: Any = None,
         files: Any = None,
     ) -> Response:
@@ -1765,7 +1765,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         path: str,
         status_code: int,
         request_values: RequestValues,
-        original_data: dict[str, Any] | None = None,  # FIXME: default empty dict?
+        original_data: dict[str, Any] = {},
     ) -> None:
         """
         This keyword first calls the Authorized Request keyword, then the Validate
@@ -1838,7 +1838,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         self,
         path: str,
         response: Response,
-        original_data: dict[str, Any] |  None = None,  # FIXME: default emtpy dict?
+        original_data: dict[str, Any] = {},
     ) -> None:
         """
         Validate the `response` by performing the following validations:
@@ -2120,7 +2120,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
     @staticmethod
     @keyword
     def validate_send_response(
-        response: Response, original_data: dict[str, Any] | None = None  # FIXME: default empty dict?
+        response: Response,
+        original_data: dict[str, Any] = {},
     ) -> None:
         """
         Validate that each property that was send that is in the response has the value

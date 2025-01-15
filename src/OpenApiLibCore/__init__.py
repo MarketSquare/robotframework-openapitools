@@ -18,7 +18,7 @@ from OpenApiLibCore.dto_base import (
     IdReference,
     PathPropertiesConstraint,
     PropertyValueConstraint,
-    Relation,
+    ResourceRelation,
     UniquePropertyValueConstraint,
     resolve_schema,
 )
@@ -42,7 +42,7 @@ __all__ = [
     "IdReference",
     "PathPropertiesConstraint",
     "PropertyValueConstraint",
-    "Relation",
+    "ResourceRelation",
     "UniquePropertyValueConstraint",
     "DefaultDto",
     "OpenApiLibCore",

@@ -9,15 +9,15 @@ from OpenApiLibCore import (
     IdDependency,
     IdReference,
     PropertyValueConstraint,
-    Relation,
+    ResourceRelation,
     UniquePropertyValueConstraint,
 )
 
 
 class WagegroupDto(Dto):
     @staticmethod
-    def get_relations() -> list[Relation]:
-        relations: list[Relation] = [
+    def get_relations() -> list[ResourceRelation]:
+        relations: list[ResourceRelation] = [
             UniquePropertyValueConstraint(
                 property_name="id",
                 value="Teapot",
@@ -44,8 +44,8 @@ class WagegroupDto(Dto):
 
 class EmployeeDto(Dto):
     @staticmethod
-    def get_relations() -> list[Relation]:
-        relations: list[Relation] = [
+    def get_relations() -> list[ResourceRelation]:
+        relations: list[ResourceRelation] = [
             IdDependency(
                 property_name="wagegroup_id",
                 get_path="/wagegroups",

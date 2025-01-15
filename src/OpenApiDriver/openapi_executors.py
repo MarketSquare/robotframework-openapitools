@@ -170,7 +170,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         the desired operation and validate the response against the openapi document.
         """
         json_data: dict[str, Any] | None = None
-        original_data = None
+        original_data = {}
 
         url: str = run_keyword("get_valid_url", path, method)
         request_data: RequestData = self.get_request_data(method=method, endpoint=path)
@@ -266,7 +266,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             json_data = (
                 request_data.get_minimal_body_dict() if request_data.has_body else None
             )
-            original_data = None
+            original_data = {}
             if method == "PATCH":
                 original_data = self.get_original_data(url=url)
             run_keyword(
@@ -283,13 +283,13 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
                 original_data,
             )
 
-    def get_original_data(self, url: str) -> dict[str, Any] | None:
+    def get_original_data(self, url: str) -> dict[str, Any]:
         """
         Attempt to GET the current data for the given url and return it.
 
-        If the GET request fails, None is returned.
+        If the GET request fails, an empty dict is returned.
         """
-        original_data = None
+        original_data = {}
         path = self.get_parameterized_endpoint_from_url(url)
         get_request_data = self.get_request_data(endpoint=path, method="GET")
         get_params = get_request_data.params

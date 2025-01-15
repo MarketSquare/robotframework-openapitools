@@ -122,7 +122,7 @@ class IdDependency(ResourceRelation):
 
     property_name: str
     get_path: str
-    operation_id: str | None = None  # FIXME: default empty string?
+    operation_id: str = ""
     error_code: int = 422
 
 
@@ -144,28 +144,20 @@ class UniquePropertyValueConstraint(ResourceRelation):
     error_code: int = 422
 
 
-# FIXME: change to Generic with bound ResourceRelation and covariance=True
-Relation = (
-    IdDependency
-    | IdReference
-    | PathPropertiesConstraint
-    | PropertyValueConstraint
-    | UniquePropertyValueConstraint
-)
-
-
 @dataclass
 class Dto(ABC):
     """Base class for the Dto class."""
 
     @staticmethod
-    def get_parameter_relations() -> list[Relation]:
+    def get_parameter_relations() -> list[ResourceRelation]:
         """Return the list of Relations for the header and query parameters."""
         return []
 
-    def get_parameter_relations_for_error_code(self, error_code: int) -> list[Relation]:
+    def get_parameter_relations_for_error_code(
+        self, error_code: int
+    ) -> list[ResourceRelation]:
         """Return the list of Relations associated with the given error_code."""
-        relations: list[Relation] = [
+        relations: list[ResourceRelation] = [
             r
             for r in self.get_parameter_relations()
             if r.error_code == error_code
@@ -177,13 +169,13 @@ class Dto(ABC):
         return relations
 
     @staticmethod
-    def get_relations() -> list[Relation]:
+    def get_relations() -> list[ResourceRelation]:
         """Return the list of Relations for the (json) body."""
         return []
 
-    def get_relations_for_error_code(self, error_code: int) -> list[Relation]:
+    def get_relations_for_error_code(self, error_code: int) -> list[ResourceRelation]:
         """Return the list of Relations associated with the given error_code."""
-        relations: list[Relation] = [
+        relations: list[ResourceRelation] = [
             r
             for r in self.get_relations()
             if r.error_code == error_code
@@ -194,7 +186,9 @@ class Dto(ABC):
         ]
         return relations
 
-    def get_body_relations_for_error_code(self, error_code: int) -> list[Relation]:
+    def get_body_relations_for_error_code(
+        self, error_code: int
+    ) -> list[ResourceRelation]:
         """
         Return the list of Relations associated with the given error_code that are
         applicable to the body / payload of the request.
