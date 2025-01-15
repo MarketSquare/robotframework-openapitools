@@ -1,6 +1,6 @@
 [tool.poetry]
 name="robotframework-openapitools"
-version = "0.4.0"
+version = "1.0.0"
 description = "A set of Robot Framework libraries to test APIs for which the OAS is available."
 license = "Apache-2.0"
 authors = [
@@ -13,7 +13,7 @@ readme =  "./docs/README.md"
 homepage = "https://github.com/MarketSquare/robotframework-openapitools"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.10",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Topic :: Software Development :: Testing",
@@ -28,7 +28,7 @@ packages = [
 include = ["*.libspec"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.10"
 robotframework = {version = ">=6.0.0, !=7.0.0", allow-prereleases = false }
 robotframework-datadriver = ">=1.10.0"
 requests = ">=2.31.0"
@@ -86,6 +86,9 @@ check_untyped_defs = true
 disallow_untyped_defs = true
 strict = true
 show_error_codes = true
+exclude = [
+  "src/roboswag",
+]
 
 [[tool.mypy.overrides]]
 module = [
@@ -96,9 +99,13 @@ module = [
 ]
 ignore_missing_imports = true
 
+[tool.pyright]
+include = ["src"]
+exclude = ["src/roboswag"]
+
 [tool.black]
 line-length = 88
-target-version = ["py38"]
+target-version = ["py310"]
 
 [tool.isort]
 profile = "black"
@@ -109,10 +116,11 @@ src_paths = [
 
 [tool.ruff]
 line-length = 120
-src = ["src/OpenApiDriver"]
+exclude = ["src/roboswag"]
 
 [tool.ruff.lint]
-select = ["E", "F", "PL"]
+select = ["F", "C90", "PL", "RUF"]
+ignore = []
 
 [tool.pylint.'MESSAGES CONTROL']
 disable = ["logging-fstring-interpolation", "missing-class-docstring"]

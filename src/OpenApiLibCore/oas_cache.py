@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Tuple
+from typing import Callable
 
 from openapi_core import Spec
 from openapi_core.contrib.requests import (
@@ -7,9 +7,9 @@ from openapi_core.contrib.requests import (
 )
 from prance import ResolvingParser
 
-PARSER_CACHE: Dict[
+PARSER_CACHE: dict[
     str,
-    Tuple[
+    tuple[
         ResolvingParser,
         Spec,
         Callable[[RequestsOpenAPIRequest, RequestsOpenAPIResponse], None],

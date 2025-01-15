@@ -18,7 +18,7 @@ from OpenApiLibCore.dto_base import (
     IdReference,
     PathPropertiesConstraint,
     PropertyValueConstraint,
-    Relation,
+    ResourceRelation,
     UniquePropertyValueConstraint,
 )
 from OpenApiLibCore.value_utils import IGNORE
@@ -34,7 +34,7 @@ __all__ = [
     "IdReference",
     "PathPropertiesConstraint",
     "PropertyValueConstraint",
-    "Relation",
+    "ResourceRelation",
     "UniquePropertyValueConstraint",
     "IGNORE",
     "OpenApiDriver",

@@ -1,6 +1,6 @@
 """Module holding the OpenApiReader reader_class implementation."""
 
-from typing import Any, Dict, List, Union
+from typing import Any
 
 from DataDriver.AbstractReaderClass import AbstractReaderClass
 from DataDriver.ReaderConfig import TestCaseData
@@ -12,7 +12,7 @@ class Test:
     Helper class to support ignoring endpoint responses when generating the test cases.
     """
 
-    def __init__(self, path: str, method: str, response: Union[str, int]):
+    def __init__(self, path: str, method: str, response: str | int) -> None:
         self.path = path
         self.method = method.lower()
         self.response = str(response)
@@ -30,11 +30,11 @@ class Test:
 class OpenApiReader(AbstractReaderClass):
     """Implementation of the reader_class used by DataDriver."""
 
-    def get_data_from_source(self) -> List[TestCaseData]:
-        test_data: List[TestCaseData] = []
+    def get_data_from_source(self) -> list[TestCaseData]:
+        test_data: list[TestCaseData] = []
 
         read_paths_method = getattr(self, "read_paths_method")
-        paths: Dict[str, Any] = read_paths_method()
+        paths: dict[str, Any] = read_paths_method()
         self._filter_paths(paths)
 
         ignored_responses_ = [
@@ -77,7 +77,7 @@ class OpenApiReader(AbstractReaderClass):
                     )
         return test_data
 
-    def _filter_paths(self, paths: Dict[str, Any]) -> None:
+    def _filter_paths(self, paths: dict[str, Any]) -> None:
         def matches_include_pattern(path: str) -> bool:
             for included_path in included_paths:
                 if path == included_path:
@@ -112,5 +112,5 @@ class OpenApiReader(AbstractReaderClass):
                     paths.pop(path)
 
 
-def _get_tag_list(tags: List[str], method: str, response: str) -> List[str]:
+def _get_tag_list(tags: list[str], method: str, response: str) -> list[str]:
     return [*tags, f"Method: {method.upper()}", f"Response: {response}"]

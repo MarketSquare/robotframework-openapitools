@@ -123,7 +123,7 @@ data types and properties. The following list details the most important ones:
 """
 
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Iterable
 
 from DataDriver import DataDriver
 from requests.auth import AuthBase
@@ -146,28 +146,30 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         source: str,
         origin: str = "",
         base_path: str = "",
-        included_paths: Optional[Iterable[str]] = None,
-        ignored_paths: Optional[Iterable[str]] = None,
-        ignored_responses: Optional[Iterable[int]] = None,
-        ignored_testcases: Optional[Iterable[Tuple[str, str, int]]] = None,
+        included_paths: Iterable[str] | None = None,  # FIXME: default set?
+        ignored_paths: Iterable[str] | None = None,  # FIXME: default set?
+        ignored_responses: Iterable[int] | None = None,  # FIXME: default set?
+        ignored_testcases: (
+            Iterable[tuple[str, str, int]] | None
+        ) = None,  # FIXME: default set?
         response_validation: ValidationLevel = ValidationLevel.WARN,
         disable_server_validation: bool = True,
-        mappings_path: Union[str, Path] = "",
+        mappings_path: str | Path = "",
         invalid_property_default_response: int = 422,
         default_id_property_name: str = "id",
-        faker_locale: Optional[Union[str, List[str]]] = None,
+        faker_locale: str | list[str] | None = None,  # FIXME: default empty string?
         require_body_for_invalid_url: bool = False,
         recursion_limit: int = 1,
         recursion_default: Any = {},
         username: str = "",
         password: str = "",
         security_token: str = "",
-        auth: Optional[AuthBase] = None,
-        cert: Optional[Union[str, Tuple[str, str]]] = None,
-        verify_tls: Optional[Union[bool, str]] = True,
-        extra_headers: Optional[Dict[str, str]] = None,
-        cookies: Optional[Union[Dict[str, str], CookieJar]] = None,
-        proxies: Optional[Dict[str, str]] = None,
+        auth: AuthBase | None = None,
+        cert: str | tuple[str, str] | None = None,  # FIXME: default empty string?
+        verify_tls: bool | str = True,
+        extra_headers: dict[str, str] | None = None,  # FIXME: default empty dict?
+        cookies: dict[str, str] | CookieJar | None = None,  # FIXME: default empty dict?
+        proxies: dict[str, str] | None = None,  # FIXME: default empty dict?
     ):
         """
          == Base parameters ==
@@ -200,7 +202,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
 
          === ignored_testcases ===
          A list of specific test cases that, if it would be generated, will be ignored.
-         Specific test cases to ignore must be specified as a ``Tuple`` or ``List``
+         Specific test cases to ignore must be specified as a ``tuple`` or ``list``
          of ``path``, ``method`` and ``response``.
 
          === response_validation ===
@@ -353,7 +355,7 @@ class DocumentationGenerator(OpenApiDriver):
     __doc__ = OpenApiDriver.__doc__
 
     @staticmethod
-    def get_keyword_names() -> List[str]:
+    def get_keyword_names() -> list[str]:
         """Curated keywords for libdoc and libspec."""
         return [
             "test_unauthorized",

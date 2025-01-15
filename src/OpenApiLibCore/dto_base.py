@@ -9,7 +9,7 @@ from copy import deepcopy
 from dataclasses import dataclass, fields
 from logging import getLogger
 from random import choice, shuffle
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 from uuid import uuid4
 
 from OpenApiLibCore import value_utils
@@ -20,7 +20,7 @@ NOT_SET = object()
 SENTINEL = object()
 
 
-def resolve_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
+def resolve_schema(schema: dict[str, Any]) -> dict[str, Any]:
     """
     Helper function to resolve allOf, anyOf and oneOf instances in a schema.
 
@@ -64,7 +64,7 @@ def resolve_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
     return resolved_schema
 
 
-def merge_schemas(first: Dict[str, Any], second: Dict[str, Any]) -> Dict[str, Any]:
+def merge_schemas(first: dict[str, Any], second: dict[str, Any]) -> dict[str, Any]:
     """Helper method to merge two schemas, recursively."""
     merged_schema = deepcopy(first)
     for key, value in second.items():
@@ -109,7 +109,7 @@ class PropertyValueConstraint(ResourceRelation):
     """The allowed values for property_name."""
 
     property_name: str
-    values: List[Any]
+    values: list[Any]
     invalid_value: Any = NOT_SET
     invalid_value_error_code: int = 422
     error_code: int = 422
@@ -122,7 +122,7 @@ class IdDependency(ResourceRelation):
 
     property_name: str
     get_path: str
-    operation_id: Optional[str] = None
+    operation_id: str = ""
     error_code: int = 422
 
 
@@ -144,27 +144,20 @@ class UniquePropertyValueConstraint(ResourceRelation):
     error_code: int = 422
 
 
-Relation = Union[
-    IdDependency,
-    IdReference,
-    PathPropertiesConstraint,
-    PropertyValueConstraint,
-    UniquePropertyValueConstraint,
-]
-
-
 @dataclass
 class Dto(ABC):
     """Base class for the Dto class."""
 
     @staticmethod
-    def get_parameter_relations() -> List[Relation]:
+    def get_parameter_relations() -> list[ResourceRelation]:
         """Return the list of Relations for the header and query parameters."""
         return []
 
-    def get_parameter_relations_for_error_code(self, error_code: int) -> List[Relation]:
+    def get_parameter_relations_for_error_code(
+        self, error_code: int
+    ) -> list[ResourceRelation]:
         """Return the list of Relations associated with the given error_code."""
-        relations: List[Relation] = [
+        relations: list[ResourceRelation] = [
             r
             for r in self.get_parameter_relations()
             if r.error_code == error_code
@@ -176,13 +169,13 @@ class Dto(ABC):
         return relations
 
     @staticmethod
-    def get_relations() -> List[Relation]:
+    def get_relations() -> list[ResourceRelation]:
         """Return the list of Relations for the (json) body."""
         return []
 
-    def get_relations_for_error_code(self, error_code: int) -> List[Relation]:
+    def get_relations_for_error_code(self, error_code: int) -> list[ResourceRelation]:
         """Return the list of Relations associated with the given error_code."""
-        relations: List[Relation] = [
+        relations: list[ResourceRelation] = [
             r
             for r in self.get_relations()
             if r.error_code == error_code
@@ -193,7 +186,9 @@ class Dto(ABC):
         ]
         return relations
 
-    def get_body_relations_for_error_code(self, error_code: int) -> List[Relation]:
+    def get_body_relations_for_error_code(
+        self, error_code: int
+    ) -> list[ResourceRelation]:
         """
         Return the list of Relations associated with the given error_code that are
         applicable to the body / payload of the request.
@@ -203,12 +198,12 @@ class Dto(ABC):
 
     def get_invalidated_data(
         self,
-        schema: Dict[str, Any],
+        schema: dict[str, Any],
         status_code: int,
         invalid_property_default_code: int,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Return a data set with one of the properties set to an invalid value or type."""
-        properties: Dict[str, Any] = self.as_dict()
+        properties: dict[str, Any] = self.as_dict()
 
         schema = resolve_schema(schema)
 
@@ -309,7 +304,7 @@ class Dto(ABC):
         logger.warning("get_invalidated_data returned unchanged properties")
         return properties  # pragma: no cover
 
-    def as_dict(self) -> Dict[Any, Any]:
+    def as_dict(self) -> dict[Any, Any]:
         """Return the dict representation of the Dto."""
         result = {}
 
