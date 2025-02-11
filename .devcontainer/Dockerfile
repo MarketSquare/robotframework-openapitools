@@ -30,6 +30,7 @@ RUN	python -m pip install --upgrade pip
 ENV POETRY_HOME="/opt/poetry"
 ENV PATH="$PATH:$POETRY_HOME/bin"
 RUN curl -sSL https://install.python-poetry.org | python3 -
+RUN poetry self update
 
 # Configure poetry to not create virtual environments.
 # This is done to force package installation to the global Python install so that users
