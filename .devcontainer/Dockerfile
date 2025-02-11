@@ -1,4 +1,4 @@
-FROM python:3.13-slim-bookworm
+FROM python:3.10-slim-bookworm
 
 # Update the certificates
 RUN apt-get update && \
