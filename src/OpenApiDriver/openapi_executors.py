@@ -169,7 +169,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         The keyword calls other keywords to generate the neccesary data to perform
         the desired operation and validate the response against the openapi document.
         """
-        json_data: dict[str, Any] | None = None
+        json_data: dict[str, Any] = {}
         original_data = {}
 
         url: str = run_keyword("get_valid_url", path, method)
@@ -264,7 +264,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             params = request_data.get_required_params()
             headers = request_data.get_required_headers()
             json_data = (
-                request_data.get_minimal_body_dict() if request_data.has_body else None
+                request_data.get_minimal_body_dict() if request_data.has_body else {}
             )
             original_data = {}
             if method == "PATCH":

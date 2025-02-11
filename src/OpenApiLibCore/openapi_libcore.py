@@ -204,9 +204,9 @@ class RequestValues:
 
     url: str
     method: str
-    params: dict[str, Any] | None  # FIXME: default empty dict?
-    headers: dict[str, str] | None  # FIXME: default empty dict?
-    json_data: dict[str, Any] | None  # FIXME: default empty dict?
+    params: dict[str, Any] = {}
+    headers: dict[str, str] = {}
+    json_data: dict[str, Any] = {}
 
 
 @dataclass
