@@ -8,8 +8,8 @@ from typing import Any
 from requests import Response
 from requests.auth import AuthBase
 from requests.cookies import RequestsCookieJar as CookieJar
-from robot.api import SkipExecution
 from robot.api.deco import keyword, library
+from robot.api.exceptions import SkipExecution
 from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore import OpenApiLibCore, RequestData, RequestValues, ValidationLevel
