@@ -93,8 +93,8 @@ def lint(context: Context) -> None:
 
 @task
 def format_code(context: Context) -> None:
-    subprocess.run(f"black {ROOT}", shell=True, check=False)
-    subprocess.run(f"isort {ROOT}", shell=True, check=False)
+    subprocess.run("ruff check --select I --fix", shell=True, check=False)
+    subprocess.run("ruff format", shell=True, check=False)
     subprocess.run(f"robotidy {ROOT}/tests", shell=True, check=False)
 
 
