@@ -1,5 +1,6 @@
 # mypy: disable-error-code=no-any-return
 """Utility module with functions to handle OpenAPI value types and restrictions."""
+
 import base64
 import datetime
 from copy import deepcopy

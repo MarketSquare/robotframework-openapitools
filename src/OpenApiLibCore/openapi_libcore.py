@@ -1096,7 +1096,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                 # must go before fields with a default
                 fields.insert(0, (safe_key, type(value), field(metadata=metadata)))
             else:
-                fields.append((safe_key, type(value), field(default=None, metadata=metadata)))  # type: ignore[arg-type]
+                fields.append(
+                    (safe_key, type(value), field(default=None, metadata=metadata))
+                )  # type: ignore[arg-type]
         return fields
 
     def get_request_parameters(
@@ -1704,9 +1706,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                 post_json,
             )
             # conflicting resource may already exist
-            assert (
-                response.ok or response.status_code == conflict_status_code
-            ), f"get_json_data_with_conflict received {response.status_code}: {response.json()}"
+            assert response.ok or response.status_code == conflict_status_code, (
+                f"get_json_data_with_conflict received {response.status_code}: {response.json()}"
+            )
             return json_data
         raise ValueError(
             f"No UniquePropertyValueConstraint in the get_relations list on dto {dto}."
@@ -1954,9 +1956,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         params = request_data.params
         headers = request_data.headers
         get_response = run_keyword("authorized_request", url, "GET", params, headers)
-        assert (
-            get_response.json() == json_response
-        ), f"{get_response.json()} not equal to original {json_response}"
+        assert get_response.json() == json_response, (
+            f"{get_response.json()} not equal to original {json_response}"
+        )
 
     def _validate_response_against_spec(self, response: Response) -> None:
         try:
