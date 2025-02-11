@@ -12,6 +12,7 @@ The following classes and constants are exposed to be used by the library user:
 
 from importlib.metadata import version
 
+from OpenApiLibCore.data_generation import RequestData
 from OpenApiLibCore.dto_base import (
     Dto,
     IdDependency,
@@ -25,7 +26,6 @@ from OpenApiLibCore.dto_base import (
 from OpenApiLibCore.dto_utils import DefaultDto
 from OpenApiLibCore.openapi_libcore import (
     OpenApiLibCore,
-    RequestData,
     RequestValues,
     ValidationLevel,
 )
@@ -37,18 +37,18 @@ except Exception:  # pragma: no cover
     pass
 
 __all__ = [
+    "IGNORE",
+    "DefaultDto",
     "Dto",
     "IdDependency",
     "IdReference",
+    "OpenApiLibCore",
     "PathPropertiesConstraint",
     "PropertyValueConstraint",
-    "ResourceRelation",
-    "UniquePropertyValueConstraint",
-    "DefaultDto",
-    "OpenApiLibCore",
     "RequestData",
     "RequestValues",
+    "ResourceRelation",
+    "UniquePropertyValueConstraint",
     "ValidationLevel",
     "resolve_schema",
-    "IGNORE",
 ]
