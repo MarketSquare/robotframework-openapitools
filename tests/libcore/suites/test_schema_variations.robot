@@ -12,7 +12,7 @@ ${ORIGIN}=      http://localhost:8000
 
 *** Test Cases ***
 Test Get Request Data For Schema With allOf
-    ${request_data}=    Get Request Data    endpoint=/hypermedia    method=post
+    ${request_data}=    Get Request Data    path=/hypermedia    method=post
     ${dict}=    Create Dictionary
     ${list}=    Create List
     ${list_of_dict}=    Create List    ${dict}

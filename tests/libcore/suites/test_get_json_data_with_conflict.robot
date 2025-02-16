@@ -13,7 +13,7 @@ ${ORIGIN}=      http://localhost:8000
 
 *** Test Cases ***
 Test Get Json Data With Conflict Raises For No UniquePropertyValueConstraint
-    ${url}=    Get Valid Url    endpoint=/wagegroups    method=post
+    ${url}=    Get Valid Url    path=/wagegroups    method=post
     Run Keyword And Expect Error    ValueError: No UniquePropertyValueConstraint*
     ...    Get Json Data With Conflict
     ...    url=${url}
@@ -22,8 +22,8 @@ Test Get Json Data With Conflict Raises For No UniquePropertyValueConstraint
     ...    conflict_status_code=418
 
 Test Get Json Data With Conflict For Post Request
-    ${url}=    Get Valid Url    endpoint=/wagegroups    method=post
-    ${request_data}=    Get Request Data    endpoint=/wagegroups    method=post
+    ${url}=    Get Valid Url    path=/wagegroups    method=post
+    ${request_data}=    Get Request Data    path=/wagegroups    method=post
     ${invalid_data}=    Get Json Data With Conflict
     ...    url=${url}
     ...    method=post
@@ -32,8 +32,8 @@ Test Get Json Data With Conflict For Post Request
     Should Not Be Empty    ${invalid_data}
 
 Test Get Json Data With Conflict For Put Request
-    ${url}=    Get Valid Url    endpoint=/wagegroups/{wagegroup_id}    method=put
-    ${request_data}=    Get Request Data    endpoint=/wagegroups/{wagegroup_id}    method=put
+    ${url}=    Get Valid Url    path=/wagegroups/{wagegroup_id}    method=put
+    ${request_data}=    Get Request Data    path=/wagegroups/{wagegroup_id}    method=put
     ${invalid_json}=    Get Json Data With Conflict
     ...    url=${url}
     ...    method=put
@@ -44,8 +44,8 @@ Test Get Json Data With Conflict For Put Request
     Should Be Equal As Integers    ${response.status_code}    418
 
 # Test Get Json Data With Conflict For Patch Request
-#    ${url}=    Get Valid Url    endpoint=/wagegroups/{wagegroup_id}    method=put
-#    ${request_data}=    Get Request Data    endpoint=/wagegroups/{wagegroup_id}    method=put
+#    ${url}=    Get Valid Url    path=/wagegroups/{wagegroup_id}    method=put
+#    ${request_data}=    Get Request Data    path=/wagegroups/{wagegroup_id}    method=put
 #    ${invalid_json}=    Get Json Data With Conflict
 #    ...    url=${url}
 #    ...    method=put
