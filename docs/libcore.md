@@ -76,7 +76,7 @@ recursion in them. See the `recursion_limit` and `recursion_default` parameters.
 
 If the openapi document passes this validation, the next step is trying to do a test
 run with a minimal test suite.
-The example below can be used, with `source`, `origin` and 'endpoint' altered to
+The example below can be used, with `source`, `origin` and `path` altered to
 fit your situation.
 
 ``` robotframework
@@ -87,7 +87,7 @@ Library            OpenApiLibCore
 
 *** Test Cases ***
 Getting Started
-    ${url}=    Get Valid Url    endpoint=/employees/{employee_id}   method=get
+    ${url}=    Get Valid Url    path=/employees/{employee_id}   method=get
 
 ```
 

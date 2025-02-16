@@ -37,7 +37,7 @@ The OpenAPI Specification (OAS) defines a standard, language-agnostic interface
 to RESTful APIs, see https://swagger.io/specification/
 
 The OpenApiDriver module implements a reader class that generates a test case for
-each endpoint, method and response that is defined in an OpenAPI document, typically
+each path, method and response that is defined in an OpenAPI document, typically
 an openapi.json or openapi.yaml file.
 
 > Note: OpenApiDriver is designed for APIs based on the OAS v3
@@ -88,13 +88,13 @@ Library            OpenApiDriver
 Test Template      Validate Using Test Endpoint Keyword
 
 *** Test Cases ***
-Test Endpoint for ${method} on ${endpoint} where ${status_code} is expected
+Test Endpoint for ${method} on ${path} where ${status_code} is expected
 
 *** Keywords ***
 Validate Using Test Endpoint Keyword
-    [Arguments]    ${endpoint}    ${method}    ${status_code}
+    [Arguments]    ${path}    ${method}    ${status_code}
     Test Endpoint
-    ...    endpoint=${endpoint}    method=${method}    status_code=${status_code}
+    ...    path=${path}    method=${method}    status_code=${status_code}
 
 ```
 
