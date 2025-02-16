@@ -75,7 +75,7 @@ recursion in them. See the `recursion_limit` and `recursion_default` parameters.
 
 If the openapi document passes this validation, the next step is trying to do a test
 run with a minimal test suite.
-The example below can be used, with `source`, `origin` and 'endpoint' altered to
+The example below can be used, with `source`, `origin` and `path` altered to
 fit your situation.
 
 ``` robotframework
@@ -86,7 +86,7 @@ Library            OpenApiLibCore
 
 *** Test Cases ***
 Getting Started
-    ${url}=    Get Valid Url    endpoint=/employees/{employee_id}   method=get
+    ${url}=    Get Valid Url    path=/employees/{employee_id}   method=get
 
 ```
 
@@ -119,16 +119,14 @@ data types and properties. The following list details the most important ones:
 """
 
 import json as _json
-import re
 import sys
 from copy import deepcopy
-from dataclasses import Field, dataclass, field, make_dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from functools import cached_property
-from itertools import zip_longest
 from logging import getLogger
 from pathlib import Path
-from random import choice, sample
+from random import choice
 from typing import Any, Callable, Generator
 from uuid import uuid4
 
@@ -152,21 +150,20 @@ from robot.api.exceptions import Failure
 from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore import value_utils
+from OpenApiLibCore import data_generation as dg
+from OpenApiLibCore import path_functions as pf
 from OpenApiLibCore.data_generation import RequestData
 from OpenApiLibCore.dto_base import (
     NOT_SET,
     Dto,
-    IdDependency,
     IdReference,
     PathPropertiesConstraint,
     PropertyValueConstraint,
-    ResourceRelation,
     UniquePropertyValueConstraint,
     resolve_schema,
 )
 from OpenApiLibCore.dto_utils import (
     DEFAULT_ID_PROPERTY_NAME,
-    DefaultDto,
     get_dto_class,
     get_id_property_name,
 )
@@ -185,18 +182,6 @@ class ValidationLevel(str, Enum):
     INFO = "INFO"
     WARN = "WARN"
     STRICT = "STRICT"
-
-
-def get_safe_key(key: str) -> str:
-    """
-    Helper function to convert a valid JSON property name to a string that can be used
-    as a Python variable or function / method name.
-    """
-    key = key.replace("-", "_")
-    key = key.replace("@", "_")
-    if key[0].isdigit():
-        key = f"_{key}"
-    return key
 
 
 @dataclass
@@ -253,7 +238,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         The server (and port) of the target server. E.g. ``https://localhost:8000``
 
         === base_path ===
-        The routing between ``origin`` and the endpoints as found in the ``paths``
+        The routing between ``origin`` and the paths as found in the ``paths``
         section in the openapi document.
         E.g. ``/petshop/v2``.
 
@@ -417,10 +402,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         DEFAULT_ID_PROPERTY_NAME.id_property_name = default_id_property_name
         self._server_validation_warning_logged = False
 
-    @property
-    def origin(self) -> str:
-        return self._origin
-
     @keyword
     def set_origin(self, origin: str) -> None:
         """
@@ -475,6 +456,38 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         will use the provided `extra_headers`.
         """
         self.extra_headers = extra_headers
+
+    @keyword
+    def get_request_data(self, path: str, method: str) -> RequestData:
+        """Return an object with valid request data for body, headers and query params."""
+        return dg.get_request_data(
+            path=path,
+            method=method,
+            get_dto_class=self.get_dto_class,
+            get_id_property_name=self.get_id_property_name,
+            openapi_spec=self.openapi_spec,
+        )
+
+    @keyword
+    def get_json_data_for_dto_class(
+        self,
+        schema: dict[str, Any],
+        dto_class: Dto | type[Dto],
+        operation_id: str = "",
+    ) -> dict[str, Any]:
+        """
+        Generate a valid (json-compatible) dict for all the `dto_class` properties.
+        """
+        return dg.get_json_data_for_dto_class(
+            schema=schema,
+            dto_class=dto_class,
+            get_id_property_name=self.get_id_property_name,
+            operation_id=operation_id,
+        )
+
+    @property
+    def origin(self) -> str:
+        return self._origin
 
     @property
     def base_url(self) -> str:
@@ -601,139 +614,61 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
     def read_paths(self) -> dict[str, Any]:
         return self.openapi_spec["paths"]
 
+    # FIXME: Refacor to no longer require `method`
     @keyword
-    def get_valid_url(self, endpoint: str, method: str) -> str:
+    def get_valid_url(self, path: str, method: str) -> str:
         """
-        This keyword returns a valid url for the given `endpoint` and `method`.
+        This keyword returns a valid url for the given `path` and `method`.
 
-        If the `endpoint` contains path parameters the Get Valid Id For Endpoint
+        If the `path` contains path parameters the Get Valid Id For Path
         keyword will be executed to retrieve valid ids for the path parameters.
 
         > Note: if valid ids cannot be retrieved within the scope of the API, the
         `PathPropertiesConstraint` Relation can be used. More information can be found
-        [https://marketsquare.github.io/robotframework-openapi-libcore/advanced_use.html | here].
+        [https://marketsquare.github.io/robotframework-openapitools/advanced_use.html | here].
         """
         method = method.lower()
         try:
-            # endpoint can be partially resolved or provided by a PathPropertiesConstraint
-            parametrized_endpoint = self.get_parametrized_endpoint(endpoint=endpoint)
-            _ = self.openapi_spec["paths"][parametrized_endpoint]
+            # path can be partially resolved or provided by a PathPropertiesConstraint
+            parametrized_path = pf.get_parametrized_path(
+                path=path, openapi_spec=self.openapi_spec
+            )
+            _ = self.openapi_spec["paths"][parametrized_path]
         except KeyError:
             raise ValueError(
-                f"{endpoint} not found in paths section of the OpenAPI document."
+                f"{path} not found in paths section of the OpenAPI document."
             ) from None
-        dto_class = self.get_dto_class(endpoint=endpoint, method=method)
+        dto_class = self.get_dto_class(path=path, method=method)
         relations = dto_class.get_relations()
         paths = [p.path for p in relations if isinstance(p, PathPropertiesConstraint)]
         if paths:
             url = f"{self.base_url}{choice(paths)}"
             return url
-        endpoint_parts = list(endpoint.split("/"))
-        for index, part in enumerate(endpoint_parts):
+        path_parts = list(path.split("/"))
+        for index, part in enumerate(path_parts):
             if part.startswith("{") and part.endswith("}"):
-                type_endpoint_parts = endpoint_parts[slice(index)]
-                type_endpoint = "/".join(type_endpoint_parts)
+                type_path_parts = path_parts[slice(index)]
+                type_path = "/".join(type_path_parts)
                 existing_id: str | int | float = run_keyword(
-                    "get_valid_id_for_endpoint", type_endpoint, method
+                    "get_valid_id_for_path", type_path, method
                 )
-                endpoint_parts[index] = str(existing_id)
-        resolved_endpoint = "/".join(endpoint_parts)
-        url = f"{self.base_url}{resolved_endpoint}"
+                path_parts[index] = str(existing_id)
+        resolved_path = "/".join(path_parts)
+        url = f"{self.base_url}{resolved_path}"
         return url
 
     @keyword
-    def get_valid_id_for_endpoint(
-        self, endpoint: str, method: str
-    ) -> str | int | float:
+    def get_valid_id_for_path(self, path: str, method: str) -> str | int | float:
         """
-        Support keyword that returns the `id` for an existing resource at `endpoint`.
+        Support keyword that returns the `id` for an existing resource at `path`.
 
         To prevent resource conflicts with other test cases, a new resource is created
-        (POST) if possible.
+        (by a POST operation) if possible.
         """
 
-        def dummy_transformer(valid_id: str | int | float) -> str | int | float:
-            return valid_id
-
-        method = method.lower()
-        url: str = run_keyword("get_valid_url", endpoint, method)
-        # Try to create a new resource to prevent conflicts caused by
-        # operations performed on the same resource by other test cases
-        request_data = self.get_request_data(endpoint=endpoint, method="post")
-
-        response: Response = run_keyword(
-            "authorized_request",
-            url,
-            "post",
-            request_data.get_required_params(),
-            request_data.get_required_headers(),
-            request_data.get_required_properties_dict(),
+        return pf.get_valid_id_for_path(
+            path=path, method=method, get_id_property_name=self.get_id_property_name
         )
-
-        # determine the id property name for this path and whether or not a transformer is used
-        mapping = self.get_id_property_name(endpoint=endpoint)
-        if isinstance(mapping, str):
-            id_property = mapping
-            # set the transformer to a dummy callable that returns the original value so
-            # the transformer can be applied on any returned id
-            id_transformer = dummy_transformer
-        else:
-            id_property, id_transformer = mapping
-
-        if not response.ok:
-            # If a new resource cannot be created using POST, try to retrieve a
-            # valid id using a GET request.
-            try:
-                valid_id = choice(run_keyword("get_ids_from_url", url))
-                return id_transformer(valid_id)
-            except Exception as exception:
-                raise AssertionError(
-                    f"Failed to get a valid id using GET on {url}"
-                ) from exception
-
-        response_data = response.json()
-        if prepared_body := response.request.body:
-            if isinstance(prepared_body, bytes):
-                send_json = _json.loads(prepared_body.decode("UTF-8"))
-            else:
-                send_json = _json.loads(prepared_body)
-        else:
-            send_json = None
-
-        # no support for retrieving an id from an array returned on a POST request
-        if isinstance(response_data, list):
-            raise NotImplementedError(
-                f"Unexpected response body for POST request: expected an object but "
-                f"received an array ({response_data})"
-            )
-
-        # POST on /resource_type/{id}/array_item/ will return the updated {id} resource
-        # instead of a newly created resource. In this case, the send_json must be
-        # in the array of the 'array_item' property on {id}
-        send_path: str = response.request.path_url
-        response_href: str = response_data.get("href", "")
-        if response_href and (send_path not in response_href) and send_json:
-            try:
-                property_to_check = send_path.replace(response_href, "")[1:]
-                item_list: list[dict[str, Any]] = response_data[property_to_check]
-                # Use the (mandatory) id to get the POSTed resource from the list
-                [valid_id] = [
-                    item[id_property]
-                    for item in item_list
-                    if item[id_property] == send_json[id_property]
-                ]
-            except Exception as exception:
-                raise AssertionError(
-                    f"Failed to get a valid id from {response_href}"
-                ) from exception
-        else:
-            try:
-                valid_id = response_data[id_property]
-            except KeyError:
-                raise AssertionError(
-                    f"Failed to get a valid id from {response_data}"
-                ) from None
-        return id_transformer(valid_id)
 
     @keyword
     def get_ids_from_url(self, url: str) -> list[str]:
@@ -741,8 +676,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         Perform a GET request on the `url` and return the list of resource
         `ids` from the response.
         """
-        endpoint = self.get_parameterized_endpoint_from_url(url)
-        request_data = self.get_request_data(endpoint=endpoint, method="get")
+        path = self.get_parameterized_path_from_url(url)
+        # TOOD: change to run_keyword?
+        request_data = self.get_request_data(path=path, method="get")
         response = run_keyword(
             "authorized_request",
             url,
@@ -754,7 +690,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         response_data: dict[str, Any] | list[dict[str, Any]] = response.json()
 
         # determine the property name to use
-        mapping = self.get_id_property_name(endpoint=endpoint)
+        mapping = self.get_id_property_name(path=path)
         if isinstance(mapping, str):
             id_property = mapping
         else:
@@ -776,338 +712,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         return valid_ids
 
     @keyword
-    def get_request_data(self, endpoint: str, method: str) -> RequestData:
-        """Return an object with valid request data for body, headers and query params."""
-        method = method.lower()
-        dto_cls_name = self._get_dto_cls_name(endpoint=endpoint, method=method)
-        # The endpoint can contain already resolved Ids that have to be matched
-        # against the parametrized endpoints in the paths section.
-        spec_endpoint = self.get_parametrized_endpoint(endpoint)
-        dto_class = self.get_dto_class(endpoint=spec_endpoint, method=method)
-        try:
-            method_spec = self.openapi_spec["paths"][spec_endpoint][method]
-        except KeyError:
-            logger.info(
-                f"method '{method}' not supported on '{spec_endpoint}, using empty spec."
-            )
-            method_spec = {}
-
-        parameters, params, headers = self.get_request_parameters(
-            dto_class=dto_class, method_spec=method_spec
-        )
-        if (body_spec := method_spec.get("requestBody", None)) is None:
-            if dto_class == DefaultDto:
-                dto_instance: Dto = DefaultDto()
-            else:
-                dto_class = make_dataclass(
-                    cls_name=method_spec.get("operationId", dto_cls_name),
-                    fields=[],
-                    bases=(dto_class,),
-                )
-                dto_instance = dto_class()
-            return RequestData(
-                dto=dto_instance,
-                parameters=parameters,
-                params=params,
-                headers=headers,
-                has_body=False,
-            )
-        content_schema = resolve_schema(self.get_content_schema(body_spec))
-        headers.update({"content-type": self.get_content_type(body_spec)})
-        dto_data = self.get_json_data_for_dto_class(
-            schema=content_schema,
-            dto_class=dto_class,
-            operation_id=method_spec.get("operationId", ""),
-        )
-        if dto_data is None:
-            dto_instance = DefaultDto()
-        else:
-            fields = self.get_fields_from_dto_data(content_schema, dto_data)
-            dto_class = make_dataclass(
-                cls_name=method_spec.get("operationId", dto_cls_name),
-                fields=fields,
-                bases=(dto_class,),
-            )
-            dto_data = {get_safe_key(key): value for key, value in dto_data.items()}
-            dto_instance = dto_class(**dto_data)
-        return RequestData(
-            dto=dto_instance,
-            dto_schema=content_schema,
-            parameters=parameters,
-            params=params,
-            headers=headers,
-        )
-
-    @staticmethod
-    def _get_dto_cls_name(endpoint: str, method: str) -> str:
-        method = method.capitalize()
-        path = endpoint.translate({ord(i): None for i in "{}"})
-        path_parts = path.split("/")
-        path_parts = [p.capitalize() for p in path_parts]
-        result = "".join([method, *path_parts])
-        return result
-
-    @staticmethod
-    def get_fields_from_dto_data(
-        content_schema: dict[str, Any], dto_data: dict[str, Any]
-    ) -> list[str | tuple[str, type[Any]] | tuple[str, type[Any], Field[Any]]]:
-        """Get a dataclasses fields list based on the content_schema and dto_data."""
-        fields: list[
-            str | tuple[str, type[Any]] | tuple[str, type[Any], Field[Any]]
-        ] = []
-        for key, value in dto_data.items():
-            required_properties = content_schema.get("required", [])
-            safe_key = get_safe_key(key)
-            metadata = {"original_property_name": key}
-            if key in required_properties:
-                # The fields list is used to create a dataclass, so non-default fields
-                # must go before fields with a default
-                fields.insert(0, (safe_key, type(value), field(metadata=metadata)))
-            else:
-                fields.append(
-                    (safe_key, type(value), field(default=None, metadata=metadata))
-                )  # type: ignore[arg-type]
-        return fields
-
-    def get_request_parameters(
-        self, dto_class: Dto | type[Dto], method_spec: dict[str, Any]
-    ) -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, str]]:
-        """Get the methods parameter spec and params and headers with valid data."""
-        parameters = method_spec.get("parameters", [])
-        parameter_relations = dto_class.get_parameter_relations()
-        query_params = [p for p in parameters if p.get("in") == "query"]
-        header_params = [p for p in parameters if p.get("in") == "header"]
-        params = self.get_parameter_data(query_params, parameter_relations)
-        headers = self.get_parameter_data(header_params, parameter_relations)
-        return parameters, params, headers
-
-    @classmethod
-    def get_content_schema(cls, body_spec: dict[str, Any]) -> dict[str, Any]:
-        """Get the content schema from the requestBody spec."""
-        content_type = cls.get_content_type(body_spec)
-        content_schema = body_spec["content"][content_type]["schema"]
-        return resolve_schema(content_schema)
-
-    @staticmethod
-    def get_content_type(body_spec: dict[str, Any]) -> str:
-        """Get and validate the first supported content type from the requested body spec
-
-        Should be application/json like content type,
-        e.g "application/json;charset=utf-8" or "application/merge-patch+json"
-        """
-        content_types: list[str] = body_spec["content"].keys()
-        json_regex = r"application/([a-z\-]+\+)?json(;\s?charset=(.+))?"
-        for content_type in content_types:
-            if re.search(json_regex, content_type):
-                return content_type
-
-        # At present no supported for other types.
-        raise NotImplementedError(
-            f"Only content types like 'application/json' are supported. "
-            f"Content types definded in the spec are '{content_types}'."
-        )
-
-    def get_parametrized_endpoint(self, endpoint: str) -> str:
-        """
-        Get the parametrized endpoint as found in the `paths` section of the openapi
-        document from a (partially) resolved endpoint.
-        """
-
-        def match_parts(parts: list[str], spec_parts: list[str]) -> bool:
-            for part, spec_part in zip_longest(parts, spec_parts, fillvalue="Filler"):
-                if part == "Filler" or spec_part == "Filler":
-                    return False
-                if part != spec_part and not spec_part.startswith("{"):
-                    return False
-            return True
-
-        endpoint_parts = endpoint.split("/")
-        # if the last part is empty, the path has a trailing `/` that
-        # should be ignored during matching
-        if endpoint_parts[-1] == "":
-            _ = endpoint_parts.pop(-1)
-
-        spec_endpoints: list[str] = {**self.openapi_spec}["paths"].keys()
-
-        candidates: list[str] = []
-
-        for spec_endpoint in spec_endpoints:
-            spec_endpoint_parts = spec_endpoint.split("/")
-            # ignore trailing `/` the same way as for endpoint_parts
-            if spec_endpoint_parts[-1] == "":
-                _ = spec_endpoint_parts.pop(-1)
-            if match_parts(endpoint_parts, spec_endpoint_parts):
-                candidates.append(spec_endpoint)
-
-        if not candidates:
-            raise ValueError(
-                f"{endpoint} not found in paths section of the OpenAPI document."
-            )
-
-        if len(candidates) == 1:
-            return candidates[0]
-        # Multiple matches can happen in APIs with overloaded endpoints, e.g.
-        # /users/me
-        # /users/${user_id}
-        # In this case, find the closest (or exact) match
-        exact_match = [c for c in candidates if c == endpoint]
-        if exact_match:
-            return exact_match[0]
-        # TODO: Implement a decision mechanism when real-world examples become available
-        # In the face of ambiguity, refuse the temptation to guess.
-        raise ValueError(f"{endpoint} matched to multiple paths: {candidates}")
-
-    @staticmethod
-    def get_parameter_data(
-        parameters: list[dict[str, Any]],
-        parameter_relations: list[ResourceRelation],
-    ) -> dict[str, str]:
-        """Generate a valid list of key-value pairs for all parameters."""
-        result: dict[str, str] = {}
-        value: Any = None
-        for parameter in parameters:
-            parameter_name = parameter["name"]
-            parameter_schema = resolve_schema(parameter["schema"])
-            relations = [
-                r for r in parameter_relations if r.property_name == parameter_name
-            ]
-            if constrained_values := [
-                r.values for r in relations if isinstance(r, PropertyValueConstraint)
-            ]:
-                value = choice(*constrained_values)
-                if value is IGNORE:
-                    continue
-                result[parameter_name] = value
-                continue
-            value = value_utils.get_valid_value(parameter_schema)
-            result[parameter_name] = value
-        return result
-
-    @keyword
-    def get_json_data_for_dto_class(
-        self,
-        schema: dict[str, Any],
-        dto_class: Dto | type[Dto],
-        operation_id: str = "",
-    ) -> dict[str, Any]:
-        """
-        Generate a valid (json-compatible) dict for all the `dto_class` properties.
-        """
-
-        def get_constrained_values(property_name: str) -> list[Any]:
-            relations = dto_class.get_relations()
-            values_list = [
-                c.values
-                for c in relations
-                if (
-                    isinstance(c, PropertyValueConstraint)
-                    and c.property_name == property_name
-                )
-            ]
-            # values should be empty or contain 1 list of allowed values
-            return values_list.pop() if values_list else []
-
-        def get_dependent_id(
-            property_name: str, operation_id: str
-        ) -> str | int | float | None:
-            relations = dto_class.get_relations()
-            # multiple get paths are possible based on the operation being performed
-            id_get_paths = [
-                (d.get_path, d.operation_id)
-                for d in relations
-                if (isinstance(d, IdDependency) and d.property_name == property_name)
-            ]
-            if not id_get_paths:
-                return None
-            if len(id_get_paths) == 1:
-                id_get_path, _ = id_get_paths.pop()
-            else:
-                try:
-                    [id_get_path] = [
-                        path
-                        for path, operation in id_get_paths
-                        if operation == operation_id
-                    ]
-                # There could be multiple get_paths, but not one for the current operation
-                except ValueError:
-                    return None
-            valid_id = self.get_valid_id_for_endpoint(
-                endpoint=id_get_path, method="get"
-            )
-            logger.debug(f"get_dependent_id for {id_get_path} returned {valid_id}")
-            return valid_id
-
-        json_data: dict[str, Any] = {}
-
-        property_names = []
-        for property_name in schema.get("properties", []):
-            if constrained_values := get_constrained_values(property_name):
-                # do not add properties that are configured to be ignored
-                if IGNORE in constrained_values:
-                    continue
-            property_names.append(property_name)
-
-        max_properties = schema.get("maxProperties")
-        if max_properties and len(property_names) > max_properties:
-            required_properties = schema.get("required", [])
-            number_of_optional_properties = max_properties - len(required_properties)
-            optional_properties = [
-                name for name in property_names if name not in required_properties
-            ]
-            selected_optional_properties = sample(
-                optional_properties, number_of_optional_properties
-            )
-            property_names = required_properties + selected_optional_properties
-
-        for property_name in property_names:
-            properties_schema = schema["properties"][property_name]
-
-            property_type = properties_schema.get("type")
-            if property_type is None:
-                property_types = properties_schema.get("types")
-                if property_types is None:
-                    if properties_schema.get("properties") is not None:
-                        nested_data = self.get_json_data_for_dto_class(
-                            schema=properties_schema,
-                            dto_class=DefaultDto,
-                        )
-                        json_data[property_name] = nested_data
-                        continue
-                selected_type_schema = choice(property_types)
-                property_type = selected_type_schema["type"]
-            if properties_schema.get("readOnly", False):
-                continue
-            if constrained_values := get_constrained_values(property_name):
-                json_data[property_name] = choice(constrained_values)
-                continue
-            if (
-                dependent_id := get_dependent_id(
-                    property_name=property_name, operation_id=operation_id
-                )
-            ) is not None:
-                json_data[property_name] = dependent_id
-                continue
-            if property_type == "object":
-                object_data = self.get_json_data_for_dto_class(
-                    schema=properties_schema,
-                    dto_class=DefaultDto,
-                    operation_id="",
-                )
-                json_data[property_name] = object_data
-                continue
-            if property_type == "array":
-                array_data = self.get_json_data_for_dto_class(
-                    schema=properties_schema["items"],
-                    dto_class=DefaultDto,
-                    operation_id=operation_id,
-                )
-                json_data[property_name] = [array_data]
-                continue
-            json_data[property_name] = value_utils.get_valid_value(properties_schema)
-
-        return json_data
-
-    @keyword
     def get_invalidated_url(
         self,
         valid_url: str,
@@ -1123,7 +727,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
         Raises ValueError if the valid_url cannot be invalidated.
         """
-        dto_class = self.get_dto_class(endpoint=path, method=method)
+        dto_class = self.get_dto_class(path=path, method=method)
         relations = dto_class.get_relations()
         paths = [
             p.invalid_value
@@ -1134,8 +738,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         if paths:
             url = f"{self.base_url}{choice(paths)}"
             return url
-        parameterized_endpoint = self.get_parameterized_endpoint_from_url(valid_url)
-        parameterized_url = self.base_url + parameterized_endpoint
+        parameterized_path = self.get_parameterized_path_from_url(valid_url)
+        parameterized_url = self.base_url + parameterized_path
         valid_url_parts = list(reversed(valid_url.split("/")))
         parameterized_parts = reversed(parameterized_url.split("/"))
         for index, (parameterized_part, _) in enumerate(
@@ -1146,19 +750,19 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                 valid_url_parts.reverse()
                 invalid_url = "/".join(valid_url_parts)
                 return invalid_url
-        raise ValueError(f"{parameterized_endpoint} could not be invalidated.")
+        raise ValueError(f"{parameterized_path} could not be invalidated.")
 
     @keyword
-    def get_parameterized_endpoint_from_url(self, url: str) -> str:
+    def get_parameterized_path_from_url(self, url: str) -> str:
         """
-        Return the endpoint as found in the `paths` section based on the given `url`.
+        Return the path as found in the `paths` section based on the given `url`.
         """
-        endpoint = url.replace(self.base_url, "")
-        endpoint_parts = endpoint.split("/")
-        # first part will be '' since an endpoint starts with /
-        endpoint_parts.pop(0)
-        parameterized_endpoint = self.get_parametrized_endpoint(endpoint=endpoint)
-        return parameterized_endpoint
+        path = url.replace(self.base_url, "")
+        path_parts = path.split("/")
+        # first part will be '' since a path starts with /
+        path_parts.pop(0)
+        parameterized_path = pf.get_parametrized_path(path=path, openapi_spec=self.openapi_spec)
+        return parameterized_path
 
     @keyword
     def get_invalid_json_data(
@@ -1394,21 +998,20 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         """
         resource_id = ""
 
-        endpoint = url.replace(self.base_url, "")
-        endpoint_parts = endpoint.split("/")
-        parameterized_endpoint = self.get_parametrized_endpoint(endpoint=endpoint)
-        parameterized_endpoint_parts = parameterized_endpoint.split("/")
+        path = url.replace(self.base_url, "")
+        path_parts = path.split("/")
+        parameterized_path = pf.get_parametrized_path(path=path, openapi_spec=self.openapi_spec)
+        parameterized_path_parts = parameterized_path.split("/")
         for part, param_part in zip(
-            reversed(endpoint_parts), reversed(parameterized_endpoint_parts)
+            reversed(path_parts), reversed(parameterized_path_parts)
         ):
             if param_part.endswith("}"):
                 resource_id = part
                 break
         if not resource_id:
             raise ValueError(f"The provided url ({url}) does not contain an id.")
-        request_data = self.get_request_data(
-            method="post", endpoint=resource_relation.post_path
-        )
+        # TODO: change to run_keyword?
+        request_data = self.get_request_data(method="post", path=resource_relation.post_path)
         json_data = request_data.dto.as_dict()
         json_data[resource_relation.property_name] = resource_id
         post_url: str = run_keyword(
@@ -1454,8 +1057,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                 post_url = "/".join(post_url_parts)
                 # the PATCH or PUT may use a different dto than required for POST
                 # so a valid POST dto must be constructed
-                endpoint = post_url.replace(self.base_url, "")
-                request_data = self.get_request_data(endpoint=endpoint, method="post")
+                path = post_url.replace(self.base_url, "")
+                # TODO: change to run_keyword/
+                request_data = self.get_request_data(path=path, method="post")
                 post_json = request_data.dto.as_dict()
                 for key in post_json.keys():
                     if key in json_data:
@@ -1463,8 +1067,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             else:
                 post_url = url
                 post_json = json_data
-            endpoint = post_url.replace(self.base_url, "")
-            request_data = self.get_request_data(endpoint=endpoint, method="post")
+            path = post_url.replace(self.base_url, "")
+            # TODO: change to run_keyword?
+            request_data = self.get_request_data(path=path, method="post")
             response: Response = run_keyword(
                 "authorized_request",
                 post_url,
@@ -1579,9 +1184,10 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         run_keyword("validate_response", path, response, original_data)
 
         if request_values.method == "DELETE":
-            get_request_data = self.get_request_data(endpoint=path, method="GET")
-            get_params = get_request_data.params
-            get_headers = get_request_data.headers
+            # TODO: change to run_keyword?
+            request_data = self.get_request_data(path=path, method="GET")
+            get_params = request_data.params
+            get_headers = request_data.headers
             get_response = run_keyword(
                 "authorized_request", request_values.url, "GET", get_params, get_headers
             )
@@ -1612,7 +1218,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
     ) -> None:
         """
         Validate the `response` by performing the following validations:
-        - validate the `response` against the openapi schema for the `endpoint`
+        - validate the `response` against the openapi schema for the `path`
         - validate that the response does not contain extra properties
         - validate that a href, if present, refers to the correct resource
         - validate that the value for a property that is in the response is equal to
@@ -1704,7 +1310,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                         value=item, expected_type=type_of_list_items
                     )
             # no further validation; value validation of individual resources should
-            # be performed on the endpoints for the specific resource
+            # be performed on the path for the specific resources
             return None
 
         run_keyword("validate_resource_properties", json_response, response_schema)
@@ -1720,7 +1326,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
     def _assert_href_is_valid(self, href: str, json_response: dict[str, Any]) -> None:
         url = f"{self.origin}{href}"
         path = url.replace(self.base_url, "")
-        request_data = self.get_request_data(endpoint=path, method="GET")
+        # TODO: change to run_keyword?
+        request_data = self.get_request_data(path=path, method="GET")
         params = request_data.params
         headers = request_data.headers
         get_response = run_keyword("authorized_request", url, "GET", params, headers)

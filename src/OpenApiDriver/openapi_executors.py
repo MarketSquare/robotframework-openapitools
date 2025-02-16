@@ -144,7 +144,8 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
 
         params, headers, json_data = None, None, None
         if self.require_body_for_invalid_url:
-            request_data = self.get_request_data(method=method, endpoint=path)
+            # TODO: change to run_keyword?
+            request_data = self.get_request_data(path=path, method=method)
             params = request_data.params
             headers = request_data.headers
             dto = request_data.dto
@@ -173,7 +174,8 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         original_data = {}
 
         url: str = run_keyword("get_valid_url", path, method)
-        request_data: RequestData = self.get_request_data(method=method, endpoint=path)
+        # TODO: change to run_keyword?
+        request_data: RequestData = self.get_request_data(path=path, method=method)
         params = request_data.params
         headers = request_data.headers
         if request_data.has_body:
@@ -260,7 +262,8 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         ):
             logger.info("Performing request without optional properties and parameters")
             url = run_keyword("get_valid_url", path, method)
-            request_data = self.get_request_data(method=method, endpoint=path)
+            # tODO: change to run_keyword?
+            request_data = self.get_request_data(path=path, method=method)
             params = request_data.get_required_params()
             headers = request_data.get_required_headers()
             json_data = (
@@ -290,8 +293,9 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         If the GET request fails, an empty dict is returned.
         """
         original_data = {}
-        path = self.get_parameterized_endpoint_from_url(url)
-        get_request_data = self.get_request_data(endpoint=path, method="GET")
+        path = self.get_parameterized_path_from_url(url)
+        # TODO: change to run_keyword?
+        get_request_data = self.get_request_data(path=path, method="GET")
         get_params = get_request_data.params
         get_headers = get_request_data.headers
         response: Response = run_keyword(

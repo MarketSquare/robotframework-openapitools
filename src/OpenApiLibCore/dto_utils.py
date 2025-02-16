@@ -24,7 +24,7 @@ class DefaultDto(Dto):
 
 
 # pylint: disable=invalid-name, too-few-public-methods
-class get_dto_class:
+class get_dto_class:  # FIXME: change to function that returns class
     """Callable class to return Dtos from user-implemented mappings file."""
 
     def __init__(self, mappings_module_name: str) -> None:
@@ -38,16 +38,16 @@ class get_dto_class:
                 logger.error(f"DTO_MAPPING was not imported: {exception}")
             self.dto_mapping = {}
 
-    def __call__(self, endpoint: str, method: str) -> Type[Dto]:
+    def __call__(self, path: str, method: str) -> Type[Dto]:
         try:
-            return self.dto_mapping[(endpoint, method.lower())]
+            return self.dto_mapping[(path, method.lower())]
         except KeyError:
-            logger.debug(f"No Dto mapping for {endpoint} {method}.")
+            logger.debug(f"No Dto mapping for {path} {method}.")
             return DefaultDto
 
 
 # pylint: disable=invalid-name, too-few-public-methods
-class get_id_property_name:
+class get_id_property_name:  # FIXME: change to function that returns class
     """
     Callable class to return the name of the property that uniquely identifies
     the resource from user-implemented mappings file.
@@ -67,13 +67,13 @@ class get_id_property_name:
             self.id_mapping = {}
 
     def __call__(
-        self, endpoint: str
+        self, path: str
     ) -> str | tuple[str, tuple[Callable[[str | int | float], str | int | float]]]:
         try:
-            return self.id_mapping[endpoint]
+            return self.id_mapping[path]
         except KeyError:
             default_id_name = DEFAULT_ID_PROPERTY_NAME.id_property_name
             logger.debug(
-                f"No id mapping for {endpoint} ('{default_id_name}' will be used)"
+                f"No id mapping for {path} ('{default_id_name}' will be used)"
             )
             return default_id_name
