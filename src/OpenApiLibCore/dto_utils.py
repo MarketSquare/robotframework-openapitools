@@ -73,7 +73,5 @@ class get_id_property_name:  # FIXME: change to function that returns class
             return self.id_mapping[path]
         except KeyError:
             default_id_name = DEFAULT_ID_PROPERTY_NAME.id_property_name
-            logger.debug(
-                f"No id mapping for {path} ('{default_id_name}' will be used)"
-            )
+            logger.debug(f"No id mapping for {path} ('{default_id_name}' will be used)")
             return default_id_name
