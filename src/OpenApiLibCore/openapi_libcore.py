@@ -121,7 +121,6 @@ data types and properties. The following list details the most important ones:
 import json as _json
 import sys
 from copy import deepcopy
-from dataclasses import dataclass, field
 from enum import Enum
 from functools import cached_property
 from logging import getLogger
@@ -152,7 +151,6 @@ from robot.libraries.BuiltIn import BuiltIn
 from OpenApiLibCore import data_generation as dg
 from OpenApiLibCore import path_functions as pf
 from OpenApiLibCore import value_utils
-from OpenApiLibCore.data_generation import RequestData
 from OpenApiLibCore.dto_base import (
     NOT_SET,
     Dto,
@@ -168,6 +166,7 @@ from OpenApiLibCore.dto_utils import (
     get_id_property_name,
 )
 from OpenApiLibCore.oas_cache import PARSER_CACHE
+from OpenApiLibCore.request_data import RequestData, RequestValues
 from OpenApiLibCore.value_utils import FAKE, IGNORE, JSON
 
 run_keyword = BuiltIn().run_keyword
@@ -182,17 +181,6 @@ class ValidationLevel(str, Enum):
     INFO = "INFO"
     WARN = "WARN"
     STRICT = "STRICT"
-
-
-@dataclass
-class RequestValues:
-    """Helper class to hold parameter values needed to make a request."""
-
-    url: str
-    method: str
-    params: dict[str, Any] = field(default_factory=dict)
-    headers: dict[str, str] = field(default_factory=dict)
-    json_data: dict[str, Any] = field(default_factory=dict)
 
 
 @library(scope="SUITE", doc_format="ROBOT")
@@ -525,6 +513,30 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             path=path, method=method, get_id_property_name=self.get_id_property_name
         )
 
+    @keyword
+    def get_parameterized_path_from_url(self, url: str) -> str:
+        """
+        Return the path as found in the `paths` section based on the given `url`.
+        """
+        path = url.replace(self.base_url, "")
+        path_parts = path.split("/")
+        # first part will be '' since a path starts with /
+        path_parts.pop(0)
+        parameterized_path = pf.get_parametrized_path(
+            path=path, openapi_spec=self.openapi_spec
+        )
+        return parameterized_path
+
+    @keyword
+    def get_ids_from_url(self, url: str) -> list[str]:
+        """
+        Perform a GET request on the `url` and return the list of resource
+        `ids` from the response.
+        """
+        return pf.get_ids_from_url(
+            url=url, get_id_property_name=self.get_id_property_name
+        )
+
     # endregion
 
     # region: response validation keywords
@@ -661,47 +673,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         return self.openapi_spec["paths"]
 
     @keyword
-    def get_ids_from_url(self, url: str) -> list[str]:
-        """
-        Perform a GET request on the `url` and return the list of resource
-        `ids` from the response.
-        """
-        path = self.get_parameterized_path_from_url(url)
-        # TOOD: change to run_keyword?
-        request_data = self.get_request_data(path=path, method="get")
-        response = run_keyword(
-            "authorized_request",
-            url,
-            "get",
-            request_data.get_required_params(),
-            request_data.get_required_headers(),
-        )
-        response.raise_for_status()
-        response_data: dict[str, Any] | list[dict[str, Any]] = response.json()
-
-        # determine the property name to use
-        mapping = self.get_id_property_name(path=path)
-        if isinstance(mapping, str):
-            id_property = mapping
-        else:
-            id_property, _ = mapping
-
-        if isinstance(response_data, list):
-            valid_ids: list[str] = [item[id_property] for item in response_data]
-            return valid_ids
-        # if the response is an object (dict), check if it's hal+json
-        if embedded := response_data.get("_embedded"):
-            # there should be 1 item in the dict that has a value that's a list
-            for value in embedded.values():
-                if isinstance(value, list):
-                    valid_ids = [item[id_property] for item in value]
-                    return valid_ids
-        if (valid_id := response_data.get(id_property)) is not None:
-            return [valid_id]
-        valid_ids = [item[id_property] for item in response_data["items"]]
-        return valid_ids
-
-    @keyword
     def get_invalidated_url(
         self,
         valid_url: str,
@@ -741,20 +712,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                 invalid_url = "/".join(valid_url_parts)
                 return invalid_url
         raise ValueError(f"{parameterized_path} could not be invalidated.")
-
-    @keyword
-    def get_parameterized_path_from_url(self, url: str) -> str:
-        """
-        Return the path as found in the `paths` section based on the given `url`.
-        """
-        path = url.replace(self.base_url, "")
-        path_parts = path.split("/")
-        # first part will be '' since a path starts with /
-        path_parts.pop(0)
-        parameterized_path = pf.get_parametrized_path(
-            path=path, openapi_spec=self.openapi_spec
-        )
-        return parameterized_path
 
     @keyword
     def get_invalid_json_data(

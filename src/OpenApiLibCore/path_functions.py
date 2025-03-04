@@ -7,6 +7,7 @@ from requests import Response
 from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore.dto_base import Dto, PathPropertiesConstraint
+from OpenApiLibCore.request_data import RequestData
 
 run_keyword = BuiltIn().run_keyword
 
@@ -113,7 +114,7 @@ def get_valid_id_for_path(
     url: str = run_keyword("get_valid_url", path, method)
     # Try to create a new resource to prevent conflicts caused by
     # operations performed on the same resource by other test cases
-    request_data = run_keyword("get_request_data", path, "post")
+    request_data: RequestData = run_keyword("get_request_data", path, "post")
 
     response: Response = run_keyword(
         "authorized_request",
@@ -191,3 +192,48 @@ def get_valid_id_for_path(
                 f"Failed to get a valid id from {response_data}"
             ) from None
     return id_transformer(valid_id)
+
+
+def get_ids_from_url(
+    url: str,
+    get_id_property_name: Callable[
+        [str], str | tuple[str, tuple[Callable[[str | int | float], str | int | float]]]
+    ],  # FIXME: Protocol for the signature
+) -> list[str]:
+    """
+    Perform a GET request on the `url` and return the list of resource
+    `ids` from the response.
+    """
+    path: str = run_keyword("get_parameterized_path_from_url", url)
+    request_data: RequestData = run_keyword("get_request_data", path, "get")
+    response = run_keyword(
+        "authorized_request",
+        url,
+        "get",
+        request_data.get_required_params(),
+        request_data.get_required_headers(),
+    )
+    response.raise_for_status()
+    response_data: dict[str, Any] | list[dict[str, Any]] = response.json()
+
+    # determine the property name to use
+    mapping = get_id_property_name(path=path)
+    if isinstance(mapping, str):
+        id_property = mapping
+    else:
+        id_property, _ = mapping
+
+    if isinstance(response_data, list):
+        valid_ids: list[str] = [item[id_property] for item in response_data]
+        return valid_ids
+    # if the response is an object (dict), check if it's hal+json
+    if embedded := response_data.get("_embedded"):
+        # there should be 1 item in the dict that has a value that's a list
+        for value in embedded.values():
+            if isinstance(value, list):
+                valid_ids = [item[id_property] for item in value]
+                return valid_ids
+    if (valid_id := response_data.get(id_property)) is not None:
+        return [valid_id]
+    valid_ids = [item[id_property] for item in response_data["items"]]
+    return valid_ids

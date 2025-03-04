@@ -12,7 +12,6 @@ The following classes and constants are exposed to be used by the library user:
 
 from importlib.metadata import version
 
-from OpenApiLibCore.data_generation import RequestData
 from OpenApiLibCore.dto_base import (
     Dto,
     IdDependency,
@@ -26,9 +25,9 @@ from OpenApiLibCore.dto_base import (
 from OpenApiLibCore.dto_utils import DefaultDto
 from OpenApiLibCore.openapi_libcore import (
     OpenApiLibCore,
-    RequestValues,
     ValidationLevel,
 )
+from OpenApiLibCore.request_data import RequestData, RequestValues
 from OpenApiLibCore.value_utils import IGNORE
 
 try:
