@@ -508,6 +508,23 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             invalid_property_default_response=self.invalid_property_default_response,
         )
 
+    @keyword
+    def get_json_data_with_conflict(
+        self, url: str, method: str, dto: Dto, conflict_status_code: int
+    ) -> dict[str, Any]:
+        """
+        Return `json_data` based on the `UniquePropertyValueConstraint` that must be
+        returned by the `get_relations` implementation on the `dto` for the given
+        `conflict_status_code`.
+        """
+        return di.get_json_data_with_conflict(
+            url=url,
+            base_url=self.base_url,
+            method=method,
+            dto=dto,
+            conflict_status_code=conflict_status_code,
+        )
+
     # endregion
     # region: path-related keywords
     # FIXME: Refacor to no longer require `method`
@@ -740,60 +757,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
     def read_paths(self) -> dict[str, Any]:
         return self.openapi_spec["paths"]
-
-    @keyword
-    def get_json_data_with_conflict(
-        self, url: str, method: str, dto: Dto, conflict_status_code: int
-    ) -> dict[str, Any]:
-        """
-        Return `json_data` based on the `UniquePropertyValueConstraint` that must be
-        returned by the `get_relations` implementation on the `dto` for the given
-        `conflict_status_code`.
-        """
-        method = method.lower()
-        json_data = dto.as_dict()
-        unique_property_value_constraints = [
-            r
-            for r in dto.get_relations()
-            if isinstance(r, UniquePropertyValueConstraint)
-        ]
-        for relation in unique_property_value_constraints:
-            json_data[relation.property_name] = relation.value
-            # create a new resource that the original request will conflict with
-            if method in ["patch", "put"]:
-                post_url_parts = url.split("/")[:-1]
-                post_url = "/".join(post_url_parts)
-                # the PATCH or PUT may use a different dto than required for POST
-                # so a valid POST dto must be constructed
-                path = post_url.replace(self.base_url, "")
-                # TODO: change to run_keyword/
-                request_data = self.get_request_data(path=path, method="post")
-                post_json = request_data.dto.as_dict()
-                for key in post_json.keys():
-                    if key in json_data:
-                        post_json[key] = json_data.get(key)
-            else:
-                post_url = url
-                post_json = json_data
-            path = post_url.replace(self.base_url, "")
-            # TODO: change to run_keyword?
-            request_data = self.get_request_data(path=path, method="post")
-            response: Response = run_keyword(
-                "authorized_request",
-                post_url,
-                "post",
-                request_data.params,
-                request_data.headers,
-                post_json,
-            )
-            # conflicting resource may already exist
-            assert response.ok or response.status_code == conflict_status_code, (
-                f"get_json_data_with_conflict received {response.status_code}: {response.json()}"
-            )
-            return json_data
-        raise ValueError(
-            f"No UniquePropertyValueConstraint in the get_relations list on dto {dto}."
-        )
 
     @keyword
     def authorized_request(  # pylint: disable=too-many-arguments
