@@ -149,9 +149,9 @@ from robot.api.deco import keyword, library
 from robot.api.exceptions import Failure
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore import value_utils
 from OpenApiLibCore import data_generation as dg
 from OpenApiLibCore import path_functions as pf
+from OpenApiLibCore import value_utils
 from OpenApiLibCore.data_generation import RequestData
 from OpenApiLibCore.dto_base import (
     NOT_SET,
@@ -402,6 +402,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         DEFAULT_ID_PROPERTY_NAME.id_property_name = default_id_property_name
         self._server_validation_warning_logged = False
 
+    # region: library configuration keywords
     @keyword
     def set_origin(self, origin: str) -> None:
         """
@@ -457,6 +458,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         """
         self.extra_headers = extra_headers
 
+    # endregion
+
+    # region: data generation keywords
     @keyword
     def get_request_data(self, path: str, method: str) -> RequestData:
         """Return an object with valid request data for body, headers and query params."""
@@ -484,6 +488,57 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             get_id_property_name=self.get_id_property_name,
             operation_id=operation_id,
         )
+
+    # endregion
+
+    # region: path-related keywords
+    # FIXME: Refacor to no longer require `method`
+    @keyword
+    def get_valid_url(self, path: str, method: str) -> str:
+        """
+        This keyword returns a valid url for the given `path` and `method`.
+
+        If the `path` contains path parameters the Get Valid Id For Path
+        keyword will be executed to retrieve valid ids for the path parameters.
+
+        > Note: if valid ids cannot be retrieved within the scope of the API, the
+        `PathPropertiesConstraint` Relation can be used. More information can be found
+        [https://marketsquare.github.io/robotframework-openapitools/advanced_use.html | here].
+        """
+        return pf.get_valid_url(
+            path=path,
+            method=method,
+            base_url=self.base_url,
+            get_dto_class=self.get_dto_class,
+            openapi_spec=self.openapi_spec,
+        )
+
+    @keyword
+    def get_valid_id_for_path(self, path: str, method: str) -> str | int | float:
+        """
+        Support keyword that returns the `id` for an existing resource at `path`.
+
+        To prevent resource conflicts with other test cases, a new resource is created
+        (by a POST operation) if possible.
+        """
+        return pf.get_valid_id_for_path(
+            path=path, method=method, get_id_property_name=self.get_id_property_name
+        )
+
+    # endregion
+
+    # region: response validation keywords
+    @keyword
+    def validate_response_using_validator(
+        self, request: RequestsOpenAPIRequest, response: RequestsOpenAPIResponse
+    ) -> None:
+        """
+        Validate the reponse for a given request against the OpenAPI Spec that is
+        loaded during library initialization.
+        """
+        self.response_validator(request=request, response=response)
+
+    # endregion
 
     @property
     def origin(self) -> str:
@@ -602,73 +657,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                 f"ValidationError while trying to load openapi spec: {exception}"
             )
 
-    def validate_response_vs_spec(
-        self, request: RequestsOpenAPIRequest, response: RequestsOpenAPIResponse
-    ) -> None:
-        """
-        Validate the reponse for a given request against the OpenAPI Spec that is
-        loaded during library initialization.
-        """
-        self.response_validator(request=request, response=response)
-
     def read_paths(self) -> dict[str, Any]:
         return self.openapi_spec["paths"]
-
-    # FIXME: Refacor to no longer require `method`
-    @keyword
-    def get_valid_url(self, path: str, method: str) -> str:
-        """
-        This keyword returns a valid url for the given `path` and `method`.
-
-        If the `path` contains path parameters the Get Valid Id For Path
-        keyword will be executed to retrieve valid ids for the path parameters.
-
-        > Note: if valid ids cannot be retrieved within the scope of the API, the
-        `PathPropertiesConstraint` Relation can be used. More information can be found
-        [https://marketsquare.github.io/robotframework-openapitools/advanced_use.html | here].
-        """
-        method = method.lower()
-        try:
-            # path can be partially resolved or provided by a PathPropertiesConstraint
-            parametrized_path = pf.get_parametrized_path(
-                path=path, openapi_spec=self.openapi_spec
-            )
-            _ = self.openapi_spec["paths"][parametrized_path]
-        except KeyError:
-            raise ValueError(
-                f"{path} not found in paths section of the OpenAPI document."
-            ) from None
-        dto_class = self.get_dto_class(path=path, method=method)
-        relations = dto_class.get_relations()
-        paths = [p.path for p in relations if isinstance(p, PathPropertiesConstraint)]
-        if paths:
-            url = f"{self.base_url}{choice(paths)}"
-            return url
-        path_parts = list(path.split("/"))
-        for index, part in enumerate(path_parts):
-            if part.startswith("{") and part.endswith("}"):
-                type_path_parts = path_parts[slice(index)]
-                type_path = "/".join(type_path_parts)
-                existing_id: str | int | float = run_keyword(
-                    "get_valid_id_for_path", type_path, method
-                )
-                path_parts[index] = str(existing_id)
-        resolved_path = "/".join(path_parts)
-        url = f"{self.base_url}{resolved_path}"
-        return url
-
-    @keyword
-    def get_valid_id_for_path(self, path: str, method: str) -> str | int | float:
-        """
-        Support keyword that returns the `id` for an existing resource at `path`.
-
-        To prevent resource conflicts with other test cases, a new resource is created
-        (by a POST operation) if possible.
-        """
-
-        return pf.get_valid_id_for_path(
-            path=path, method=method, get_id_property_name=self.get_id_property_name
-        )
 
     @keyword
     def get_ids_from_url(self, url: str) -> list[str]:
@@ -761,7 +751,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         path_parts = path.split("/")
         # first part will be '' since a path starts with /
         path_parts.pop(0)
-        parameterized_path = pf.get_parametrized_path(path=path, openapi_spec=self.openapi_spec)
+        parameterized_path = pf.get_parametrized_path(
+            path=path, openapi_spec=self.openapi_spec
+        )
         return parameterized_path
 
     @keyword
@@ -1000,7 +992,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
         path = url.replace(self.base_url, "")
         path_parts = path.split("/")
-        parameterized_path = pf.get_parametrized_path(path=path, openapi_spec=self.openapi_spec)
+        parameterized_path = pf.get_parametrized_path(
+            path=path, openapi_spec=self.openapi_spec
+        )
         parameterized_path_parts = parameterized_path.split("/")
         for part, param_part in zip(
             reversed(path_parts), reversed(parameterized_path_parts)
@@ -1011,7 +1005,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         if not resource_id:
             raise ValueError(f"The provided url ({url}) does not contain an id.")
         # TODO: change to run_keyword?
-        request_data = self.get_request_data(method="post", path=resource_relation.post_path)
+        request_data = self.get_request_data(
+            method="post", path=resource_relation.post_path
+        )
         json_data = request_data.dto.as_dict()
         json_data[resource_relation.property_name] = resource_id
         post_url: str = run_keyword(
@@ -1231,7 +1227,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             return None
 
         try:
-            self._validate_response_against_spec(response)
+            self._validate_response(response)
         except OpenAPIError as exception:
             raise Failure(f"Response did not pass schema validation: {exception}")
 
@@ -1335,9 +1331,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             f"{get_response.json()} not equal to original {json_response}"
         )
 
-    def _validate_response_against_spec(self, response: Response) -> None:
+    def _validate_response(self, response: Response) -> None:
         try:
-            self.validate_response_vs_spec(
+            self.validate_response_using_validator(
                 request=RequestsOpenAPIRequest(response.request),
                 response=RequestsOpenAPIResponse(response),
             )

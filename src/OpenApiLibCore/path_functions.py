@@ -1,10 +1,12 @@
 import json as _json
 from itertools import zip_longest
 from random import choice
-from typing import Any, Callable
+from typing import Any, Callable, Type
 
 from requests import Response
 from robot.libraries.BuiltIn import BuiltIn
+
+from OpenApiLibCore.dto_base import Dto, PathPropertiesConstraint
 
 run_keyword = BuiltIn().run_keyword
 
@@ -57,6 +59,43 @@ def get_parametrized_path(path: str, openapi_spec: dict[str, Any]) -> str:
     # TODO: Implement a decision mechanism when real-world examples become available
     # In the face of ambiguity, refuse the temptation to guess.
     raise ValueError(f"{path} matched to multiple paths: {candidates}")
+
+
+# FIXME: Refacor to no longer require `method`
+def get_valid_url(
+    path: str,
+    method: str,
+    base_url: str,
+    get_dto_class: Callable[[str, str], Type[Dto]],
+    openapi_spec: dict[str, Any],
+) -> str:
+    method = method.lower()
+    try:
+        # path can be partially resolved or provided by a PathPropertiesConstraint
+        parametrized_path = get_parametrized_path(path=path, openapi_spec=openapi_spec)
+        _ = openapi_spec["paths"][parametrized_path]
+    except KeyError:
+        raise ValueError(
+            f"{path} not found in paths section of the OpenAPI document."
+        ) from None
+    dto_class = get_dto_class(path=path, method=method)
+    relations = dto_class.get_relations()
+    paths = [p.path for p in relations if isinstance(p, PathPropertiesConstraint)]
+    if paths:
+        url = f"{base_url}{choice(paths)}"
+        return url
+    path_parts = list(path.split("/"))
+    for index, part in enumerate(path_parts):
+        if part.startswith("{") and part.endswith("}"):
+            type_path_parts = path_parts[slice(index)]
+            type_path = "/".join(type_path_parts)
+            existing_id: str | int | float = run_keyword(
+                "get_valid_id_for_path", type_path, method
+            )
+            path_parts[index] = str(existing_id)
+    resolved_path = "/".join(path_parts)
+    url = f"{base_url}{resolved_path}"
+    return url
 
 
 # FIXME: Refacor to no longer require `method`
