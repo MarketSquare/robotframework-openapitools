@@ -593,6 +593,21 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         )
 
     # endregion
+    # region: resource relations keywords
+    @keyword
+    def ensure_in_use(self, url: str, resource_relation: IdReference) -> None:
+        """
+        Ensure that the (right-most) `id` of the resource referenced by the `url`
+        is used by the resource defined by the `resource_relation`.
+        """
+        rr.ensure_in_use(
+            url=url,
+            base_url=self.base_url,
+            openapi_spec=self.openapi_spec,
+            resource_relation=resource_relation,
+        )
+
+    # endregion
     # region: response validation keywords
     @keyword
     def validate_response_using_validator(
@@ -725,19 +740,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
     def read_paths(self) -> dict[str, Any]:
         return self.openapi_spec["paths"]
-
-    @keyword
-    def ensure_in_use(self, url: str, resource_relation: IdReference) -> None:
-        """
-        Ensure that the (right-most) `id` of the resource referenced by the `url`
-        is used by the resource defined by the `resource_relation`.
-        """
-        rr.ensure_in_use(
-            url=url,
-            base_url=self.base_url,
-            openapi_spec=self.openapi_spec,
-            resource_relation=resource_relation,
-        )
 
     @keyword
     def get_json_data_with_conflict(
