@@ -146,10 +146,11 @@ from robot.api.deco import keyword, library
 from robot.api.exceptions import Failure
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore import data_generation as dg
-from OpenApiLibCore import data_invalidation as di
-from OpenApiLibCore import path_functions as pf
-from OpenApiLibCore import path_invalidation as pi
+import OpenApiLibCore.data_generation as dg
+import OpenApiLibCore.data_invalidation as di
+import OpenApiLibCore.path_functions as pf
+import OpenApiLibCore.path_invalidation as pi
+import OpenApiLibCore.resource_relations as rr
 from OpenApiLibCore.dto_base import (
     Dto,
     IdReference,
@@ -731,46 +732,12 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         Ensure that the (right-most) `id` of the resource referenced by the `url`
         is used by the resource defined by the `resource_relation`.
         """
-        resource_id = ""
-
-        path = url.replace(self.base_url, "")
-        path_parts = path.split("/")
-        parameterized_path = pf.get_parametrized_path(
-            path=path, openapi_spec=self.openapi_spec
+        rr.ensure_in_use(
+            url=url,
+            base_url=self.base_url,
+            openapi_spec=self.openapi_spec,
+            resource_relation=resource_relation,
         )
-        parameterized_path_parts = parameterized_path.split("/")
-        for part, param_part in zip(
-            reversed(path_parts), reversed(parameterized_path_parts)
-        ):
-            if param_part.endswith("}"):
-                resource_id = part
-                break
-        if not resource_id:
-            raise ValueError(f"The provided url ({url}) does not contain an id.")
-        # TODO: change to run_keyword?
-        request_data = self.get_request_data(
-            method="post", path=resource_relation.post_path
-        )
-        json_data = request_data.dto.as_dict()
-        json_data[resource_relation.property_name] = resource_id
-        post_url: str = run_keyword(
-            "get_valid_url",
-            resource_relation.post_path,
-            "post",
-        )
-        response: Response = run_keyword(
-            "authorized_request",
-            post_url,
-            "post",
-            request_data.params,
-            request_data.headers,
-            json_data,
-        )
-        if not response.ok:
-            logger.debug(
-                f"POST on {post_url} with json {json_data} failed: {response.json()}"
-            )
-            response.raise_for_status()
 
     @keyword
     def get_json_data_with_conflict(

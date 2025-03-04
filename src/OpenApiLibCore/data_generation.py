@@ -5,7 +5,7 @@ from typing import Any, Callable, Type
 
 from robot.api import logger
 
-from OpenApiLibCore import path_functions as pf
+import OpenApiLibCore.path_functions as pf
 from OpenApiLibCore.dto_base import (
     Dto,
     IdDependency,
