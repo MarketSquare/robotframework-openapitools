@@ -2,12 +2,11 @@
 
 from dataclasses import dataclass
 from importlib import import_module
-from logging import getLogger
 from typing import Callable, Type
 
-from OpenApiLibCore.dto_base import Dto
+from robot.api import logger
 
-logger = getLogger(__name__)
+from OpenApiLibCore.dto_base import Dto
 
 
 @dataclass

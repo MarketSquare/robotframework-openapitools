@@ -123,7 +123,6 @@ import sys
 from copy import deepcopy
 from enum import Enum
 from functools import cached_property
-from logging import getLogger
 from pathlib import Path
 from random import choice
 from typing import Any, Callable, Generator
@@ -143,6 +142,7 @@ from prance.util.url import ResolutionError
 from requests import Response, Session
 from requests.auth import AuthBase, HTTPBasicAuth
 from requests.cookies import RequestsCookieJar as CookieJar
+from robot.api import logger
 from robot.api.deco import keyword, library
 from robot.api.exceptions import Failure
 from robot.libraries.BuiltIn import BuiltIn
@@ -156,7 +156,6 @@ from OpenApiLibCore.dto_base import (
     NOT_SET,
     Dto,
     IdReference,
-    PathPropertiesConstraint,
     PropertyValueConstraint,
     UniquePropertyValueConstraint,
     resolve_schema,
@@ -171,8 +170,6 @@ from OpenApiLibCore.request_data import RequestData, RequestValues
 from OpenApiLibCore.value_utils import FAKE, IGNORE, JSON
 
 run_keyword = BuiltIn().run_keyword
-
-logger = getLogger(__name__)
 
 
 class ValidationLevel(str, Enum):
@@ -364,7 +361,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         if mappings_path and str(mappings_path) != ".":
             mappings_path = Path(mappings_path)
             if not mappings_path.is_file():
-                logger.warning(
+                logger.warn(
                     f"mappings_path '{mappings_path}' is not a Python module."
                 )
             # intermediate variable to ensure path.append is possible so we'll never
@@ -775,7 +772,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             n for n in relation_property_names if n not in request_data_parameter_names
         }
         if additional_relation_property_names:
-            logger.warning(
+            logger.warn(
                 f"get_parameter_relations_for_error_code yielded properties that are "
                 f"not defined in the schema: {additional_relation_property_names}\n"
                 f"These properties will be ignored for parameter invalidation."
@@ -1101,7 +1098,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                     )
                 # if the path supports GET, 404 is expected, if not 405 is expected
                 if get_response.status_code not in [404, 405]:
-                    logger.warning(
+                    logger.warn(
                         f"Unexpected response after deleting resource: Status_code "
                         f"{get_response.status_code} was received after trying to get {request_values.url} "
                         f"after sucessfully deleting it."
@@ -1140,7 +1137,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
         request_method = response.request.method
         if request_method is None:
-            logger.warning(
+            logger.warn(
                 f"Could not validate response for path {path}; no method found "
                 f"on the request property of the provided response."
             )
@@ -1156,7 +1153,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         mime_type_from_response, _, _ = content_type_from_response.partition(";")
 
         if not response_spec.get("content"):
-            logger.warning(
+            logger.warn(
                 "The response cannot be validated: 'content' not specified in the OAS."
             )
             return None
@@ -1261,7 +1258,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
             if isinstance(exception, ServerNotFound):
                 if not self._server_validation_warning_logged:
-                    logger.warning(
+                    logger.warn(
                         f"ServerNotFound was raised during response validation. "
                         f"Due to this, no full response validation will be performed."
                         f"\nThe original error was: {error_message}"
@@ -1276,7 +1273,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                 logger.error(error_message)
                 raise exception
             if self.response_validation == ValidationLevel.WARN:
-                logger.warning(error_message)
+                logger.warn(error_message)
             elif self.response_validation == ValidationLevel.INFO:
                 logger.info(error_message)
 
@@ -1380,7 +1377,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
         python_type = type_mapping.get(expected_type, None)
         if python_type is None:
-            logger.warning(
+            logger.warn(
                 f"Additonal properties were not validated: "
                 f"type '{expected_type}' is not supported."
             )
@@ -1457,7 +1454,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                     )
 
         if response.request.body is None:
-            logger.warning(
+            logger.warn(
                 "Could not validate send response; the body of the request property "
                 "on the provided response was None."
             )

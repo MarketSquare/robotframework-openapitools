@@ -1,6 +1,5 @@
 """Module containing the classes to perform automatic OpenAPI contract validation."""
 
-from logging import getLogger
 from pathlib import Path
 from random import choice
 from typing import Any
@@ -8,6 +7,7 @@ from typing import Any
 from requests import Response
 from requests.auth import AuthBase
 from requests.cookies import RequestsCookieJar as CookieJar
+from robot.api import logger
 from robot.api.deco import keyword, library
 from robot.api.exceptions import SkipExecution
 from robot.libraries.BuiltIn import BuiltIn
@@ -15,9 +15,6 @@ from robot.libraries.BuiltIn import BuiltIn
 from OpenApiLibCore import OpenApiLibCore, RequestData, RequestValues, ValidationLevel
 
 run_keyword = BuiltIn().run_keyword
-
-
-logger = getLogger(__name__)
 
 
 @library(scope="SUITE", doc_format="ROBOT")

@@ -4,16 +4,14 @@
 import base64
 import datetime
 from copy import deepcopy
-from logging import getLogger
 from random import choice, randint, uniform
 from typing import Any, Callable
 
 import faker
 import rstr
+from robot.api import logger
 
 JSON = dict[str, "JSON"] | list["JSON"] | str | int | float | bool | None
-
-logger = getLogger(__name__)
 
 IGNORE = object()
 
@@ -414,7 +412,7 @@ def get_invalid_value_from_enum(values: list[Any], value_type: str) -> Any:
         # force creation of a new object since we will be modifying it
         invalid_value = {**values[0]}
     else:
-        logger.warning(f"Cannot invalidate enum value with type {value_type}")
+        logger.warn(f"Cannot invalidate enum value with type {value_type}")
         return None
     for value in values:
         # repeat each addition to ensure single-item enums are invalidated

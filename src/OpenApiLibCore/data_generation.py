@@ -1,8 +1,9 @@
 import re
 from dataclasses import Field, field, make_dataclass
-from logging import getLogger
 from random import choice, sample
 from typing import Any, Callable, Type
+
+from robot.api import logger
 
 from OpenApiLibCore import path_functions as pf
 from OpenApiLibCore.dto_base import (
@@ -15,8 +16,6 @@ from OpenApiLibCore.dto_base import (
 from OpenApiLibCore.dto_utils import DefaultDto
 from OpenApiLibCore.request_data import RequestData
 from OpenApiLibCore.value_utils import IGNORE, get_valid_value
-
-logger = getLogger(__name__)
 
 
 def get_request_data(
