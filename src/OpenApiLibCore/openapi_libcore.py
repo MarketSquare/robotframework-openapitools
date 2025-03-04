@@ -150,6 +150,7 @@ from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore import data_generation as dg
 from OpenApiLibCore import path_functions as pf
+from OpenApiLibCore import path_invalidation as pi
 from OpenApiLibCore import value_utils
 from OpenApiLibCore.dto_base import (
     NOT_SET,
@@ -445,9 +446,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         will use the provided `extra_headers`.
         """
         self.extra_headers = extra_headers
-
     # endregion
-
     # region: data generation keywords
     @keyword
     def get_request_data(self, path: str, method: str) -> RequestData:
@@ -476,9 +475,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             get_id_property_name=self.get_id_property_name,
             operation_id=operation_id,
         )
-
     # endregion
-
     # region: path-related keywords
     # FIXME: Refacor to no longer require `method`
     @keyword
@@ -537,8 +534,31 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             url=url, get_id_property_name=self.get_id_property_name
         )
 
-    # endregion
+    @keyword
+    def get_invalidated_url(
+        self,
+        valid_url: str,
+        path: str = "",
+        method: str = "",
+        expected_status_code: int = 404,
+    ) -> str:
+        """
+        Return an url with all the path parameters in the `valid_url` replaced by a
+        random UUID if no PathPropertiesConstraint is mapped for the `path`, `method`
+        and `expected_status_code`.
+        If a PathPropertiesConstraint is mapped, the `invalid_value` is returned.
 
+        Raises ValueError if the valid_url cannot be invalidated.
+        """
+        return pi.get_invalidated_url(
+            valid_url=valid_url,
+            path=path,
+            method=method,
+            base_url=self.base_url,
+            get_dto_class=self.get_dto_class,
+            expected_status_code=expected_status_code,
+        )
+    # endregion
     # region: response validation keywords
     @keyword
     def validate_response_using_validator(
@@ -549,7 +569,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         loaded during library initialization.
         """
         self.response_validator(request=request, response=response)
-
     # endregion
 
     @property
@@ -671,47 +690,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
     def read_paths(self) -> dict[str, Any]:
         return self.openapi_spec["paths"]
-
-    @keyword
-    def get_invalidated_url(
-        self,
-        valid_url: str,
-        path: str = "",
-        method: str = "",
-        expected_status_code: int = 404,
-    ) -> str:
-        """
-        Return an url with all the path parameters in the `valid_url` replaced by a
-        random UUID if no PathPropertiesConstraint is mapped for the `path`, `method`
-        and `expected_status_code`.
-        If a PathPropertiesConstraint is mapped, the `invalid_value` is returned.
-
-        Raises ValueError if the valid_url cannot be invalidated.
-        """
-        dto_class = self.get_dto_class(path=path, method=method)
-        relations = dto_class.get_relations()
-        paths = [
-            p.invalid_value
-            for p in relations
-            if isinstance(p, PathPropertiesConstraint)
-            and p.invalid_value_error_code == expected_status_code
-        ]
-        if paths:
-            url = f"{self.base_url}{choice(paths)}"
-            return url
-        parameterized_path = self.get_parameterized_path_from_url(valid_url)
-        parameterized_url = self.base_url + parameterized_path
-        valid_url_parts = list(reversed(valid_url.split("/")))
-        parameterized_parts = reversed(parameterized_url.split("/"))
-        for index, (parameterized_part, _) in enumerate(
-            zip(parameterized_parts, valid_url_parts)
-        ):
-            if parameterized_part.startswith("{") and parameterized_part.endswith("}"):
-                valid_url_parts[index] = uuid4().hex
-                valid_url_parts.reverse()
-                invalid_url = "/".join(valid_url_parts)
-                return invalid_url
-        raise ValueError(f"{parameterized_path} could not be invalidated.")
 
     @keyword
     def get_invalid_json_data(
