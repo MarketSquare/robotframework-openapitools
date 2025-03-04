@@ -127,7 +127,6 @@ from logging import getLogger
 from pathlib import Path
 from random import choice
 from typing import Any, Callable, Generator
-from uuid import uuid4
 
 from openapi_core import Config, OpenAPI, Spec
 from openapi_core.contrib.requests import (
@@ -149,6 +148,7 @@ from robot.api.exceptions import Failure
 from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore import data_generation as dg
+from OpenApiLibCore import data_invalidation as di
 from OpenApiLibCore import path_functions as pf
 from OpenApiLibCore import path_invalidation as pi
 from OpenApiLibCore import value_utils
@@ -475,6 +475,29 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             get_id_property_name=self.get_id_property_name,
             operation_id=operation_id,
         )
+
+    @keyword
+    def get_invalid_json_data(
+        self,
+        url: str,
+        method: str,
+        status_code: int,
+        request_data: RequestData,
+    ) -> dict[str, Any]:
+        """
+        Return `json_data` based on the `dto` on the `request_data` that will cause
+        the provided `status_code` for the `method` operation on the `url`.
+
+        > Note: applicable UniquePropertyValueConstraint and IdReference Relations are
+            considered before changes to `json_data` are made.
+        """
+        return di.get_invalid_json_data(
+            url=url,
+            method=method,
+            status_code=status_code,
+            request_data=request_data,
+            invalid_property_default_response=self.invalid_property_default_response,
+        )
     # endregion
     # region: path-related keywords
     # FIXME: Refacor to no longer require `method`
@@ -690,57 +713,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
     def read_paths(self) -> dict[str, Any]:
         return self.openapi_spec["paths"]
-
-    @keyword
-    def get_invalid_json_data(
-        self,
-        url: str,
-        method: str,
-        status_code: int,
-        request_data: RequestData,
-    ) -> dict[str, Any]:
-        """
-        Return `json_data` based on the `dto` on the `request_data` that will cause
-        the provided `status_code` for the `method` operation on the `url`.
-
-        > Note: applicable UniquePropertyValueConstraint and IdReference Relations are
-            considered before changes to `json_data` are made.
-        """
-        method = method.lower()
-        data_relations = request_data.dto.get_relations_for_error_code(status_code)
-        data_relations = [
-            r for r in data_relations if not isinstance(r, PathPropertiesConstraint)
-        ]
-        if not data_relations:
-            if not request_data.dto_schema:
-                raise ValueError(
-                    "Failed to invalidate: no data_relations and empty schema."
-                )
-            json_data = request_data.dto.get_invalidated_data(
-                schema=request_data.dto_schema,
-                status_code=status_code,
-                invalid_property_default_code=self.invalid_property_default_response,
-            )
-            return json_data
-        resource_relation = choice(data_relations)
-        if isinstance(resource_relation, UniquePropertyValueConstraint):
-            json_data = run_keyword(
-                "get_json_data_with_conflict",
-                url,
-                method,
-                request_data.dto,
-                status_code,
-            )
-        elif isinstance(resource_relation, IdReference):
-            run_keyword("ensure_in_use", url, resource_relation)
-            json_data = request_data.dto.as_dict()
-        else:
-            json_data = request_data.dto.get_invalidated_data(
-                schema=request_data.dto_schema,
-                status_code=status_code,
-                invalid_property_default_code=self.invalid_property_default_response,
-            )
-        return json_data
 
     @keyword
     def get_invalidated_parameters(
