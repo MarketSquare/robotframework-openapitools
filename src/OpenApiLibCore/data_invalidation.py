@@ -233,11 +233,6 @@ def ensure_parameter_in_parameters(
 def get_json_data_with_conflict(
     url: str, base_url: str, method: str, dto: Dto, conflict_status_code: int
 ) -> dict[str, Any]:
-    """
-    Return `json_data` based on the `UniquePropertyValueConstraint` that must be
-    returned by the `get_relations` implementation on the `dto` for the given
-    `conflict_status_code`.
-    """
     method = method.lower()
     json_data = dto.as_dict()
     unique_property_value_constraints = [

@@ -17,14 +17,6 @@ def get_invalidated_url(
     get_dto_class: Callable[[str, str], Type[Dto]],
     expected_status_code: int,
 ) -> str:
-    """
-    Return an url with all the path parameters in the `valid_url` replaced by a
-    random UUID if no PathPropertiesConstraint is mapped for the `path`, `method`
-    and `expected_status_code`.
-    If a PathPropertiesConstraint is mapped, the `invalid_value` is returned.
-
-    Raises ValueError if the valid_url cannot be invalidated.
-    """
     dto_class = get_dto_class(path=path, method=method)
     relations = dto_class.get_relations()
     paths = [

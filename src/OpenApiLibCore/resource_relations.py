@@ -17,10 +17,6 @@ def ensure_in_use(
     openapi_spec: dict[str, Any],
     resource_relation: IdReference,
 ) -> None:
-    """
-    Ensure that the (right-most) `id` of the resource referenced by the `url`
-    is used by the resource defined by the `resource_relation`.
-    """
     resource_id = ""
 
     path = url.replace(base_url, "")

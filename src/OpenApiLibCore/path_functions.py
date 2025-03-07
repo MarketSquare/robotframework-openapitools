@@ -22,11 +22,6 @@ def match_parts(parts: list[str], spec_parts: list[str]) -> bool:
 
 
 def get_parametrized_path(path: str, openapi_spec: dict[str, Any]) -> str:
-    """
-    Get the parametrized path as found in the `paths` section of the openapi
-    document from a (partially) resolved path.
-    """
-
     path_parts = path.split("/")
     # if the last part is empty, the path has a trailing `/` that
     # should be ignored during matching
@@ -200,10 +195,6 @@ def get_ids_from_url(
         [str], str | tuple[str, tuple[Callable[[str | int | float], str | int | float]]]
     ],  # FIXME: Protocol for the signature
 ) -> list[str]:
-    """
-    Perform a GET request on the `url` and return the list of resource
-    `ids` from the response.
-    """
     path: str = run_keyword("get_parameterized_path_from_url", url)
     request_data: RequestData = run_keyword("get_request_data", path, "get")
     response = run_keyword(
