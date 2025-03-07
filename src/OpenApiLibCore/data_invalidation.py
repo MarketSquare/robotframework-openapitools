@@ -255,8 +255,9 @@ def get_json_data_with_conflict(
         else:
             post_url = url
             post_json = json_data
-        path = post_url.replace(base_url, "")
-        request_data: RequestData = run_keyword("get_request_data", path, "post")
+            path = post_url.replace(base_url, "")
+            request_data: RequestData = run_keyword("get_request_data", path, "post")
+
         response: Response = run_keyword(
             "authorized_request",
             post_url,
