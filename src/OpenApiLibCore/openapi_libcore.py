@@ -121,7 +121,6 @@ data types and properties. The following list details the most important ones:
 import json as _json
 import sys
 from copy import deepcopy
-from enum import Enum
 from functools import cached_property
 from pathlib import Path
 from typing import Any, Callable, Generator
@@ -131,11 +130,7 @@ from openapi_core.contrib.requests import (
     RequestsOpenAPIRequest,
     RequestsOpenAPIResponse,
 )
-from openapi_core.exceptions import OpenAPIError
-from openapi_core.templating.paths.exceptions import ServerNotFound
 from openapi_core.validation.exceptions import ValidationError
-from openapi_core.validation.response.exceptions import ResponseValidationError
-from openapi_core.validation.schemas.exceptions import InvalidSchemaValue
 from prance import ResolvingParser
 from prance.util.url import ResolutionError
 from requests import Response, Session
@@ -143,7 +138,6 @@ from requests.auth import AuthBase, HTTPBasicAuth
 from requests.cookies import RequestsCookieJar as CookieJar
 from robot.api import logger
 from robot.api.deco import keyword, library
-from robot.api.exceptions import Failure
 from robot.libraries.BuiltIn import BuiltIn
 
 import OpenApiLibCore.data_generation as dg
@@ -151,12 +145,8 @@ import OpenApiLibCore.data_invalidation as di
 import OpenApiLibCore.path_functions as pf
 import OpenApiLibCore.path_invalidation as pi
 import OpenApiLibCore.resource_relations as rr
-from OpenApiLibCore.dto_base import (
-    Dto,
-    IdReference,
-    UniquePropertyValueConstraint,
-    resolve_schema,
-)
+import OpenApiLibCore.validation as val
+from OpenApiLibCore.dto_base import Dto, IdReference
 from OpenApiLibCore.dto_utils import (
     DEFAULT_ID_PROPERTY_NAME,
     get_dto_class,
@@ -167,15 +157,6 @@ from OpenApiLibCore.request_data import RequestData, RequestValues
 from OpenApiLibCore.value_utils import FAKE, JSON
 
 run_keyword = BuiltIn().run_keyword
-
-
-class ValidationLevel(str, Enum):
-    """The available levels for the response_validation parameter."""
-
-    DISABLED = "DISABLED"
-    INFO = "INFO"
-    WARN = "WARN"
-    STRICT = "STRICT"
 
 
 @library(scope="SUITE", doc_format="ROBOT")
@@ -192,7 +173,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         source: str,
         origin: str = "",
         base_path: str = "",
-        response_validation: ValidationLevel = ValidationLevel.WARN,
+        response_validation: val.ValidationLevel = val.ValidationLevel.WARN,
         disable_server_validation: bool = True,
         mappings_path: str | Path = "",
         invalid_property_default_response: int = 422,
@@ -625,16 +606,146 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         )
 
     # endregion
-    # region: response validation keywords
+    # region: request keywords
+    @keyword
+    def authorized_request(  # pylint: disable=too-many-arguments
+        self,
+        url: str,
+        method: str,
+        params: dict[str, Any] = {},
+        headers: dict[str, str] = {},
+        json_data: JSON = {},
+        data: Any = None,
+        files: Any = None,
+    ) -> Response:
+        """
+        Perform a request using the security token or authentication set in the library.
+
+        `json_data`, `data` and `files` are passed to `requests.request`s `json`,
+        `data` and `files` parameters unaltered.
+        See the requests documentation for details:
+        https://requests.readthedocs.io/en/latest/api/#requests.request
+
+        > Note: provided username / password or auth objects take precedence over token
+            based security
+        """
+        headers = headers if headers else {}
+        if self.extra_headers:
+            headers.update(self.extra_headers)
+        # if both an auth object and a token are available, auth takes precedence
+        if self.security_token and not self.auth:
+            security_header = {"Authorization": self.security_token}
+            headers.update(security_header)
+        headers = {k: str(v) for k, v in headers.items()}
+        response = self.session.request(
+            url=url,
+            method=method,
+            params=params,
+            headers=headers,
+            json=json_data,
+            data=data,
+            files=files,
+            cookies=self.cookies,
+            auth=self.auth,
+            proxies=self.proxies,
+            verify=self.verify,
+            cert=self.cert,
+        )
+        logger.debug(f"Response text: {response.text}")
+        return response
+
+    # endregion
+    # region: validation keywords
+    @keyword
+    def perform_validated_request(
+        self,
+        path: str,
+        status_code: int,
+        request_values: RequestValues,
+        original_data: dict[str, Any] = {},
+    ) -> None:
+        """
+        This keyword first calls the Authorized Request keyword, then the Validate
+        Response keyword and finally validates, for `DELETE` operations, whether
+        the target resource was indeed deleted (OK response) or not (error responses).
+        """
+        val.perform_validated_request(
+            path=path,
+            status_code=status_code,
+            request_values=request_values,
+            original_data=original_data,
+        )
+
     @keyword
     def validate_response_using_validator(
         self, request: RequestsOpenAPIRequest, response: RequestsOpenAPIResponse
     ) -> None:
         """
-        Validate the reponse for a given request against the OpenAPI Spec that is
+        Validate the `response` for a given `request` against the OpenAPI Spec that is
         loaded during library initialization.
         """
-        self.response_validator(request=request, response=response)
+        val.validate_response_using_validator(
+            request=request,
+            response=response,
+            response_validator=self.response_validator,
+        )
+
+    @keyword
+    def assert_href_to_resource_is_valid(
+        self, href: str, referenced_resource: dict[str, Any]
+    ) -> None:
+        """
+        Attempt to GET the resource referenced by the `href` and validate it's equal
+        to the provided `referenced_resource` object / dictionary.
+        """
+        val.assert_href_to_resource_is_valid(
+            href=href,
+            origin=self.origin,
+            base_url=self.base_url,
+            referenced_resource=referenced_resource,
+        )
+
+    @keyword
+    def validate_response(
+        self,
+        path: str,
+        response: Response,
+        original_data: dict[str, Any] = {},
+    ) -> None:
+        """
+        Validate the `response` by performing the following validations:
+        - validate the `response` against the openapi schema for the `path`
+        - validate that the response does not contain extra properties
+        - validate that a href, if present, refers to the correct resource
+        - validate that the value for a property that is in the response is equal to
+            the property value that was send
+        - validate that no `original_data` is preserved when performing a PUT operation
+        - validate that a PATCH operation only updates the provided properties
+        """
+        val.validate_response(
+            path=path,
+            response=response,
+            response_validator=self.response_validator,
+            server_validation_warning_logged=self._server_validation_warning_logged,
+            disable_server_validation=self.disable_server_validation,
+            invalid_property_default_response=self.invalid_property_default_response,
+            response_validation=self.response_validation,
+            openapi_spec=self.openapi_spec,
+            original_data=original_data,
+        )
+
+    @keyword
+    def validate_resource_properties(
+        self, resource: dict[str, Any], schema: dict[str, Any]
+    ) -> None:
+        """
+        Validate that the `resource` does not contain any properties that are not
+        defined in the `schema_properties`.
+        """
+        val.validate_resource_properties(
+            resource=resource,
+            schema=schema,
+        )
 
     # endregion
 
@@ -758,413 +869,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
     def read_paths(self) -> dict[str, Any]:
         return self.openapi_spec["paths"]
 
-    @keyword
-    def authorized_request(  # pylint: disable=too-many-arguments
-        self,
-        url: str,
-        method: str,
-        params: dict[str, Any] = {},
-        headers: dict[str, str] = {},
-        json_data: JSON = {},
-        data: Any = None,
-        files: Any = None,
-    ) -> Response:
-        """
-        Perform a request using the security token or authentication set in the library.
-
-        `json_data`, `data` and `files` are passed to `requests.request`s `json`,
-        `data` and `files` parameters unaltered.
-        See the requests documentation for details:
-        https://requests.readthedocs.io/en/latest/api/#requests.request
-
-        > Note: provided username / password or auth objects take precedence over token
-            based security
-        """
-        headers = headers if headers else {}
-        if self.extra_headers:
-            headers.update(self.extra_headers)
-        # if both an auth object and a token are available, auth takes precedence
-        if self.security_token and not self.auth:
-            security_header = {"Authorization": self.security_token}
-            headers.update(security_header)
-        headers = {k: str(v) for k, v in headers.items()}
-        response = self.session.request(
-            url=url,
-            method=method,
-            params=params,
-            headers=headers,
-            json=json_data,
-            data=data,
-            files=files,
-            cookies=self.cookies,
-            auth=self.auth,
-            proxies=self.proxies,
-            verify=self.verify,
-            cert=self.cert,
-        )
-        logger.debug(f"Response text: {response.text}")
-        return response
-
-    @keyword
-    def perform_validated_request(
-        self,
-        path: str,
-        status_code: int,
-        request_values: RequestValues,
-        original_data: dict[str, Any] = {},
-    ) -> None:
-        """
-        This keyword first calls the Authorized Request keyword, then the Validate
-        Response keyword and finally validates, for `DELETE` operations, whether
-        the target resource was indeed deleted (OK response) or not (error responses).
-        """
-        response = run_keyword(
-            "authorized_request",
-            request_values.url,
-            request_values.method,
-            request_values.params,
-            request_values.headers,
-            request_values.json_data,
-        )
-        if response.status_code != status_code:
-            try:
-                response_json = response.json()
-            except Exception as _:  # pylint: disable=broad-except
-                logger.info(
-                    f"Failed to get json content from response. "
-                    f"Response text was: {response.text}"
-                )
-                response_json = {}
-            if not response.ok:
-                if description := response_json.get("detail"):
-                    pass
-                else:
-                    description = response_json.get(
-                        "message", "response contains no message or detail."
-                    )
-                logger.error(f"{response.reason}: {description}")
-
-            logger.debug(
-                f"\nSend: {_json.dumps(request_values.json_data, indent=4, sort_keys=True)}"
-                f"\nGot: {_json.dumps(response_json, indent=4, sort_keys=True)}"
-            )
-            raise AssertionError(
-                f"Response status_code {response.status_code} was not {status_code}"
-            )
-
-        run_keyword("validate_response", path, response, original_data)
-
-        if request_values.method == "DELETE":
-            # TODO: change to run_keyword?
-            request_data = self.get_request_data(path=path, method="GET")
-            get_params = request_data.params
-            get_headers = request_data.headers
-            get_response = run_keyword(
-                "authorized_request", request_values.url, "GET", get_params, get_headers
-            )
-            if response.ok:
-                if get_response.ok:
-                    raise AssertionError(
-                        f"Resource still exists after deletion. Url was {request_values.url}"
-                    )
-                # if the path supports GET, 404 is expected, if not 405 is expected
-                if get_response.status_code not in [404, 405]:
-                    logger.warn(
-                        f"Unexpected response after deleting resource: Status_code "
-                        f"{get_response.status_code} was received after trying to get {request_values.url} "
-                        f"after sucessfully deleting it."
-                    )
-            elif not get_response.ok:
-                raise AssertionError(
-                    f"Resource could not be retrieved after failed deletion. "
-                    f"Url was {request_values.url}, status_code was {get_response.status_code}"
-                )
-
-    @keyword
-    def validate_response(
-        self,
-        path: str,
-        response: Response,
-        original_data: dict[str, Any] = {},
-    ) -> None:
-        """
-        Validate the `response` by performing the following validations:
-        - validate the `response` against the openapi schema for the `path`
-        - validate that the response does not contain extra properties
-        - validate that a href, if present, refers to the correct resource
-        - validate that the value for a property that is in the response is equal to
-            the property value that was send
-        - validate that no `original_data` is preserved when performing a PUT operation
-        - validate that a PATCH operation only updates the provided properties
-        """
-        if response.status_code == 204:
-            assert not response.content
-            return None
-
-        try:
-            self._validate_response(response)
-        except OpenAPIError as exception:
-            raise Failure(f"Response did not pass schema validation: {exception}")
-
-        request_method = response.request.method
-        if request_method is None:
-            logger.warn(
-                f"Could not validate response for path {path}; no method found "
-                f"on the request property of the provided response."
-            )
-            return None
-
-        response_spec = self._get_response_spec(
-            path=path,
-            method=request_method,
-            status_code=response.status_code,
-        )
-
-        content_type_from_response = response.headers.get("Content-Type", "unknown")
-        mime_type_from_response, _, _ = content_type_from_response.partition(";")
-
-        if not response_spec.get("content"):
-            logger.warn(
-                "The response cannot be validated: 'content' not specified in the OAS."
-            )
-            return None
-
-        # multiple content types can be specified in the OAS
-        content_types = list(response_spec["content"].keys())
-        supported_types = [
-            ct for ct in content_types if ct.partition(";")[0].endswith("json")
-        ]
-        if not supported_types:
-            raise NotImplementedError(
-                f"The content_types '{content_types}' are not supported. "
-                f"Only json types are currently supported."
-            )
-        content_type = supported_types[0]
-        mime_type = content_type.partition(";")[0]
-
-        if mime_type != mime_type_from_response:
-            raise ValueError(
-                f"Content-Type '{content_type_from_response}' of the response "
-                f"does not match '{mime_type}' as specified in the OpenAPI document."
-            )
-
-        json_response = response.json()
-        response_schema = resolve_schema(
-            response_spec["content"][content_type]["schema"]
-        )
-
-        response_types = response_schema.get("types")
-        if response_types:
-            # In case of oneOf / anyOf there can be multiple possible response types
-            # which makes generic validation too complex
-            return None
-        response_type = response_schema.get("type", "undefined")
-        if response_type not in ["object", "array"]:
-            self._validate_value_type(value=json_response, expected_type=response_type)
-            return None
-
-        if list_item_schema := response_schema.get("items"):
-            if not isinstance(json_response, list):
-                raise AssertionError(
-                    f"Response schema violation: the schema specifies an array as "
-                    f"response type but the response was of type {type(json_response)}."
-                )
-            type_of_list_items = list_item_schema.get("type")
-            if type_of_list_items == "object":
-                for resource in json_response:
-                    run_keyword(
-                        "validate_resource_properties", resource, list_item_schema
-                    )
-            else:
-                for item in json_response:
-                    self._validate_value_type(
-                        value=item, expected_type=type_of_list_items
-                    )
-            # no further validation; value validation of individual resources should
-            # be performed on the path for the specific resources
-            return None
-
-        run_keyword("validate_resource_properties", json_response, response_schema)
-        # ensure the href is valid if present in the response
-        if href := json_response.get("href"):
-            self._assert_href_is_valid(href, json_response)
-        # every property that was sucessfully send and that is in the response
-        # schema must have the value that was send
-        if response.ok and response.request.method in ["POST", "PUT", "PATCH"]:
-            run_keyword("validate_send_response", response, original_data)
-        return None
-
-    def _assert_href_is_valid(self, href: str, json_response: dict[str, Any]) -> None:
-        url = f"{self.origin}{href}"
-        path = url.replace(self.base_url, "")
-        # TODO: change to run_keyword?
-        request_data = self.get_request_data(path=path, method="GET")
-        params = request_data.params
-        headers = request_data.headers
-        get_response = run_keyword("authorized_request", url, "GET", params, headers)
-        assert get_response.json() == json_response, (
-            f"{get_response.json()} not equal to original {json_response}"
-        )
-
-    def _validate_response(self, response: Response) -> None:
-        try:
-            self.validate_response_using_validator(
-                request=RequestsOpenAPIRequest(response.request),
-                response=RequestsOpenAPIResponse(response),
-            )
-        except (ResponseValidationError, ServerNotFound) as exception:
-            errors: list[InvalidSchemaValue] = exception.__cause__
-            validation_errors: list[ValidationError] = getattr(
-                errors, "schema_errors", []
-            )
-            if validation_errors:
-                error_message = "\n".join(
-                    [
-                        f"{list(error.schema_path)}: {error.message}"
-                        for error in validation_errors
-                    ]
-                )
-            else:
-                error_message = str(exception)
-
-            if isinstance(exception, ServerNotFound):
-                if not self._server_validation_warning_logged:
-                    logger.warn(
-                        f"ServerNotFound was raised during response validation. "
-                        f"Due to this, no full response validation will be performed."
-                        f"\nThe original error was: {error_message}"
-                    )
-                    self._server_validation_warning_logged = True
-                if self.disable_server_validation:
-                    return
-            if response.status_code == self.invalid_property_default_response:
-                logger.debug(error_message)
-                return
-            if self.response_validation == ValidationLevel.STRICT:
-                logger.error(error_message)
-                raise exception
-            if self.response_validation == ValidationLevel.WARN:
-                logger.warn(error_message)
-            elif self.response_validation == ValidationLevel.INFO:
-                logger.info(error_message)
-
-    @keyword
-    def validate_resource_properties(
-        self, resource: dict[str, Any], schema: dict[str, Any]
-    ) -> None:
-        """
-        Validate that the `resource` does not contain any properties that are not
-        defined in the `schema_properties`.
-        """
-        schema_properties = schema.get("properties", {})
-        property_names_from_schema = set(schema_properties.keys())
-        property_names_in_resource = set(resource.keys())
-
-        if property_names_from_schema != property_names_in_resource:
-            # The additionalProperties property determines whether properties with
-            # unspecified names are allowed. This property can be boolean or an object
-            # (dict) that specifies the type of any additional properties.
-            additional_properties = schema.get("additionalProperties", True)
-            if isinstance(additional_properties, bool):
-                allow_additional_properties = additional_properties
-                allowed_additional_properties_type = None
-            else:
-                allow_additional_properties = True
-                allowed_additional_properties_type = additional_properties["type"]
-
-            extra_property_names = property_names_in_resource.difference(
-                property_names_from_schema
-            )
-            if allow_additional_properties:
-                # If a type is defined for extra properties, validate them
-                if allowed_additional_properties_type:
-                    extra_properties = {
-                        key: value
-                        for key, value in resource.items()
-                        if key in extra_property_names
-                    }
-                    self._validate_type_of_extra_properties(
-                        extra_properties=extra_properties,
-                        expected_type=allowed_additional_properties_type,
-                    )
-                # If allowed, validation should not fail on extra properties
-                extra_property_names = set()
-
-            required_properties = set(schema.get("required", []))
-            missing_properties = required_properties.difference(
-                property_names_in_resource
-            )
-
-            if extra_property_names or missing_properties:
-                extra = (
-                    f"\n\tExtra properties in response: {extra_property_names}"
-                    if extra_property_names
-                    else ""
-                )
-                missing = (
-                    f"\n\tRequired properties missing in response: {missing_properties}"
-                    if missing_properties
-                    else ""
-                )
-                raise AssertionError(
-                    f"Response schema violation: the response contains properties that are "
-                    f"not specified in the schema or does not contain properties that are "
-                    f"required according to the schema."
-                    f"\n\tReceived in the response: {property_names_in_resource}"
-                    f"\n\tDefined in the schema:    {property_names_from_schema}"
-                    f"{extra}{missing}"
-                )
-
-    @staticmethod
-    def _validate_value_type(value: Any, expected_type: str) -> None:
-        type_mapping = {
-            "string": str,
-            "number": float,
-            "integer": int,
-            "boolean": bool,
-            "array": list,
-            "object": dict,
-        }
-        python_type = type_mapping.get(expected_type, None)
-        if python_type is None:
-            raise AssertionError(
-                f"Validation of type '{expected_type}' is not supported."
-            )
-        if not isinstance(value, python_type):
-            raise AssertionError(f"{value} is not of type {expected_type}")
-
-    @staticmethod
-    def _validate_type_of_extra_properties(
-        extra_properties: dict[str, Any], expected_type: str
-    ) -> None:
-        type_mapping = {
-            "string": str,
-            "number": float,
-            "integer": int,
-            "boolean": bool,
-            "array": list,
-            "object": dict,
-        }
-
-        python_type = type_mapping.get(expected_type, None)
-        if python_type is None:
-            logger.warn(
-                f"Additonal properties were not validated: "
-                f"type '{expected_type}' is not supported."
-            )
-            return
-
-        invalid_extra_properties = {
-            key: value
-            for key, value in extra_properties.items()
-            if not isinstance(value, python_type)
-        }
-        if invalid_extra_properties:
-            raise AssertionError(
-                f"Response contains invalid additionalProperties: "
-                f"{invalid_extra_properties} are not of type {expected_type}."
-            )
-
     @staticmethod
     @keyword
     def validate_send_response(
@@ -1266,13 +970,3 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
                         f"\nGot: {_json.dumps(response_data, indent=4, sort_keys=True)}"
                     )
         return None
-
-    def _get_response_spec(
-        self, path: str, method: str, status_code: int
-    ) -> dict[str, Any]:
-        method = method.lower()
-        status = str(status_code)
-        spec: dict[str, Any] = {**self.openapi_spec}["paths"][path][method][
-            "responses"
-        ][status]
-        return spec

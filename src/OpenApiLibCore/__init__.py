@@ -25,15 +25,16 @@ from OpenApiLibCore.dto_base import (
 from OpenApiLibCore.dto_utils import DefaultDto
 from OpenApiLibCore.openapi_libcore import (
     OpenApiLibCore,
-    ValidationLevel,
 )
 from OpenApiLibCore.request_data import RequestData, RequestValues
+from OpenApiLibCore.validation import ValidationLevel
 from OpenApiLibCore.value_utils import IGNORE
 
 try:
     __version__ = version("robotframework-openapi-libcore")
 except Exception:  # pragma: no cover
     pass
+
 
 __all__ = [
     "IGNORE",
