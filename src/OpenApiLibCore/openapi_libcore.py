@@ -747,6 +747,20 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             schema=schema,
         )
 
+    @staticmethod
+    @keyword
+    def validate_send_response(
+        response: Response,
+        original_data: dict[str, Any] = {},
+    ) -> None:
+        """
+        Validate that each property that was send that is in the response has the value
+        that was send.
+        In case a PATCH request, validate that only the properties that were patched
+        have changed and that other properties are still at their pre-patch values.
+        """
+        val.validate_send_response(response=response, original_data=original_data)
+
     # endregion
 
     @property
@@ -868,105 +882,3 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
 
     def read_paths(self) -> dict[str, Any]:
         return self.openapi_spec["paths"]
-
-    @staticmethod
-    @keyword
-    def validate_send_response(
-        response: Response,
-        original_data: dict[str, Any] = {},
-    ) -> None:
-        """
-        Validate that each property that was send that is in the response has the value
-        that was send.
-        In case a PATCH request, validate that only the properties that were patched
-        have changed and that other properties are still at their pre-patch values.
-        """
-
-        def validate_list_response(
-            send_list: list[Any], received_list: list[Any]
-        ) -> None:
-            for item in send_list:
-                if item not in received_list:
-                    raise AssertionError(
-                        f"Received value '{received_list}' does "
-                        f"not contain '{item}' in the {response.request.method} request."
-                        f"\nSend: {_json.dumps(send_json, indent=4, sort_keys=True)}"
-                        f"\nGot: {_json.dumps(response_data, indent=4, sort_keys=True)}"
-                    )
-
-        def validate_dict_response(
-            send_dict: dict[str, Any], received_dict: dict[str, Any]
-        ) -> None:
-            for send_property_name, send_property_value in send_dict.items():
-                # sometimes, a property in the request is not in the response, e.g. a password
-                if send_property_name not in received_dict.keys():
-                    continue
-                if send_property_value is not None:
-                    # if a None value is send, the target property should be cleared or
-                    # reverted to the default value (which cannot be specified in the
-                    # openapi document)
-                    received_value = received_dict[send_property_name]
-                    # In case of lists / arrays, the send values are often appended to
-                    # existing data
-                    if isinstance(received_value, list):
-                        validate_list_response(
-                            send_list=send_property_value, received_list=received_value
-                        )
-                        continue
-
-                    # when dealing with objects, we'll need to iterate the properties
-                    if isinstance(received_value, dict):
-                        validate_dict_response(
-                            send_dict=send_property_value, received_dict=received_value
-                        )
-                        continue
-
-                    assert received_value == send_property_value, (
-                        f"Received value for {send_property_name} '{received_value}' does not "
-                        f"match '{send_property_value}' in the {response.request.method} request."
-                        f"\nSend: {_json.dumps(send_json, indent=4, sort_keys=True)}"
-                        f"\nGot: {_json.dumps(response_data, indent=4, sort_keys=True)}"
-                    )
-
-        if response.request.body is None:
-            logger.warn(
-                "Could not validate send response; the body of the request property "
-                "on the provided response was None."
-            )
-            return None
-        if isinstance(response.request.body, bytes):
-            send_json = _json.loads(response.request.body.decode("UTF-8"))
-        else:
-            send_json = _json.loads(response.request.body)
-
-        response_data = response.json()
-        # POST on /resource_type/{id}/array_item/ will return the updated {id} resource
-        # instead of a newly created resource. In this case, the send_json must be
-        # in the array of the 'array_item' property on {id}
-        send_path: str = response.request.path_url
-        response_path = response_data.get("href", None)
-        if response_path and send_path not in response_path:
-            property_to_check = send_path.replace(response_path, "")[1:]
-            if response_data.get(property_to_check) and isinstance(
-                response_data[property_to_check], list
-            ):
-                item_list: list[dict[str, Any]] = response_data[property_to_check]
-                # Use the (mandatory) id to get the POSTed resource from the list
-                [response_data] = [
-                    item for item in item_list if item["id"] == send_json["id"]
-                ]
-
-        # incoming arguments are dictionaries, so they can be validated as such
-        validate_dict_response(send_dict=send_json, received_dict=response_data)
-
-        # In case of PATCH requests, ensure that only send properties have changed
-        if original_data:
-            for send_property_name, send_value in original_data.items():
-                if send_property_name not in send_json.keys():
-                    assert send_value == response_data[send_property_name], (
-                        f"Received value for {send_property_name} '{response_data[send_property_name]}' does not "
-                        f"match '{send_value}' in the pre-patch data"
-                        f"\nPre-patch: {_json.dumps(original_data, indent=4, sort_keys=True)}"
-                        f"\nGot: {_json.dumps(response_data, indent=4, sort_keys=True)}"
-                    )
-        return None
