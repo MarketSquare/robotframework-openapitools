@@ -1,10 +1,10 @@
 from random import choice
-from typing import Callable, Type
 from uuid import uuid4
 
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore.dto_base import Dto, PathPropertiesConstraint
+from OpenApiLibCore.dto_base import PathPropertiesConstraint
+from OpenApiLibCore.dto_utils import GetDtoClassType
 
 run_keyword = BuiltIn().run_keyword
 
@@ -14,7 +14,7 @@ def get_invalidated_url(
     path: str,
     method: str,
     base_url: str,
-    get_dto_class: Callable[[str, str], Type[Dto]],
+    get_dto_class: GetDtoClassType,
     expected_status_code: int,
 ) -> str:
     dto_class = get_dto_class(path=path, method=method)

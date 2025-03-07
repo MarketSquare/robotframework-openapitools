@@ -1,12 +1,13 @@
 import json as _json
 from itertools import zip_longest
 from random import choice
-from typing import Any, Callable, Type
+from typing import Any, Callable
 
 from requests import Response
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore.dto_base import Dto, PathPropertiesConstraint
+from OpenApiLibCore.dto_base import PathPropertiesConstraint
+from OpenApiLibCore.dto_utils import GetDtoClassType, GetIdPropertyNameType
 from OpenApiLibCore.request_data import RequestData
 
 run_keyword = BuiltIn().run_keyword
@@ -62,7 +63,7 @@ def get_valid_url(
     path: str,
     method: str,
     base_url: str,
-    get_dto_class: Callable[[str, str], Type[Dto]],
+    get_dto_class: GetDtoClassType,
     openapi_spec: dict[str, Any],
 ) -> str:
     method = method.lower()
@@ -98,9 +99,7 @@ def get_valid_url(
 def get_valid_id_for_path(
     path: str,
     method: str,
-    get_id_property_name: Callable[
-        [str], str | tuple[str, tuple[Callable[[str | int | float], str | int | float]]]
-    ],  # FIXME: Protocol for the signature
+    get_id_property_name: GetIdPropertyNameType,
 ) -> str | int | float:
     def dummy_transformer(valid_id: str | int | float) -> str | int | float:
         return valid_id
@@ -191,9 +190,7 @@ def get_valid_id_for_path(
 
 def get_ids_from_url(
     url: str,
-    get_id_property_name: Callable[
-        [str], str | tuple[str, tuple[Callable[[str | int | float], str | int | float]]]
-    ],  # FIXME: Protocol for the signature
+    get_id_property_name: GetIdPropertyNameType,
 ) -> list[str]:
     path: str = run_keyword("get_parameterized_path_from_url", url)
     request_data: RequestData = run_keyword("get_request_data", path, "get")

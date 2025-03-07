@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from importlib import import_module
-from typing import Callable, Type
+from typing import Callable, Protocol, Type
 
 from robot.api import logger
 
@@ -22,8 +22,17 @@ class DefaultDto(Dto):
     """A default Dto that can be instantiated."""
 
 
-# pylint: disable=invalid-name, too-few-public-methods
-class get_dto_class:  # FIXME: change to function that returns class
+class GetDtoClassType(Protocol):
+    def __init__(self, mappings_module_name: str) -> None: ...
+
+    def __call__(self, path: str, method: str) -> Type[Dto]: ...
+
+
+def get_dto_class(mappings_module_name: str) -> GetDtoClassType:
+    return GetDtoClass(mappings_module_name=mappings_module_name)
+
+
+class GetDtoClass:
     """Callable class to return Dtos from user-implemented mappings file."""
 
     def __init__(self, mappings_module_name: str) -> None:
@@ -45,8 +54,19 @@ class get_dto_class:  # FIXME: change to function that returns class
             return DefaultDto
 
 
-# pylint: disable=invalid-name, too-few-public-methods
-class get_id_property_name:  # FIXME: change to function that returns class
+class GetIdPropertyNameType(Protocol):
+    def __init__(self, mappings_module_name: str) -> None: ...
+
+    def __call__(
+        self, path: str
+    ) -> str | tuple[str, tuple[Callable[[str | int | float], str | int | float]]]: ...
+
+
+def get_id_property_name(mappings_module_name: str) -> GetIdPropertyNameType:
+    return GetIdPropertyName(mappings_module_name=mappings_module_name)
+
+
+class GetIdPropertyName:
     """
     Callable class to return the name of the property that uniquely identifies
     the resource from user-implemented mappings file.

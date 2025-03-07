@@ -1,7 +1,7 @@
 import re
 from dataclasses import Field, field, make_dataclass
 from random import choice, sample
-from typing import Any, Callable, Type
+from typing import Any, Callable
 
 from robot.api import logger
 
@@ -13,7 +13,7 @@ from OpenApiLibCore.dto_base import (
     ResourceRelation,
     resolve_schema,
 )
-from OpenApiLibCore.dto_utils import DefaultDto
+from OpenApiLibCore.dto_utils import DefaultDto, GetDtoClassType, GetIdPropertyNameType
 from OpenApiLibCore.request_data import RequestData
 from OpenApiLibCore.value_utils import IGNORE, get_valid_value
 
@@ -21,10 +21,8 @@ from OpenApiLibCore.value_utils import IGNORE, get_valid_value
 def get_request_data(
     path: str,
     method: str,
-    get_dto_class: Callable[[str, str], Type[Dto]],
-    get_id_property_name: Callable[
-        [str], str | tuple[str, tuple[Callable[[str | int | float], str | int | float]]]
-    ],  # FIXME: Protocol for the signature
+    get_dto_class: GetDtoClassType,
+    get_id_property_name: GetIdPropertyNameType,
     openapi_spec: dict[str, Any],
 ) -> RequestData:
     method = method.lower()
@@ -32,7 +30,6 @@ def get_request_data(
     # The endpoint can contain already resolved Ids that have to be matched
     # against the parametrized endpoints in the paths section.
     spec_path = pf.get_parametrized_path(path=path, openapi_spec=openapi_spec)
-    # TODO: use Protocol to annotate get_dto_class?
     dto_class = get_dto_class(path=spec_path, method=method)
     try:
         method_spec = openapi_spec["paths"][spec_path][method]
@@ -231,7 +228,7 @@ def get_fields_from_dto_data(
         else:
             fields.append(
                 (safe_key, type(value), field(default=None, metadata=metadata))
-            )  # type: ignore[arg-type]
+            )
     return fields
 
 
