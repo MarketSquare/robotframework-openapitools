@@ -224,32 +224,29 @@ class RequestData:
 
     def get_required_params(self) -> dict[str, str]:
         """Get the params dict containing only the required query parameters."""
-        relations = self.dto.get_parameter_relations()
-        mandatory_properties = [
-            relation.property_name
-            for relation in relations
-            if getattr(relation, "treat_as_mandatory", False)
-        ]
-        mandatory_parameters = [p for p in mandatory_properties if p in self.parameters]
-
-        required_parameters = [
-            p.get("name") for p in self.parameters if p.get("required")
-        ]
-        required_parameters.extend(mandatory_parameters)
-        return {k: v for k, v in self.params.items() if k in required_parameters}
+        return {k: v for k, v in self.params.items() if k in self.required_parameter_names}
 
     def get_required_headers(self) -> dict[str, str]:
         """Get the headers dict containing only the required headers."""
+        return {k: v for k, v in self.headers.items() if k in self.required_parameter_names}
+
+    @property
+    def required_parameter_names(self) -> list[str]:
+        """
+        The names of the mandatory parameters, including the parameters configured to be
+        treated as mandatory using a PropertyValueConstraint.
+        """
         relations = self.dto.get_parameter_relations()
-        mandatory_properties = [
+        mandatory_property_names = [
             relation.property_name
             for relation in relations
             if getattr(relation, "treat_as_mandatory", False)
         ]
-        mandatory_parameters = [p for p in mandatory_properties if p in self.parameters]
+        parameter_names = [p["name"] for p in self.parameters]
+        mandatory_parameters = [p for p in mandatory_property_names if p in parameter_names]
 
         required_parameters = [
-            p.get("name") for p in self.parameters if p.get("required")
+            p["name"] for p in self.parameters if p.get("required")
         ]
         required_parameters.extend(mandatory_parameters)
-        return {k: v for k, v in self.headers.items() if k in required_parameters}
+        return required_parameters
