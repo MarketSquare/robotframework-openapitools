@@ -73,7 +73,8 @@ Test Get Required Params
     ${request_data}=    Get Request Data    path=/energy_label/{zipcode}/{home_number}    method=get
     Should Contain    ${request_data.params}    extension
     ${required_params}=    Set Variable    ${request_data.get_required_params()}
-    Should Be Empty    ${required_params}
+    # extension is configured with treat_as_mandatory=True
+    Should Contain    ${required_params}    extension
 
 Test Get Required Headers
     ${request_data}=    Get Request Data    path=/secret_message    method=get
