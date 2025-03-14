@@ -120,10 +120,12 @@ data types and properties. The following list details the most important ones:
 
 import json as _json
 import sys
+from collections.abc import Mapping, MutableMapping
 from copy import deepcopy
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Callable, Generator
+from types import MappingProxyType
+from typing import Any, Generator
 
 from openapi_core import Config, OpenAPI, Spec
 from openapi_core.contrib.requests import (
@@ -138,6 +140,7 @@ from requests.auth import AuthBase, HTTPBasicAuth
 from requests.cookies import RequestsCookieJar as CookieJar
 from robot.api import logger
 from robot.api.deco import keyword, library
+from robot.api.exceptions import FatalError
 from robot.libraries.BuiltIn import BuiltIn
 
 import OpenApiLibCore.data_generation as dg
@@ -146,21 +149,24 @@ import OpenApiLibCore.path_functions as pf
 import OpenApiLibCore.path_invalidation as pi
 import OpenApiLibCore.resource_relations as rr
 import OpenApiLibCore.validation as val
+from OpenApiLibCore.annotations import ResponseValidatorType
 from OpenApiLibCore.dto_base import Dto, IdReference
 from OpenApiLibCore.dto_utils import (
     DEFAULT_ID_PROPERTY_NAME,
     get_dto_class,
     get_id_property_name,
 )
-from OpenApiLibCore.oas_cache import PARSER_CACHE
+from OpenApiLibCore.oas_cache import PARSER_CACHE, CachedParser
 from OpenApiLibCore.request_data import RequestData, RequestValues
 from OpenApiLibCore.value_utils import FAKE, JSON
 
 run_keyword = BuiltIn().run_keyword
+default_str_mapping: Mapping[str, str] = MappingProxyType({})
+default_any_mapping: Mapping[str, Any] = MappingProxyType({})
 
 
 @library(scope="SUITE", doc_format="ROBOT")
-class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
+class OpenApiLibCore:
     """
     Main class providing the keywords and core logic to interact with an OpenAPI server.
 
@@ -168,7 +174,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
     for an introduction.
     """
 
-    def __init__(  # pylint: disable=too-many-arguments, too-many-locals, dangerous-default-value
+    def __init__(
         self,
         source: str,
         origin: str = "",
@@ -181,16 +187,16 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         faker_locale: str | list[str] = "",
         require_body_for_invalid_url: bool = False,
         recursion_limit: int = 1,
-        recursion_default: Any = {},
+        recursion_default: Any = default_str_mapping,
         username: str = "",
         password: str = "",
         security_token: str = "",
         auth: AuthBase | None = None,
-        cert: str | tuple[str, str] | None = None,
+        cert: str | tuple[str, str] = "",
         verify_tls: bool | str = True,
-        extra_headers: dict[str, str] = {},
-        cookies: dict[str, str] | CookieJar = {},
-        proxies: dict[str, str] = {},
+        extra_headers: Mapping[str, str] = default_str_mapping,
+        cookies: MutableMapping[str, str] | CookieJar | None = None,
+        proxies: MutableMapping[str, str] | None = None,
     ) -> None:
         """
         == Base parameters ==
@@ -320,16 +326,16 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         self._recursion_limit = recursion_limit
         self._recursion_default = recursion_default
         self.session = Session()
-        # only username and password, security_token or auth object should be provided
+        # Only username and password, security_token or auth object should be provided
         # if multiple are provided, username and password take precedence
         self.security_token = security_token
         self.auth = auth
         if username:
             self.auth = HTTPBasicAuth(username, password)
-        # Robot Framework does not allow users to create tuples and requests
-        # does not accept lists, so perform the conversion here
-        if isinstance(cert, list):
-            cert = tuple(cert)
+        # Requests only allows a string or a tuple[str, str], so ensure cert is a tuple
+        # if the passed argument is not a string.
+        if not isinstance(cert, str):
+            cert = (cert[0], cert[1])
         self.cert = cert
         self.verify = verify_tls
         self.extra_headers = extra_headers
@@ -340,8 +346,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
             mappings_path = Path(mappings_path)
             if not mappings_path.is_file():
                 logger.warn(f"mappings_path '{mappings_path}' is not a Python module.")
-            # intermediate variable to ensure path.append is possible so we'll never
-            # path.pop a location that we didn't append
+            # Intermediate variable to ensure path.append is possible so we'll never
+            # path.pop a location that we didn't append.
             mappings_folder = str(mappings_path.parent)
             sys.path.append(mappings_folder)
             mappings_module_name = mappings_path.stem
@@ -612,9 +618,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         self,
         url: str,
         method: str,
-        params: dict[str, Any] = {},
-        headers: dict[str, str] = {},
-        json_data: JSON = {},
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        json_data: JSON = None,
         data: Any = None,
         files: Any = None,
     ) -> Response:
@@ -629,7 +635,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         > Note: provided username / password or auth objects take precedence over token
             based security
         """
-        headers = headers if headers else {}
+        headers = deepcopy(headers) if headers else {}
         if self.extra_headers:
             headers.update(self.extra_headers)
         # if both an auth object and a token are available, auth takes precedence
@@ -662,7 +668,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         path: str,
         status_code: int,
         request_values: RequestValues,
-        original_data: dict[str, Any] = {},
+        original_data: Mapping[str, Any] = default_any_mapping,
     ) -> None:
         """
         This keyword first calls the Authorized Request keyword, then the Validate
@@ -710,7 +716,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
         self,
         path: str,
         response: Response,
-        original_data: dict[str, Any] = {},
+        original_data: Mapping[str, Any] = default_any_mapping,
     ) -> None:
         """
         Validate the `response` by performing the following validations:
@@ -751,7 +757,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
     @keyword
     def validate_send_response(
         response: Response,
-        original_data: dict[str, Any] = {},
+        original_data: Mapping[str, Any] = default_any_mapping,
     ) -> None:
         """
         Validate that each property that was send that is in the response has the value
@@ -790,7 +796,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
     @cached_property
     def response_validator(
         self,
-    ) -> Callable[[RequestsOpenAPIRequest, RequestsOpenAPIResponse], None]:
+    ) -> ResponseValidatorType:
         _, _, response_validator = self._load_specs_and_validator()
         return response_validator
 
@@ -820,65 +826,65 @@ class OpenApiLibCore:  # pylint: disable=too-many-instance-attributes
     ) -> tuple[
         ResolvingParser,
         Spec,
-        Callable[[RequestsOpenAPIRequest, RequestsOpenAPIResponse], None],
+        ResponseValidatorType,
     ]:
+        def recursion_limit_handler(limit: int, refstring: str, recursions: Any) -> Any:
+            return self._recursion_default
+
         try:
-
-            def recursion_limit_handler(
-                limit: int, refstring: str, recursions: Any
-            ) -> Any:
-                return self._recursion_default
-
             # Since parsing of the OAS and creating the Spec can take a long time,
             # they are cached. This is done by storing them in an imported module that
             # will have a global scope due to how the Python import system works. This
             # ensures that in a Suite of Suites where multiple Suites use the same
             # `source`, that OAS is only parsed / loaded once.
-            parser, validation_spec, response_validator = PARSER_CACHE.get(
-                self._source, (None, None, None)
+            cached_parser = PARSER_CACHE.get(self._source, None)
+            if cached_parser:
+                return (
+                    cached_parser.parser,
+                    cached_parser.validation_spec,
+                    cached_parser.response_validator,
+                )
+
+            parser = ResolvingParser(
+                self._source,
+                backend="openapi-spec-validator",
+                recursion_limit=self._recursion_limit,
+                recursion_limit_handler=recursion_limit_handler,
             )
 
-            if parser is None:
-                parser = ResolvingParser(
-                    self._source,
-                    backend="openapi-spec-validator",
-                    recursion_limit=self._recursion_limit,
-                    recursion_limit_handler=recursion_limit_handler,
+            if parser.specification is None:  # pragma: no cover
+                raise FatalError(
+                    "Source was loaded, but no specification was present after parsing."
                 )
 
-                if parser.specification is None:  # pragma: no cover
-                    BuiltIn().fatal_error(
-                        "Source was loaded, but no specification was present after parsing."
-                    )
+            validation_spec = Spec.from_dict(parser.specification)
 
-                validation_spec = Spec.from_dict(parser.specification)
+            json_types_from_spec: set[str] = self._get_json_types_from_spec(
+                parser.specification
+            )
+            extra_deserializers = {
+                json_type: _json.loads for json_type in json_types_from_spec
+            }
+            config = Config(extra_media_type_deserializers=extra_deserializers)
+            openapi = OpenAPI(spec=validation_spec, config=config)
+            response_validator: ResponseValidatorType = openapi.validate_response
 
-                json_types_from_spec: set[str] = self._get_json_types_from_spec(
-                    parser.specification
-                )
-                extra_deserializers = {
-                    json_type: _json.loads for json_type in json_types_from_spec
-                }
-                config = Config(extra_media_type_deserializers=extra_deserializers)
-                openapi = OpenAPI(spec=validation_spec, config=config)
-                response_validator = openapi.validate_response
-
-                PARSER_CACHE[self._source] = (
-                    parser,
-                    validation_spec,
-                    response_validator,
-                )
+            PARSER_CACHE[self._source] = CachedParser(
+                parser=parser,
+                validation_spec=validation_spec,
+                response_validator=response_validator,
+            )
 
             return parser, validation_spec, response_validator
 
         except ResolutionError as exception:
-            BuiltIn().fatal_error(
+            raise FatalError(
                 f"ResolutionError while trying to load openapi spec: {exception}"
-            )
+            ) from exception
         except ValidationError as exception:
-            BuiltIn().fatal_error(
+            raise FatalError(
                 f"ValidationError while trying to load openapi spec: {exception}"
-            )
+            ) from exception
 
     def read_paths(self) -> dict[str, Any]:
         return self.openapi_spec["paths"]

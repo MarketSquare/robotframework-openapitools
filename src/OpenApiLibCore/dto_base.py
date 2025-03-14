@@ -85,7 +85,7 @@ def merge_schemas(first: dict[str, Any], second: dict[str, Any]) -> dict[str, An
     return merged_schema
 
 
-class ResourceRelation(ABC):  # pylint: disable=too-few-public-methods
+class ResourceRelation(ABC):
     """ABC for all resource relations or restrictions within the API."""
 
     property_name: str

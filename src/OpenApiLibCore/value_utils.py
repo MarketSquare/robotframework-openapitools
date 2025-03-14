@@ -5,7 +5,7 @@ import base64
 import datetime
 from copy import deepcopy
 from random import choice, randint, uniform
-from typing import Any, Callable
+from typing import Any, Callable, Iterable, Mapping
 
 import faker
 import rstr
@@ -125,7 +125,7 @@ def python_type_by_json_type_name(type_name: str) -> Any:
     raise ValueError(f"No Python type mapping for JSON type '{type_name}' available.")
 
 
-def get_valid_value(value_schema: dict[str, Any]) -> Any:
+def get_valid_value(value_schema: Mapping[str, Any]) -> Any:
     """Return a random value that is valid under the provided value_schema."""
     value_schema = deepcopy(value_schema)
 
@@ -155,9 +155,9 @@ def get_valid_value(value_schema: dict[str, Any]) -> Any:
 
 
 def get_invalid_value(
-    value_schema: dict[str, Any],
+    value_schema: Mapping[str, Any],
     current_value: Any,
-    values_from_constraint: list[Any] | None = None,  # FIXME: default empty list?
+    values_from_constraint: Iterable[Any] = tuple(),
 ) -> Any:
     """Return a random value that violates the provided value_schema."""
     value_schema = deepcopy(value_schema)
@@ -179,7 +179,7 @@ def get_invalid_value(
         values_from_constraint
         and (
             invalid_value := get_invalid_value_from_constraint(
-                values_from_constraint=values_from_constraint,
+                values_from_constraint=list(values_from_constraint),
                 value_type=value_type,
             )
         )
@@ -211,7 +211,7 @@ def get_invalid_value(
     return FAKE.uuid()
 
 
-def get_random_int(value_schema: dict[str, Any]) -> int:
+def get_random_int(value_schema: Mapping[str, Any]) -> int:
     """Generate a random int within the min/max range of the schema, if specified."""
     # Use int32 integers if "format" does not specify int64
     property_format = value_schema.get("format", "int32")
@@ -240,7 +240,7 @@ def get_random_int(value_schema: dict[str, Any]) -> int:
     return randint(minimum, maximum)
 
 
-def get_random_float(value_schema: dict[str, Any]) -> float:
+def get_random_float(value_schema: Mapping[str, Any]) -> float:
     """Generate a random float within the min/max range of the schema, if specified."""
     # Python floats are already double precision, so no check for "format"
     minimum = value_schema.get("minimum")
@@ -288,7 +288,7 @@ def get_random_float(value_schema: dict[str, Any]) -> float:
     return uniform(minimum, maximum)
 
 
-def get_random_string(value_schema: dict[str, Any]) -> bytes | str:
+def get_random_string(value_schema: Mapping[str, Any]) -> bytes | str:
     """Generate a random string within the min/max length in the schema, if specified."""
     # if a pattern is provided, format and min/max length can be ignored
     if pattern := value_schema.get("pattern"):
@@ -323,7 +323,7 @@ def fake_string(string_format: str) -> str:
     return value
 
 
-def get_random_array(value_schema: dict[str, Any]) -> list[Any]:
+def get_random_array(value_schema: Mapping[str, Any]) -> list[Any]:
     """Generate a list with random elements as specified by the schema."""
     minimum = value_schema.get("minItems", 0)
     maximum = value_schema.get("maxItems", 1)
@@ -434,7 +434,7 @@ def get_invalid_value_from_enum(values: list[Any], value_type: str) -> Any:
     return invalid_value
 
 
-def get_value_out_of_bounds(value_schema: dict[str, Any], current_value: Any) -> Any:
+def get_value_out_of_bounds(value_schema: Mapping[str, Any], current_value: Any) -> Any:
     """
     Return a value just outside the value or length range if specified in the
     provided schema, otherwise None is returned.

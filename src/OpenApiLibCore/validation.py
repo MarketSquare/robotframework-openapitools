@@ -1,6 +1,8 @@
+"""Module holding the functions related to validation of requests and responses."""
+
 import json as _json
 from enum import Enum
-from typing import Any, Callable
+from typing import Any, Mapping
 
 from openapi_core.contrib.requests import (
     RequestsOpenAPIRequest,
@@ -10,12 +12,12 @@ from openapi_core.exceptions import OpenAPIError
 from openapi_core.templating.paths.exceptions import ServerNotFound
 from openapi_core.validation.exceptions import ValidationError
 from openapi_core.validation.response.exceptions import ResponseValidationError
-from openapi_core.validation.schemas.exceptions import InvalidSchemaValue
 from requests import Response
 from robot.api import logger
 from robot.api.exceptions import Failure
 from robot.libraries.BuiltIn import BuiltIn
 
+from OpenApiLibCore.annotations import ResponseValidatorType
 from OpenApiLibCore.dto_base import resolve_schema
 from OpenApiLibCore.request_data import RequestData, RequestValues
 
@@ -35,7 +37,7 @@ def perform_validated_request(
     path: str,
     status_code: int,
     request_values: RequestValues,
-    original_data: dict[str, Any] = {},
+    original_data: Mapping[str, Any],
 ) -> None:
     response = run_keyword(
         "authorized_request",
@@ -116,15 +118,13 @@ def assert_href_to_resource_is_valid(
 def validate_response(
     path: str,
     response: Response,
-    response_validator: Callable[
-        [RequestsOpenAPIRequest, RequestsOpenAPIResponse], None
-    ],
+    response_validator: ResponseValidatorType,
     server_validation_warning_logged: bool,
     disable_server_validation: bool,
     invalid_property_default_response: int,
     response_validation: str,
     openapi_spec: dict[str, Any],
-    original_data: dict[str, Any] = {},
+    original_data: Mapping[str, Any],
 ) -> None:
     if response.status_code == 204:
         assert not response.content
@@ -140,7 +140,9 @@ def validate_response(
             response_validation=response_validation,
         )
     except OpenAPIError as exception:
-        raise Failure(f"Response did not pass schema validation: {exception}")
+        raise Failure(
+            f"Response did not pass schema validation: {exception}"
+        ) from exception
 
     request_method = response.request.method
     if request_method is None:
@@ -289,7 +291,7 @@ def validate_resource_properties(
 
 def validate_send_response(
     response: Response,
-    original_data: dict[str, Any] = {},
+    original_data: Mapping[str, Any],
 ) -> None:
     def validate_list_response(send_list: list[Any], received_list: list[Any]) -> None:
         for item in send_list:
@@ -382,18 +384,14 @@ def validate_send_response(
 def validate_response_using_validator(
     request: RequestsOpenAPIRequest,
     response: RequestsOpenAPIResponse,
-    response_validator: Callable[
-        [RequestsOpenAPIRequest, RequestsOpenAPIResponse], None
-    ],
+    response_validator: ResponseValidatorType,
 ) -> None:
     response_validator(request=request, response=response)
 
 
 def _validate_response(
     response: Response,
-    response_validator: Callable[
-        [RequestsOpenAPIRequest, RequestsOpenAPIResponse], None
-    ],
+    response_validator: ResponseValidatorType,
     server_validation_warning_logged: bool,
     disable_server_validation: bool,
     invalid_property_default_response: int,
@@ -406,12 +404,12 @@ def _validate_response(
             response_validator=response_validator,
         )
     except (ResponseValidationError, ServerNotFound) as exception:
-        errors: list[InvalidSchemaValue] = exception.__cause__
-        validation_errors: list[ValidationError] = getattr(errors, "schema_errors", [])
+        error: BaseException | None = exception.__cause__
+        validation_errors: list[ValidationError] = getattr(error, "schema_errors", [])
         if validation_errors:
             error_message = "\n".join(
                 [
-                    f"{list(error.schema_path)}: {error.message}"
+                    f"{list(getattr(error, 'schema_path', ''))}: {getattr(error, 'message', '')}"
                     for error in validation_errors
                 ]
             )

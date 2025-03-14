@@ -1,10 +1,12 @@
+"""Module holding functions related to invalidation of paths and urls."""
+
 from random import choice
 from uuid import uuid4
 
 from robot.libraries.BuiltIn import BuiltIn
 
+from OpenApiLibCore.annotations import GetDtoClassType
 from OpenApiLibCore.dto_base import PathPropertiesConstraint
-from OpenApiLibCore.dto_utils import GetDtoClassType
 
 run_keyword = BuiltIn().run_keyword
 

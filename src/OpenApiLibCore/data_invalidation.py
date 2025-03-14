@@ -1,3 +1,8 @@
+"""
+Module holding the functions related to invalidation of valid data (generated
+to make 2xx requests) to support testing for 4xx responses.
+"""
+
 from copy import deepcopy
 from random import choice
 from typing import Any
@@ -77,7 +82,7 @@ def get_invalidated_parameters(
         r
         for r in relations
         if isinstance(r, PropertyValueConstraint)
-        and (r.error_code == status_code or r.invalid_value_error_code == status_code)
+        and (status_code in (r.error_code, r.invalid_value_error_code))
     ]
     parameters_to_ignore = {
         r.property_name
@@ -193,7 +198,7 @@ def get_invalidated_parameters(
     if parameter_to_invalidate in params.keys():
         params[parameter_to_invalidate] = invalid_value
     else:
-        headers[parameter_to_invalidate] = invalid_value
+        headers[parameter_to_invalidate] = str(invalid_value)
     return params, headers
 
 
@@ -256,7 +261,7 @@ def get_json_data_with_conflict(
             post_url = url
             post_json = json_data
             path = post_url.replace(base_url, "")
-            request_data: RequestData = run_keyword("get_request_data", path, "post")
+            request_data = run_keyword("get_request_data", path, "post")
 
         response: Response = run_keyword(
             "authorized_request",

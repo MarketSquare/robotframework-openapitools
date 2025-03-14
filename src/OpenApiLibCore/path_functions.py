@@ -1,13 +1,15 @@
+"""Module holding the functions related to paths and urls."""
+
 import json as _json
 from itertools import zip_longest
 from random import choice
-from typing import Any, Callable
+from typing import Any
 
 from requests import Response
 from robot.libraries.BuiltIn import BuiltIn
 
+from OpenApiLibCore.annotations import GetDtoClassType, GetIdPropertyNameType
 from OpenApiLibCore.dto_base import PathPropertiesConstraint
-from OpenApiLibCore.dto_utils import GetDtoClassType, GetIdPropertyNameType
 from OpenApiLibCore.request_data import RequestData
 
 run_keyword = BuiltIn().run_keyword
@@ -100,10 +102,7 @@ def get_valid_id_for_path(
     path: str,
     method: str,
     get_id_property_name: GetIdPropertyNameType,
-) -> str | int | float:
-    def dummy_transformer(valid_id: str | int | float) -> str | int | float:
-        return valid_id
-
+) -> str | int:
     method = method.lower()
     url: str = run_keyword("get_valid_url", path, method)
     # Try to create a new resource to prevent conflicts caused by
@@ -119,18 +118,7 @@ def get_valid_id_for_path(
         request_data.get_required_properties_dict(),
     )
 
-    # determine the id property name for this path and whether or not a transformer is used
-    mapping = get_id_property_name(path=path)
-    if isinstance(mapping, str):
-        id_property = mapping
-        # set the transformer to a dummy callable that returns the original value so
-        # the transformer can be applied on any returned id
-        # TODO: annotation should be a Generic
-        id_transformer: Callable[[str | int | float], str | int | float] = (
-            dummy_transformer
-        )
-    else:
-        id_property, id_transformer = mapping
+    id_property, id_transformer = get_id_property_name(path=path)
 
     if not response.ok:
         # If a new resource cannot be created using POST, try to retrieve a

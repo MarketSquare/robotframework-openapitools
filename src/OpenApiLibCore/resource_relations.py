@@ -1,3 +1,5 @@
+"""Module holding the functions related to relations between resources."""
+
 from typing import Any
 
 from requests import Response

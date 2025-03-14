@@ -1,11 +1,17 @@
+"""
+Module holding the functions related to data generation
+for the requests made as part of keyword exection.
+"""
+
 import re
 from dataclasses import Field, field, make_dataclass
 from random import choice, sample
-from typing import Any, Callable
+from typing import Any
 
 from robot.api import logger
 
 import OpenApiLibCore.path_functions as pf
+from OpenApiLibCore.annotations import GetDtoClassType, GetIdPropertyNameType
 from OpenApiLibCore.dto_base import (
     Dto,
     IdDependency,
@@ -13,7 +19,7 @@ from OpenApiLibCore.dto_base import (
     ResourceRelation,
     resolve_schema,
 )
-from OpenApiLibCore.dto_utils import DefaultDto, GetDtoClassType, GetIdPropertyNameType
+from OpenApiLibCore.dto_utils import DefaultDto
 from OpenApiLibCore.request_data import RequestData
 from OpenApiLibCore.value_utils import IGNORE, get_valid_value
 
@@ -90,9 +96,7 @@ def get_request_data(
 def get_json_data_for_dto_class(
     schema: dict[str, Any],
     dto_class: Dto | type[Dto],
-    get_id_property_name: Callable[
-        [str], str | tuple[str, tuple[Callable[[str | int | float], str | int | float]]]
-    ],  # FIXME: Protocol for the signature
+    get_id_property_name: GetIdPropertyNameType,
     operation_id: str = "",
 ) -> dict[str, Any]:
     def get_constrained_values(property_name: str) -> list[Any]:

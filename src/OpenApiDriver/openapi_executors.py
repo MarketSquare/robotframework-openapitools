@@ -1,7 +1,9 @@
 """Module containing the classes to perform automatic OpenAPI contract validation."""
 
+from collections.abc import Mapping, MutableMapping
 from pathlib import Path
 from random import choice
+from types import MappingProxyType
 from typing import Any
 
 from requests import Response
@@ -15,13 +17,14 @@ from robot.libraries.BuiltIn import BuiltIn
 from OpenApiLibCore import OpenApiLibCore, RequestData, RequestValues, ValidationLevel
 
 run_keyword = BuiltIn().run_keyword
+default_str_mapping: Mapping[str, str] = MappingProxyType({})
 
 
 @library(scope="SUITE", doc_format="ROBOT")
-class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-attributes
+class OpenApiExecutors(OpenApiLibCore):
     """Main class providing the keywords and core logic to perform endpoint validations."""
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         source: str,
         origin: str = "",
@@ -31,19 +34,19 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         mappings_path: str | Path = "",
         invalid_property_default_response: int = 422,
         default_id_property_name: str = "id",
-        faker_locale: str | list[str] | None = None,  # FIXME: default empty string?
+        faker_locale: str | list[str] = "",
         require_body_for_invalid_url: bool = False,
         recursion_limit: int = 1,
-        recursion_default: Any = {},
+        recursion_default: Any = default_str_mapping,
         username: str = "",
         password: str = "",
         security_token: str = "",
         auth: AuthBase | None = None,
-        cert: str | tuple[str, str] | None = None,  # FIXME: default empty string?
+        cert: str | tuple[str, str] = "",
         verify_tls: bool | str = True,
-        extra_headers: dict[str, str] | None = None,  # FIXME: default empty dict?
-        cookies: dict[str, str] | CookieJar | None = None,  # FIXME: default empty dict?
-        proxies: dict[str, str] | None = None,  # FIXME: default empty dict?
+        extra_headers: Mapping[str, str] = default_str_mapping,
+        cookies: MutableMapping[str, str] | CookieJar | None = None,
+        proxies: MutableMapping[str, str] | None = None,
     ) -> None:
         super().__init__(
             source=source,
@@ -141,8 +144,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
 
         params, headers, json_data = None, None, None
         if self.require_body_for_invalid_url:
-            # TODO: change to run_keyword?
-            request_data = self.get_request_data(path=path, method=method)
+            request_data: RequestData = run_keyword("get_request_data", path, method)
             params = request_data.params
             headers = request_data.headers
             dto = request_data.dto
@@ -171,8 +173,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         original_data = {}
 
         url: str = run_keyword("get_valid_url", path, method)
-        # TODO: change to run_keyword?
-        request_data: RequestData = self.get_request_data(path=path, method=method)
+        request_data: RequestData = run_keyword("get_request_data", path, method)
         params = request_data.params
         headers = request_data.headers
         if request_data.has_body:
@@ -259,8 +260,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         ):
             logger.info("Performing request without optional properties and parameters")
             url = run_keyword("get_valid_url", path, method)
-            # tODO: change to run_keyword?
-            request_data = self.get_request_data(path=path, method=method)
+            request_data = run_keyword("get_request_data", path, method)
             params = request_data.get_required_params()
             headers = request_data.get_required_headers()
             json_data = (
@@ -291,8 +291,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         """
         original_data = {}
         path = self.get_parameterized_path_from_url(url)
-        # TODO: change to run_keyword?
-        get_request_data = self.get_request_data(path=path, method="GET")
+        get_request_data: RequestData = run_keyword("get_request_data", path, "GET")
         get_params = get_request_data.params
         get_headers = get_request_data.headers
         response: Response = run_keyword(

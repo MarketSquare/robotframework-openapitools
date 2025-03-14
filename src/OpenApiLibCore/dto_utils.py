@@ -2,10 +2,11 @@
 
 from dataclasses import dataclass
 from importlib import import_module
-from typing import Callable, Protocol, Type
+from typing import Any, Callable, Type, overload
 
 from robot.api import logger
 
+from OpenApiLibCore.annotations import GetDtoClassType, GetIdPropertyNameType
 from OpenApiLibCore.dto_base import Dto
 
 
@@ -20,12 +21,6 @@ DEFAULT_ID_PROPERTY_NAME = _DefaultIdPropertyName()
 @dataclass
 class DefaultDto(Dto):
     """A default Dto that can be instantiated."""
-
-
-class GetDtoClassType(Protocol):
-    def __init__(self, mappings_module_name: str) -> None: ...
-
-    def __call__(self, path: str, method: str) -> Type[Dto]: ...
 
 
 def get_dto_class(mappings_module_name: str) -> GetDtoClassType:
@@ -54,14 +49,6 @@ class GetDtoClass:
             return DefaultDto
 
 
-class GetIdPropertyNameType(Protocol):
-    def __init__(self, mappings_module_name: str) -> None: ...
-
-    def __call__(
-        self, path: str
-    ) -> str | tuple[str, tuple[Callable[[str | int | float], str | int | float]]]: ...
-
-
 def get_id_property_name(mappings_module_name: str) -> GetIdPropertyNameType:
     return GetIdPropertyName(mappings_module_name=mappings_module_name)
 
@@ -77,8 +64,7 @@ class GetIdPropertyName:
             mappings_module = import_module(mappings_module_name)
             self.id_mapping: dict[
                 str,
-                str
-                | tuple[str, tuple[Callable[[str | int | float], str | int | float]]],
+                str | tuple[str, Callable[[str], str] | Callable[[int], int]],
             ] = mappings_module.ID_MAPPING
         except (ImportError, AttributeError, ValueError) as exception:
             if mappings_module_name != "no mapping":
@@ -87,10 +73,25 @@ class GetIdPropertyName:
 
     def __call__(
         self, path: str
-    ) -> str | tuple[str, tuple[Callable[[str | int | float], str | int | float]]]:
+    ) -> tuple[str, Callable[[str], str] | Callable[[int], int]]:
         try:
-            return self.id_mapping[path]
+            value_or_mapping = self.id_mapping[path]
+            if isinstance(value_or_mapping, str):
+                return (value_or_mapping, dummy_transformer)
+            return value_or_mapping
         except KeyError:
             default_id_name = DEFAULT_ID_PROPERTY_NAME.id_property_name
             logger.debug(f"No id mapping for {path} ('{default_id_name}' will be used)")
-            return default_id_name
+            return (default_id_name, dummy_transformer)
+
+
+@overload
+def dummy_transformer(valid_id: str) -> str: ...
+
+
+@overload
+def dummy_transformer(valid_id: int) -> int: ...
+
+
+def dummy_transformer(valid_id: Any) -> Any:
+    return valid_id
