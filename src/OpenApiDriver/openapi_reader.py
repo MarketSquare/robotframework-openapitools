@@ -6,7 +6,6 @@ from DataDriver.AbstractReaderClass import AbstractReaderClass
 from DataDriver.ReaderConfig import TestCaseData
 
 
-# pylint: disable=too-few-public-methods
 class Test:
     """
     Helper class to support ignoring endpoint responses when generating the test cases.

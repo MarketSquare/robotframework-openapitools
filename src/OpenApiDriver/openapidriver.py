@@ -122,16 +122,21 @@ data types and properties. The following list details the most important ones:
 
 """
 
+from collections.abc import Mapping, MutableMapping
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, Iterable
 
-from DataDriver import DataDriver
+from DataDriver.DataDriver import DataDriver
 from requests.auth import AuthBase
 from requests.cookies import RequestsCookieJar as CookieJar
 from robot.api.deco import library
 
-from OpenApiDriver.openapi_executors import OpenApiExecutors, ValidationLevel
+from OpenApiDriver.openapi_executors import OpenApiExecutors
 from OpenApiDriver.openapi_reader import OpenApiReader
+from OpenApiLibCore import ValidationLevel
+
+default_str_mapping: Mapping[str, str] = MappingProxyType({})
 
 
 @library(scope="SUITE", doc_format="ROBOT")
@@ -141,35 +146,33 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
     for an introduction and examples.
     """
 
-    def __init__(  # pylint: disable=too-many-arguments, too-many-locals, dangerous-default-value
+    def __init__(
         self,
         source: str,
         origin: str = "",
         base_path: str = "",
-        included_paths: Iterable[str] | None = None,  # FIXME: default set?
-        ignored_paths: Iterable[str] | None = None,  # FIXME: default set?
-        ignored_responses: Iterable[int] | None = None,  # FIXME: default set?
-        ignored_testcases: (
-            Iterable[tuple[str, str, int]] | None
-        ) = None,  # FIXME: default set?
+        included_paths: Iterable[str] = frozenset(),
+        ignored_paths: Iterable[str] = frozenset(),
+        ignored_responses: Iterable[int] = frozenset(),
+        ignored_testcases: Iterable[tuple[str, str, int]] = frozenset(),
         response_validation: ValidationLevel = ValidationLevel.WARN,
         disable_server_validation: bool = True,
         mappings_path: str | Path = "",
         invalid_property_default_response: int = 422,
         default_id_property_name: str = "id",
-        faker_locale: str | list[str] | None = None,  # FIXME: default empty string?
+        faker_locale: str | list[str] = "",
         require_body_for_invalid_url: bool = False,
         recursion_limit: int = 1,
-        recursion_default: Any = {},
+        recursion_default: Any = default_str_mapping,
         username: str = "",
         password: str = "",
         security_token: str = "",
         auth: AuthBase | None = None,
-        cert: str | tuple[str, str] | None = None,  # FIXME: default empty string?
+        cert: str | tuple[str, str] = "",
         verify_tls: bool | str = True,
-        extra_headers: dict[str, str] | None = None,  # FIXME: default empty dict?
-        cookies: dict[str, str] | CookieJar | None = None,  # FIXME: default empty dict?
-        proxies: dict[str, str] | None = None,  # FIXME: default empty dict?
+        extra_headers: Mapping[str, str] = default_str_mapping,
+        cookies: MutableMapping[str, str] | CookieJar | None = None,
+        proxies: MutableMapping[str, str] | None = None,
     ):
         """
          == Base parameters ==

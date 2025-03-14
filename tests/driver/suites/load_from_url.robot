@@ -16,6 +16,7 @@ Test Template       Validate Test Endpoint Keyword
 
 
 *** Test Cases ***
+# robotcode: ignore[ModelError, VariableNotReplaced]
 Test Endpoint for ${method} on ${path} where ${status_code} is expected
 
 

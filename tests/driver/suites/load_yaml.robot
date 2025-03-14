@@ -16,10 +16,11 @@ Test Template       Do Nothing
 
 
 *** Test Cases ***
+# robotcode: ignore[ModelError, VariableNotReplaced]
 OpenApiYaml test for ${method} on ${path} where ${status_code} is expected
 
 
 *** Keywords ***
 Do Nothing
-    [Arguments]    ${path}    ${method}    ${status_code}
+    [Arguments]    ${path}    ${method}    ${status_code}    # robocop: off=unused-argument
     No Operation

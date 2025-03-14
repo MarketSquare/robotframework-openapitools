@@ -42,12 +42,14 @@ dev = [
     "uvicorn >= 0.27.0",
     "fastapi >= 0.109.0",
     "coverage[toml] >= 7.2.0",
+    "robotcode-runner >= 1.0.3",
 ]
 type-checking = [
     "mypy >= 1.14.1",
     "types-requests >= 2.31.0",
     "types-invoke >= 2.0.0.0",
     "pyright >= 1.1.350",
+    "robotcode-analyze >= 1.0.3",
 ]
 lint-and-format = [
     "ruff >= 0.9.0",
@@ -74,6 +76,7 @@ robotframework-stacktrace = ">=0.4.0"
 uvicorn = ">=0.27.0"
 fastapi = ">=0.109.0"
 coverage = {version = ">=7.2.0", extras = ["toml"]}
+robotcode-runner = ">=1.0.3"
 
 [tool.poetry.group.lint-and-format.dependencies]
 ruff = ">=0.9.0"
@@ -86,6 +89,7 @@ mypy = ">=1.14.1"
 pyright = ">=1.1.350"
 types-requests = ">=2.31.0"
 types-invoke = ">=2.0.0.0"
+robotcode-analyze = ">=1.0.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -146,7 +150,19 @@ known-third-party = []
 "__init__.py" = ["F401", "PLC0414"]
 
 [tool.pylint.'MESSAGES CONTROL']
-disable = ["logging-fstring-interpolation", "missing-class-docstring"]
+disable = [
+    "logging-fstring-interpolation",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "too-few-public-methods",
+    "too-many-arguments",
+    "too-many-branches",
+    "too-many-instance-attributes",
+    "too-many-locals",
+    "too-many-positional-arguments",
+    "too-many-return-statements",
+    "too-many-statements",
+]
 
 [tool.pylint.'FORMAT CHECKER']
 max-line-length=120

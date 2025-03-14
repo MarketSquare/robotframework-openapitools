@@ -20,7 +20,7 @@ ${ORIGIN}=      http://localhost:8000
 
 *** Test Cases ***
 Test Authorized Request With Security Token And Extra Headers
-    ${request_data}=    Get Request Data    endpoint=/secret_message    method=get
+    ${request_data}=    Get Request Data    path=/secret_message    method=get
     ${response}=    Authorized Request
     ...    url=${ORIGIN}/secret_message    method=get    headers=${request_data.headers}
     Should Be Equal As Integers    ${response.status_code}    200
@@ -36,7 +36,7 @@ Test Authorized Request With Security Token And Extra Headers
 Test Set Security Token
     Set Security Token    another secret
 
-    ${request_data}=    Get Request Data    endpoint=/secret_message    method=get
+    ${request_data}=    Get Request Data    path=/secret_message    method=get
     ${response}=    Authorized Request
     ...    url=${ORIGIN}/secret_message    method=get    headers=${request_data.headers}
     Should Be Equal As Integers    ${response.status_code}    200
@@ -52,7 +52,7 @@ Test Set Security Token
 Test Set Extra Headers
     Set Extra Headers    {"spam": "bacon"}
 
-    ${request_data}=    Get Request Data    endpoint=/secret_message    method=get
+    ${request_data}=    Get Request Data    path=/secret_message    method=get
     ${response}=    Authorized Request
     ...    url=${ORIGIN}/secret_message    method=get    headers=${request_data.headers}
     Should Be Equal As Integers    ${response.status_code}    200
@@ -70,7 +70,7 @@ Test Set Extra Headers
 Test Set Basic Auth
     Set Basic Auth    username=Joe    password=Jane
 
-    ${request_data}=    Get Request Data    endpoint=/secret_message    method=get
+    ${request_data}=    Get Request Data    path=/secret_message    method=get
     ${response}=    Authorized Request
     ...    url=${ORIGIN}/secret_message    method=get    headers=${request_data.headers}
     Should Be Equal As Integers    ${response.status_code}    200
@@ -88,7 +88,7 @@ Test Set Basic Auth
 Test Set Auth
     Set Auth    auth=${DIGEST_AUTH}
 
-    ${request_data}=    Get Request Data    endpoint=/secret_message    method=get
+    ${request_data}=    Get Request Data    path=/secret_message    method=get
     ${response}=    Authorized Request
     ...    url=${ORIGIN}/secret_message    method=get    headers=${request_data.headers}
     Should Be Equal As Integers    ${response.status_code}    200

@@ -79,6 +79,11 @@ def tests(context: Context) -> None:
 def type_check(context: Context) -> None:
     subprocess.run(f"mypy {ROOT}/src", shell=True, check=False)
     subprocess.run(f"pyright {ROOT}/src", shell=True, check=False)
+    subprocess.run(
+        f"robotcode analyze code {ROOT}/tests/driver {ROOT}/tests/libcore",
+        shell=True,
+        check=False,
+    )
 
 
 @task

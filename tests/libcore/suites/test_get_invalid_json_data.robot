@@ -14,7 +14,7 @@ ${ORIGIN}=      http://localhost:8000
 
 *** Test Cases ***
 Test Get Invalid Json Data Raises If Data Cannot Be Invalidated
-    ${request_data}=    Get Request Data    endpoint=/    method=get
+    ${request_data}=    Get Request Data    path=/    method=get
     Run Keyword And Expect Error    ValueError: Failed to invalidate: no data_relations and empty schema.
     ...    Get Invalid Json Data
     ...    url=none
@@ -22,7 +22,7 @@ Test Get Invalid Json Data Raises If Data Cannot Be Invalidated
     ...    status_code=999
     ...    request_data=${request_data}
 
-    ${request_data}=    Get Request Data    endpoint=/employees    method=post
+    ${request_data}=    Get Request Data    path=/employees    method=post
     Run Keyword And Expect Error    ValueError: No property can be invalidated to cause status_code 999
     ...    Get Invalid Json Data
     ...    url=none
@@ -31,7 +31,7 @@ Test Get Invalid Json Data Raises If Data Cannot Be Invalidated
     ...    request_data=${request_data}
 
 Test Get Invalid Json Data Based On Schema
-    ${request_data}=    Get Request Data    endpoint=/events/    method=post
+    ${request_data}=    Get Request Data    path=/events/    method=post
     Should Be Empty    ${request_data.dto.get_relations_for_error_code(422)}
     ${invalid_json}=    Get Invalid Json Data
     ...    url=none
@@ -44,7 +44,7 @@ Test Get Invalid Json Data Based On Schema
     Should Be Equal As Integers    ${response.status_code}    422
 
 Test Get Invalid Json Data For UniquePropertyValueConstraint
-    ${request_data}=    Get Request Data    endpoint=/wagegroups    method=post
+    ${request_data}=    Get Request Data    path=/wagegroups    method=post
     ${invalid_json}=    Get Invalid Json Data
     ...    url=${ORIGIN}/wagegroups
     ...    method=post
@@ -56,8 +56,8 @@ Test Get Invalid Json Data For UniquePropertyValueConstraint
     Should Be Equal As Integers    ${response.status_code}    418
 
 Test Get Invalid Json Data For IdReference
-    ${url}=    Get Valid Url    endpoint=/wagegroups/{wagegroup_id}    method=delete
-    ${request_data}=    Get Request Data    endpoint=/wagegroups/{wagegroup_id}    method=delete
+    ${url}=    Get Valid Url    path=/wagegroups/{wagegroup_id}
+    ${request_data}=    Get Request Data    path=/wagegroups/{wagegroup_id}    method=delete
     ${invalid_json}=    Get Invalid Json Data
     ...    url=${url}
     ...    method=delete
@@ -69,8 +69,8 @@ Test Get Invalid Json Data For IdReference
     Should Be Equal As Integers    ${response.status_code}    406
 
 Test Get Invalid Json Data For IdDependency
-    ${url}=    Get Valid Url    endpoint=/employees    method=post
-    ${request_data}=    Get Request Data    endpoint=/employees    method=post
+    ${url}=    Get Valid Url    path=/employees
+    ${request_data}=    Get Request Data    path=/employees    method=post
     ${invalid_json}=    Get Invalid Json Data
     ...    url=${url}
     ...    method=post
@@ -82,7 +82,7 @@ Test Get Invalid Json Data For IdDependency
     Should Be Equal As Integers    ${response.status_code}    451
 
 Test Get Invalid Json Data For Dto With Other Relations
-    ${request_data}=    Get Request Data    endpoint=/employees    method=post
+    ${request_data}=    Get Request Data    path=/employees    method=post
     ${invalid_json}=    Get Invalid Json Data
     ...    url=${ORIGIN}/employees
     ...    method=post
@@ -94,8 +94,8 @@ Test Get Invalid Json Data For Dto With Other Relations
     Should Be Equal As Integers    ${response.status_code}    403
 
 Test Get Invalid Json Data Can Invalidate Missing Optional Parameters
-    ${url}=    Get Valid Url    endpoint=/employees/{emplyee_id}    method=patch
-    ${request_data}=    Get Request Data    endpoint=/employees/{emplyee_id}    method=patch
+    ${url}=    Get Valid Url    path=/employees/{emplyee_id}
+    ${request_data}=    Get Request Data    path=/employees/{emplyee_id}    method=patch
     Evaluate    ${request_data.dto.__dict__.clear()} is None
     ${invalid_json}=    Get Invalid Json Data
     ...    url=${url}
@@ -105,5 +105,5 @@ Test Get Invalid Json Data Can Invalidate Missing Optional Parameters
     Should Not Be Equal    ${invalid_json}    ${request_data.dto.as_dict()}
     ${response}=    Authorized Request
     ...    url=${url}    method=patch    json_data=${invalid_json}
-    ${expected_status_codes}=    Create List    ${403}    ${422}    ${451}
+    VAR    @{expected_status_codes}=    ${403}    ${422}    ${451}
     Should Contain    ${expected_status_codes}    ${response.status_code}

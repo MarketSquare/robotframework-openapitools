@@ -1,17 +1,18 @@
-from typing import Callable
+"""Module holding the (global) parser cache."""
+
+from dataclasses import dataclass
 
 from openapi_core import Spec
-from openapi_core.contrib.requests import (
-    RequestsOpenAPIRequest,
-    RequestsOpenAPIResponse,
-)
 from prance import ResolvingParser
 
-PARSER_CACHE: dict[
-    str,
-    tuple[
-        ResolvingParser,
-        Spec,
-        Callable[[RequestsOpenAPIRequest, RequestsOpenAPIResponse], None],
-    ],
-] = {}
+from OpenApiLibCore.annotations import ResponseValidatorType
+
+
+@dataclass
+class CachedParser:
+    parser: ResolvingParser
+    validation_spec: Spec
+    response_validator: ResponseValidatorType
+
+
+PARSER_CACHE: dict[str, CachedParser] = {}

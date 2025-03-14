@@ -12,11 +12,11 @@ ${ORIGIN}=      http://localhost:8000
 
 *** Test Cases ***
 Test Get Request Data For Schema With allOf
-    ${request_data}=    Get Request Data    endpoint=/hypermedia    method=post
-    ${dict}=    Create Dictionary
-    ${list}=    Create List
-    ${list_of_dict}=    Create List    ${dict}
-    ${expected_headers}=    Create Dictionary    content-type=application/hal+json
+    ${request_data}=    Get Request Data    path=/hypermedia    method=post
+    VAR    &{dict}=    &{EMPTY}
+    VAR    @{list}=    @{EMPTY}
+    VAR    @{list_of_dict}=    ${dict}
+    VAR    &{expected_headers}=    content-type=application/hal+json
     Length Should Be    ${request_data.dto.isan}    36
     Length Should Be    ${request_data.dto.published}    10
     Should Be Equal    ${request_data.dto.tags}    ${list_of_dict}
