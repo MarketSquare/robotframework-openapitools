@@ -105,5 +105,5 @@ Test Get Invalid Json Data Can Invalidate Missing Optional Parameters
     Should Not Be Equal    ${invalid_json}    ${request_data.dto.as_dict()}
     ${response}=    Authorized Request
     ...    url=${url}    method=patch    json_data=${invalid_json}
-    ${expected_status_codes}=    Create List    ${403}    ${422}    ${451}
+    VAR    @{expected_status_codes}=    ${403}    ${422}    ${451}
     Should Contain    ${expected_status_codes}    ${response.status_code}
