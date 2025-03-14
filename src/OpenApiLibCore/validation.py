@@ -91,8 +91,8 @@ def perform_validated_request(
             if get_response.status_code not in [404, 405]:
                 logger.warn(
                     f"Unexpected response after deleting resource: Status_code "
-                    f"{get_response.status_code} was received after trying to get {request_values.url} "
-                    f"after sucessfully deleting it."
+                    f"{get_response.status_code} was received after trying to get "
+                    f"{request_values.url} after sucessfully deleting it."
                 )
         elif not get_response.ok:
             raise AssertionError(

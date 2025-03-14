@@ -94,7 +94,7 @@ class ResourceRelation(ABC):
 
 @dataclass
 class PathPropertiesConstraint(ResourceRelation):
-    """The resolved path for the endpoint."""
+    """The value to be used as the ``path`` for related requests."""
 
     path: str
     property_name: str = "id"

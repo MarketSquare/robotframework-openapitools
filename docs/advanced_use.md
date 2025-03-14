@@ -4,7 +4,7 @@
 When working with APIs, there are often relations between resources or constraints on values.
 The property on one resource may refer to the `id` of another resource.
 The value for a certain property may have to be unique within a certain scope.
-Perhaps an endpoint path contains parameters that must match values that are defined outside the API itself.
+Perhaps an url contains parameters that must match values that are defined outside the API itself.
 
 These types of relations and limitations cannot be described / modeled within the openapi document.
 To support automatic validation of API endpoints where such relations apply, OpenApiLibCore supports the usage of a custom mappings file.
@@ -42,7 +42,7 @@ from OpenApiLibCore import (
 
 
 ID_MAPPING = {
-    "/myspecialendpoint", "special_thing_id",
+    "/myspecialpath", "special_thing_id",
 }
 
 
@@ -54,7 +54,7 @@ class MyDtoThatDoesNothing(Dto):
 
 
 DTO_MAPPING = {
-    ("/myspecialendpoint", "post"): MyDtoThatDoesNothing
+    ("/myspecialpath", "post"): MyDtoThatDoesNothing
 }
 
 ```
@@ -88,16 +88,16 @@ def my_transformer(identifier_name: str) -> str:
 
 
 ID_MAPPING = {
-    "/myspecialendpoint": ("special_thing_id", my_transformer),
+    "/myspecialpath": ("special_thing_id", my_transformer),
 }
 
 ```
 
 ### The DTO_MAPPING
 The `DTO_MAPPING` is a dictionary with a tuple as its key and a mappings Dto as its value.
-The tuple must be in the form `("endpoint_from_the_paths_section", "method_supported_by_the_endpoint")`.
-The `endpoint_from_the_paths_section` must be exactly as found in the openapi document.
-The `method_supported_by_the_endpoint` must be one of the methods supported by the endpoint and must be in lowercase.
+The tuple must be in the form `("path_from_the_paths_section", "method_supported_by_the_path")`.
+The `path_from_the_paths_section` must be exactly as found in the openapi document.
+The `method_supported_by_the_path` must be one of the methods supported by the path and must be in lowercase.
 
 
 ## Dto mapping classes
@@ -108,10 +108,10 @@ Each of these classes is designed to handle a relation or constraint commonly se
 
 To explain the different mapping classes, we'll use the following example:
 
-Imagine we have an API endpoint `/employees` where we can create (`post`) a new Employee resource.
+Imagine we have an API path `/employees` where we can create (`post`) a new Employee resource.
 The Employee has a number of required properties; name, employee_number, wagegroup_id, and date_of_birth.
 
-There is also the the `/wagegroups` endpoint where a Wagegroup resource can be created.
+There is also the the `/wagegroups` path where a Wagegroup resource can be created.
 This Wagegroup also has a number of required properties: name and hourly rate.
 
 ---
@@ -159,7 +159,7 @@ This `error_code` should be described as one of the `responses` in the openapi d
 
 If an Employee has been added to the system, this Employee refers to the `id` of a Wagegroup for its required `employee_number` property.
 
-Now let's say there is also the `/wagegroups/${wagegroup_id}` endpoint that supports the `delete` operation.
+Now let's say there is also the `/wagegroups/${wagegroup_id}` path that supports the `delete` operation.
 If the Wagegroup refered to the Employee would be deleted, the Employee would be left with an invalid reference for one of its required properties.
 To prevent this, an API typically returns an `error_code` when such a `delete` operation is attempted on a resource that is refered to in this fashion.
 This `error_code` should be described as one of the `responses` in the openapi document for the `delete` operation of the `/wagegroups/${wagegroup_id}` path.
@@ -314,9 +314,9 @@ To be able to automatically perform endpoint validations, the OpenApiLibCore has
 Often, such a `path` contains a reference to a resource id, e.g. `/employees/${employee_id}`.
 When such an `id` is needed, the OpenApiLibCore tries to obtain a valid `id` by taking these steps:
 
-1. Attempt a `post` on the "parent endpoint" and extract the `id` from the response.
-In our example: perform a `post` request on the `/employees` endpoint and get the `id` from the response.
-2. If 1. fails, perform a `get` request on the `/employees` endpoint. It is assumed that this will return a list of Employee objects with an `id`.
+1. Attempt a `post` on the "parent path" and extract the `id` from the response.
+In our example: perform a `post` request on the `/employees` path and get the `id` from the response.
+2. If 1. fails, perform a `get` request on the `/employees` path. It is assumed that this will return a list of Employee objects with an `id`.
 One item from the returned list is picked at rondom and its `id` is used.
 
 This mechanism relies on the standard REST structure and patterns.
@@ -339,7 +339,7 @@ DTO_MAPPING = {
     ("/birthdays/{month}/{date}", "get"): BirthdaysDto
 }
 ```
-> Note: To take a `PathPropertiesConstraint` into use, the related Dto must be mapped to the `get` operation in the `DTO_MAPPING` even if no such endpoint exists in the API.
+> Note: To take a `PathPropertiesConstraint` into use, the related Dto must be mapped to the `get` operation for the `path` in the `DTO_MAPPING` even if no such endpoint exists in the API.
 
 ---
 
@@ -347,7 +347,7 @@ DTO_MAPPING = {
 > *Never send this query parameter as part of a request*
 
 Some optional query parameters have a range of valid values that depend on one or more path parameters.
-Since path parameters are part of a url, they cannot be optional or empty so to extend the path parameters with optional parameters, query parameters can be used.
+Since path parameters are part of an url, they cannot be optional or empty so to extend the path parameters with optional parameters, query parameters can be used.
 
 To illustrate this, let's imagine an API where the energy label for a building can be requested: `/energylabel/${zipcode}/${home_number}`.
 Some addresses however have an address extension, e.g. 1234AB 42 <sup>2.C</sup>.
