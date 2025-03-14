@@ -32,10 +32,9 @@ ENV PATH="$PATH:$POETRY_HOME/bin"
 RUN curl -sSL https://install.python-poetry.org | python3 -
 RUN poetry self update
 
-# Configure poetry to not create virtual environments.
-# This is done to force package installation to the global Python install so that users
-# other than the Docker root user have access to the installed packages.
-RUN poetry config virtualenvs.create false
+# Configure poetry to create virtual environments in the project.
+# This is done to be compatible with how uv and PDM set up the venvs.
+RUN poetry config virtualenvs.in-project true
 
 EXPOSE 8888
 ENTRYPOINT ["/bin/sh"]
