@@ -249,7 +249,7 @@ version = "8.1.8"
 description = "Composable command line interface toolkit"
 optional = false
 python-versions = ">=3.7"
-groups = ["main", "dev", "lint-and-format"]
+groups = ["main", "dev", "lint-and-format", "type-checking"]
 files = [
     {file = "click-8.1.8-py3-none-any.whl", hash = "sha256:63c132bbbed01578a06712a2d1f497bb62d9c1c0d329b7903a866228027263b2"},
     {file = "click-8.1.8.tar.gz", hash = "sha256:ed53c9d8990d83c2a27deae68e4ee337473f6330c040a31d4225c9574d16096a"},
@@ -264,12 +264,12 @@ version = "0.4.6"
 description = "Cross-platform colored terminal text."
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
-groups = ["main", "dev", "lint-and-format"]
+groups = ["main", "dev", "lint-and-format", "type-checking"]
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
-markers = {main = "platform_system == \"Windows\"", dev = "platform_system == \"Windows\""}
+markers = {main = "platform_system == \"Windows\""}
 
 [[package]]
 name = "coverage"
@@ -947,7 +947,7 @@ version = "4.3.6"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a `user data dir`."
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "lint-and-format"]
+groups = ["main", "dev", "lint-and-format", "type-checking"]
 files = [
     {file = "platformdirs-4.3.6-py3-none-any.whl", hash = "sha256:73e575e1408ab8103900836b97580d5307456908a03e92031bab39e4554cc3fb"},
     {file = "platformdirs-4.3.6.tar.gz", hash = "sha256:357fb2acbc885b0419afd3ce3ed34564c13c9b95c89360cd9563f73aa5e2b907"},
@@ -957,6 +957,22 @@ files = [
 docs = ["furo (>=2024.8.6)", "proselint (>=0.14)", "sphinx (>=8.0.2)", "sphinx-autodoc-typehints (>=2.4)"]
 test = ["appdirs (==1.4.4)", "covdefaults (>=2.3)", "pytest (>=8.3.2)", "pytest-cov (>=5)", "pytest-mock (>=3.14)"]
 type = ["mypy (>=1.11.2)"]
+
+[[package]]
+name = "pluggy"
+version = "1.5.0"
+description = "plugin and hook calling mechanisms for python"
+optional = false
+python-versions = ">=3.8"
+groups = ["dev", "type-checking"]
+files = [
+    {file = "pluggy-1.5.0-py3-none-any.whl", hash = "sha256:44e1ad92c8ca002de6377e165f3e0f1be63266ab4d554740532335b9d75ea669"},
+    {file = "pluggy-1.5.0.tar.gz", hash = "sha256:2cffa88e94fdc978c4c574f15f9e59b7f4201d439195c3715ca9e2486f1d0cf1"},
+]
+
+[package.extras]
+dev = ["pre-commit", "tox"]
+testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
 name = "prance"
@@ -1372,12 +1388,146 @@ dev = ["mypy", "packaging", "pre-commit", "pytest", "pytest-cov", "rich-codex", 
 docs = ["markdown_include", "mkdocs", "mkdocs-glightbox", "mkdocs-material-extensions", "mkdocs-material[imaging] (>=9.5.18,<9.6.0)", "mkdocs-rss-plugin", "mkdocstrings[python]", "rich-codex"]
 
 [[package]]
+name = "robotcode"
+version = "1.0.3"
+description = "Command line interface for RobotCode"
+optional = false
+python-versions = ">=3.8"
+groups = ["dev", "type-checking"]
+files = [
+    {file = "robotcode-1.0.3-py3-none-any.whl", hash = "sha256:91226b78da1d8ce81921ae0caf4e4d5fc4adcbc76e2bdf805fa8a8ccb2a0dfd9"},
+    {file = "robotcode-1.0.3.tar.gz", hash = "sha256:4981cca799eef7763c1bd392a4af10c15aa345bc0b3a6f1260da529faa08c614"},
+]
+
+[package.dependencies]
+robotcode-core = "1.0.3"
+robotcode-plugin = "1.0.3"
+robotcode-robot = "1.0.3"
+
+[package.extras]
+all = ["docutils", "pyyaml (>=5.4)", "rich", "robotcode-analyze (==1.0.3)", "robotcode-debugger (==1.0.3)", "robotcode-language-server (==1.0.3)", "robotcode-repl (==1.0.3)", "robotcode-repl-server (==1.0.3)", "robotcode-runner (==1.0.3)", "robotframework-robocop (>=2.0.0)", "robotframework-tidy (>=2.0.0)"]
+analyze = ["robotcode-analyze (==1.0.3)"]
+colored = ["rich"]
+debugger = ["robotcode-debugger (==1.0.3)"]
+languageserver = ["robotcode-language-server (==1.0.3)"]
+lint = ["robotframework-robocop (>=2.0.0)"]
+repl = ["robotcode-repl (==1.0.3)"]
+replserver = ["robotcode-repl-server (==1.0.3)"]
+rest = ["docutils"]
+runner = ["robotcode-runner (==1.0.3)"]
+tidy = ["robotframework-tidy (>=2.0.0)"]
+yaml = ["pyyaml (>=5.4)"]
+
+[[package]]
+name = "robotcode-analyze"
+version = "1.0.3"
+description = "RobotCode analyze plugin for Robot Framework"
+optional = false
+python-versions = ">=3.8"
+groups = ["type-checking"]
+files = [
+    {file = "robotcode_analyze-1.0.3-py3-none-any.whl", hash = "sha256:d8083a75c1329721816c48e51c98f7f17e0dc9d43b9f0eebf2e9c6a9bad3a21f"},
+    {file = "robotcode_analyze-1.0.3.tar.gz", hash = "sha256:fa3f2e329c521a3ed3d9e2ea05f91c6e552196a3abbc157a7f051c66563639c8"},
+]
+
+[package.dependencies]
+robotcode = "1.0.3"
+robotcode-plugin = "1.0.3"
+robotcode-robot = "1.0.3"
+robotframework = ">=4.1.0"
+
+[[package]]
+name = "robotcode-core"
+version = "1.0.3"
+description = "Some core classes for RobotCode"
+optional = false
+python-versions = ">=3.8"
+groups = ["dev", "type-checking"]
+files = [
+    {file = "robotcode_core-1.0.3-py3-none-any.whl", hash = "sha256:920da47efd9e4d1f7756156d672c9fa4232cc1fd6c92f2bd0f847689b93e2d59"},
+    {file = "robotcode_core-1.0.3.tar.gz", hash = "sha256:0fc96582806f7488506db25142c3adbb6771dacfdc3f2dab6ed1b5835129a0d1"},
+]
+
+[package.dependencies]
+typing-extensions = ">=4.4.0"
+
+[[package]]
+name = "robotcode-modifiers"
+version = "1.0.3"
+description = "Some Robot Framework Modifiers for RobotCode"
+optional = false
+python-versions = ">=3.8"
+groups = ["dev"]
+files = [
+    {file = "robotcode_modifiers-1.0.3-py3-none-any.whl", hash = "sha256:871a5b1affe56a818571c50426320f046e55b9e795219f9d411f1c28e6228b10"},
+    {file = "robotcode_modifiers-1.0.3.tar.gz", hash = "sha256:755edb9b3b97131d4bd12bb8edf85bca33981ab46ff03852302a5f846e35a240"},
+]
+
+[package.dependencies]
+robotframework = ">=4.1.0"
+
+[[package]]
+name = "robotcode-plugin"
+version = "1.0.3"
+description = "Some classes for RobotCode plugin management"
+optional = false
+python-versions = ">=3.8"
+groups = ["dev", "type-checking"]
+files = [
+    {file = "robotcode_plugin-1.0.3-py3-none-any.whl", hash = "sha256:ebb3c7acf98e3c697d4026fabd585fd8354f1164b202bcf7ed6a5e3ed4d3e982"},
+    {file = "robotcode_plugin-1.0.3.tar.gz", hash = "sha256:ba9441268016684f9e028b32d85cd6ff82f8754555bcbb410c6d9da6b721e515"},
+]
+
+[package.dependencies]
+click = ">=8.1.0"
+colorama = ">=0.4.6"
+pluggy = ">=1.0.0"
+tomli-w = ">=1.0.0"
+
+[[package]]
+name = "robotcode-robot"
+version = "1.0.3"
+description = "Support classes for RobotCode for handling Robot Framework projects."
+optional = false
+python-versions = ">=3.8"
+groups = ["dev", "type-checking"]
+files = [
+    {file = "robotcode_robot-1.0.3-py3-none-any.whl", hash = "sha256:3bf953be1fed1e1669182b10d29e211a7a6b6ce4417e3e462bf1e44fc0db56da"},
+    {file = "robotcode_robot-1.0.3.tar.gz", hash = "sha256:f00846374194ba6f30df893fff9c2e5ac8fb10a4af9da74e0c5f9d72af40c0c1"},
+]
+
+[package.dependencies]
+platformdirs = ">=3.2.0,<4.4.0"
+robotcode-core = "1.0.3"
+robotframework = ">=4.1.0"
+tomli = {version = ">=1.1.0", markers = "python_version < \"3.11\""}
+
+[[package]]
+name = "robotcode-runner"
+version = "1.0.3"
+description = "RobotCode runner for Robot Framework"
+optional = false
+python-versions = ">=3.8"
+groups = ["dev"]
+files = [
+    {file = "robotcode_runner-1.0.3-py3-none-any.whl", hash = "sha256:7d64c5bfbec7ec8de6ad0b5bfa7b691613d57e1536a418fd63bb2adda20cff15"},
+    {file = "robotcode_runner-1.0.3.tar.gz", hash = "sha256:c2128e876bd7e33822641630f3811141a574514dbc352a24adabaadbd2315656"},
+]
+
+[package.dependencies]
+robotcode = "1.0.3"
+robotcode-modifiers = "1.0.3"
+robotcode-plugin = "1.0.3"
+robotcode-robot = "1.0.3"
+robotframework = ">=4.1.0"
+
+[[package]]
 name = "robotframework"
 version = "7.2.2"
 description = "Generic automation framework for acceptance testing and robotic process automation (RPA)"
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "dev", "lint-and-format"]
+groups = ["main", "dev", "lint-and-format", "type-checking"]
 files = [
     {file = "robotframework-7.2.2-py3-none-any.whl", hash = "sha256:1cb4ec69d52aae515bf6037cee66a2a2d8dc3256368081c0f4b3d4578d40904e"},
     {file = "robotframework-7.2.2.tar.gz", hash = "sha256:9c420f6d35e9c8cd4b75b77cc78e36407604534ec4ab0cbddf699d7c0b2fc435"},
@@ -1784,6 +1934,18 @@ files = [
 markers = {main = "python_version < \"3.11\"", dev = "python_version < \"3.11\"", type-checking = "python_version < \"3.11\""}
 
 [[package]]
+name = "tomli-w"
+version = "1.2.0"
+description = "A lil' TOML writer"
+optional = false
+python-versions = ">=3.9"
+groups = ["dev", "type-checking"]
+files = [
+    {file = "tomli_w-1.2.0-py3-none-any.whl", hash = "sha256:188306098d013b691fcadc011abd66727d3c414c571bb01b1a174ba8c983cf90"},
+    {file = "tomli_w-1.2.0.tar.gz", hash = "sha256:2dd14fac5a47c27be9cd4c976af5a12d87fb1f0b4512f81d69cce3b35ae25021"},
+]
+
+[[package]]
 name = "tomlkit"
 version = "0.13.2"
 description = "Style preserving TOML library"
@@ -1905,4 +2067,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10, <4"
-content-hash = "07b84eae8d5a6441f603a59e17970264a4351213cd2810a63100a61c30fa0ebd"
+content-hash = "0c8743f6a32b246adb4dc963ac43b3e12ec34089ece6b1f384b731ef25d33298"
