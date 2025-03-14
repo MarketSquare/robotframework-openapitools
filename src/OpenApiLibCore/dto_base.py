@@ -7,14 +7,13 @@ test and constraints / restrictions on properties of the resources.
 from abc import ABC
 from copy import deepcopy
 from dataclasses import dataclass, fields
-from logging import getLogger
 from random import choice, shuffle
 from typing import Any
 from uuid import uuid4
 
-from OpenApiLibCore import value_utils
+from robot.api import logger
 
-logger = getLogger(__name__)
+from OpenApiLibCore import value_utils
 
 NOT_SET = object()
 SENTINEL = object()
@@ -86,7 +85,7 @@ def merge_schemas(first: dict[str, Any], second: dict[str, Any]) -> dict[str, An
     return merged_schema
 
 
-class ResourceRelation(ABC):  # pylint: disable=too-few-public-methods
+class ResourceRelation(ABC):
     """ABC for all resource relations or restrictions within the API."""
 
     property_name: str
@@ -301,7 +300,7 @@ class Dto(ABC):
                 f"get_invalid_value)"
             )
             return properties
-        logger.warning("get_invalidated_data returned unchanged properties")
+        logger.warn("get_invalidated_data returned unchanged properties")
         return properties  # pragma: no cover
 
     def as_dict(self) -> dict[Any, Any]:

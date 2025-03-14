@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2024-12-04T12:16:37+00:00" specversion="6" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapidriver.py" lineno="352">
-<version>0.4.0</version>
+<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2025-03-14T10:36:03+00:00" specversion="6" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapidriver.py" lineno="357">
+<version>1.0.0</version>
 <doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;</doc>
 <tags>
 </tags>
 <inits>
-<init name="__init__" lineno="144">
-<arguments repr="source: str, origin: str = , base_path: str = , included_paths: Iterable[str] | None = None, ignored_paths: Iterable[str] | None = None, ignored_responses: Iterable[int] | None = None, ignored_testcases: Iterable[Tuple[str, str, int]] | None = None, response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, mappings_path: str | Path = , invalid_property_default_response: int = 422, default_id_property_name: str = id, faker_locale: str | List[str] | None = None, require_body_for_invalid_url: bool = False, recursion_limit: int = 1, recursion_default: Any = {}, username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, cert: str | Tuple[str, str] | None = None, verify_tls: bool | str | None = True, extra_headers: Dict[str, str] | None = None, cookies: Dict[str, str] | RequestsCookieJar | None = None, proxies: Dict[str, str] | None = None">
+<init name="__init__" lineno="149">
+<arguments repr="source: str, origin: str = , base_path: str = , included_paths: Iterable[str] = frozenset(), ignored_paths: Iterable[str] = frozenset(), ignored_responses: Iterable[int] = frozenset(), ignored_testcases: Iterable[tuple[str, str, int]] = frozenset(), response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, mappings_path: str | Path = , invalid_property_default_response: int = 422, default_id_property_name: str = id, faker_locale: str | list[str] = , require_body_for_invalid_url: bool = False, recursion_limit: int = 1, recursion_default: Any = {}, username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, cert: str | tuple[str, str] = , verify_tls: bool | str = True, extra_headers: Mapping[str, str] = {}, cookies: MutableMapping[str, str] | RequestsCookieJar | None = None, proxies: MutableMapping[str, str] | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="source: str">
 <name>source</name>
 <type name="str" typedoc="string"/>
@@ -21,49 +21,37 @@
 <type name="str" typedoc="string"/>
 <default/>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="included_paths: Iterable[str] | None = None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="included_paths: Iterable[str] = frozenset()">
 <name>included_paths</name>
-<type name="Union" union="true">
 <type name="Iterable">
 <type name="str" typedoc="string"/>
 </type>
-<type name="None" typedoc="None"/>
-</type>
-<default>None</default>
+<default>frozenset()</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_paths: Iterable[str] | None = None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_paths: Iterable[str] = frozenset()">
 <name>ignored_paths</name>
-<type name="Union" union="true">
 <type name="Iterable">
 <type name="str" typedoc="string"/>
 </type>
-<type name="None" typedoc="None"/>
-</type>
-<default>None</default>
+<default>frozenset()</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_responses: Iterable[int] | None = None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_responses: Iterable[int] = frozenset()">
 <name>ignored_responses</name>
-<type name="Union" union="true">
 <type name="Iterable">
 <type name="int" typedoc="integer"/>
 </type>
-<type name="None" typedoc="None"/>
-</type>
-<default>None</default>
+<default>frozenset()</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_testcases: Iterable[Tuple[str, str, int]] | None = None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="ignored_testcases: Iterable[tuple[str, str, int]] = frozenset()">
 <name>ignored_testcases</name>
-<type name="Union" union="true">
 <type name="Iterable">
-<type name="Tuple" typedoc="tuple">
+<type name="tuple" typedoc="tuple">
 <type name="str" typedoc="string"/>
 <type name="str" typedoc="string"/>
 <type name="int" typedoc="integer"/>
 </type>
 </type>
-<type name="None" typedoc="None"/>
-</type>
-<default>None</default>
+<default>frozenset()</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="response_validation: ValidationLevel = WARN">
 <name>response_validation</name>
@@ -93,16 +81,15 @@
 <type name="str" typedoc="string"/>
 <default>id</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="faker_locale: str | List[str] | None = None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="faker_locale: str | list[str] = ">
 <name>faker_locale</name>
 <type name="Union" union="true">
 <type name="str" typedoc="string"/>
-<type name="List" typedoc="list">
+<type name="list" typedoc="list">
 <type name="str" typedoc="string"/>
 </type>
-<type name="None" typedoc="None"/>
 </type>
-<default>None</default>
+<default/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="require_body_for_invalid_url: bool = False">
 <name>require_body_for_invalid_url</name>
@@ -142,42 +129,37 @@
 </type>
 <default>None</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="cert: str | Tuple[str, str] | None = None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="cert: str | tuple[str, str] = ">
 <name>cert</name>
 <type name="Union" union="true">
 <type name="str" typedoc="string"/>
-<type name="Tuple" typedoc="tuple">
+<type name="tuple" typedoc="tuple">
 <type name="str" typedoc="string"/>
 <type name="str" typedoc="string"/>
 </type>
-<type name="None" typedoc="None"/>
 </type>
-<default>None</default>
+<default/>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="verify_tls: bool | str | None = True">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="verify_tls: bool | str = True">
 <name>verify_tls</name>
 <type name="Union" union="true">
 <type name="bool" typedoc="boolean"/>
 <type name="str" typedoc="string"/>
-<type name="None" typedoc="None"/>
 </type>
 <default>True</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="extra_headers: Dict[str, str] | None = None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="extra_headers: Mapping[str, str] = {}">
 <name>extra_headers</name>
-<type name="Union" union="true">
-<type name="Dict" typedoc="dictionary">
+<type name="Mapping" typedoc="dictionary">
 <type name="str" typedoc="string"/>
 <type name="str" typedoc="string"/>
 </type>
-<type name="None" typedoc="None"/>
-</type>
-<default>None</default>
+<default>{}</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="cookies: Dict[str, str] | RequestsCookieJar | None = None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="cookies: MutableMapping[str, str] | RequestsCookieJar | None = None">
 <name>cookies</name>
 <type name="Union" union="true">
-<type name="Dict" typedoc="dictionary">
+<type name="MutableMapping" typedoc="dictionary">
 <type name="str" typedoc="string"/>
 <type name="str" typedoc="string"/>
 </type>
@@ -186,10 +168,10 @@
 </type>
 <default>None</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="proxies: Dict[str, str] | None = None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="proxies: MutableMapping[str, str] | None = None">
 <name>proxies</name>
 <type name="Union" union="true">
-<type name="Dict" typedoc="dictionary">
+<type name="MutableMapping" typedoc="dictionary">
 <type name="str" typedoc="string"/>
 <type name="str" typedoc="string"/>
 </type>
@@ -213,7 +195,7 @@
 &lt;h4&gt;ignored_responses&lt;/h4&gt;
 &lt;p&gt;A list of responses that will be ignored when generating the test cases.&lt;/p&gt;
 &lt;h4&gt;ignored_testcases&lt;/h4&gt;
-&lt;p&gt;A list of specific test cases that, if it would be generated, will be ignored. Specific test cases to ignore must be specified as a &lt;code&gt;Tuple&lt;/code&gt; or &lt;code&gt;List&lt;/code&gt; of &lt;code&gt;path&lt;/code&gt;, &lt;code&gt;method&lt;/code&gt; and &lt;code&gt;response&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;A list of specific test cases that, if it would be generated, will be ignored. Specific test cases to ignore must be specified as a &lt;code&gt;tuple&lt;/code&gt; or &lt;code&gt;list&lt;/code&gt; of &lt;code&gt;path&lt;/code&gt;, &lt;code&gt;method&lt;/code&gt; and &lt;code&gt;response&lt;/code&gt;.&lt;/p&gt;
 &lt;h4&gt;response_validation&lt;/h4&gt;
 &lt;p&gt;By default, a &lt;code&gt;WARN&lt;/code&gt; is logged when the Response received after a Request does not comply with the schema as defined in the openapi document for the given operation. The following values are supported:&lt;/p&gt;
 &lt;ul&gt;
@@ -265,7 +247,7 @@
 </init>
 </inits>
 <keywords>
-<kw name="Test Endpoint" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="161">
+<kw name="Test Endpoint" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="164">
 <arguments repr="path: str, method: str, status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
@@ -285,7 +267,7 @@
 &lt;p&gt;The keyword calls other keywords to generate the neccesary data to perform the desired operation and validate the response against the openapi document.&lt;/p&gt;</doc>
 <shortdoc>Validate that performing the `method` operation on `path` results in a `status_code` response.</shortdoc>
 </kw>
-<kw name="Test Forbidden" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="97">
+<kw name="Test Forbidden" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="100">
 <arguments repr="path: str, method: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
@@ -301,7 +283,7 @@
 &lt;p&gt;For this keyword to pass, the authorization parameters used to initialize the library should grant insufficient access rights to the target endpoint. &amp;gt; Note: No headers or (json) body are send with the request. For security reasons, the access rights validation should be checked first.&lt;/p&gt;</doc>
 <shortdoc>Perform a request for `method` on the `path`, with the provided authorization.</shortdoc>
 </kw>
-<kw name="Test Invalid Url" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="114">
+<kw name="Test Invalid Url" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="117">
 <arguments repr="path: str, method: str, expected_status_code: int = 404">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>

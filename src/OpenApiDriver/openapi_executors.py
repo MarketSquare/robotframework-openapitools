@@ -1,30 +1,30 @@
 """Module containing the classes to perform automatic OpenAPI contract validation."""
 
-from logging import getLogger
+from collections.abc import Mapping, MutableMapping
 from pathlib import Path
 from random import choice
+from types import MappingProxyType
 from typing import Any
 
 from requests import Response
 from requests.auth import AuthBase
 from requests.cookies import RequestsCookieJar as CookieJar
-from robot.api import SkipExecution
+from robot.api import logger
 from robot.api.deco import keyword, library
+from robot.api.exceptions import SkipExecution
 from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore import OpenApiLibCore, RequestData, RequestValues, ValidationLevel
 
 run_keyword = BuiltIn().run_keyword
-
-
-logger = getLogger(__name__)
+default_str_mapping: Mapping[str, str] = MappingProxyType({})
 
 
 @library(scope="SUITE", doc_format="ROBOT")
-class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-attributes
+class OpenApiExecutors(OpenApiLibCore):
     """Main class providing the keywords and core logic to perform endpoint validations."""
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         source: str,
         origin: str = "",
@@ -34,19 +34,19 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         mappings_path: str | Path = "",
         invalid_property_default_response: int = 422,
         default_id_property_name: str = "id",
-        faker_locale: str | list[str] | None = None,  # FIXME: default empty string?
+        faker_locale: str | list[str] = "",
         require_body_for_invalid_url: bool = False,
         recursion_limit: int = 1,
-        recursion_default: Any = {},
+        recursion_default: Any = default_str_mapping,
         username: str = "",
         password: str = "",
         security_token: str = "",
         auth: AuthBase | None = None,
-        cert: str | tuple[str, str] | None = None,  # FIXME: default empty string?
+        cert: str | tuple[str, str] = "",
         verify_tls: bool | str = True,
-        extra_headers: dict[str, str] | None = None,  # FIXME: default empty dict?
-        cookies: dict[str, str] | CookieJar | None = None,  # FIXME: default empty dict?
-        proxies: dict[str, str] | None = None,  # FIXME: default empty dict?
+        extra_headers: Mapping[str, str] = default_str_mapping,
+        cookies: MutableMapping[str, str] | CookieJar | None = None,
+        proxies: MutableMapping[str, str] | None = None,
     ) -> None:
         super().__init__(
             source=source,
@@ -84,7 +84,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         > Note: No headers or (json) body are send with the request. For security
         reasons, the authorization validation should be checked first.
         """
-        url: str = run_keyword("get_valid_url", path, method)
+        url: str = run_keyword("get_valid_url", path)
         response = self.session.request(
             method=method,
             url=url,
@@ -105,7 +105,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         > Note: No headers or (json) body are send with the request. For security
         reasons, the access rights validation should be checked first.
         """
-        url: str = run_keyword("get_valid_url", path, method)
+        url: str = run_keyword("get_valid_url", path)
         response: Response = run_keyword("authorized_request", url, method)
         if response.status_code != 403:
             raise AssertionError(f"Response {response.status_code} was not 403.")
@@ -130,11 +130,11 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         parameters are send with the request. The `require_body_for_invalid_url`
         parameter can be set to `True` if needed.
         """
-        valid_url: str = run_keyword("get_valid_url", path, method)
+        valid_url: str = run_keyword("get_valid_url", path)
 
         if not (
             url := run_keyword(
-                "get_invalidated_url", valid_url, path, method, expected_status_code
+                "get_invalidated_url", valid_url, path, expected_status_code
             )
         ):
             raise SkipExecution(
@@ -144,7 +144,7 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
 
         params, headers, json_data = None, None, None
         if self.require_body_for_invalid_url:
-            request_data = self.get_request_data(method=method, endpoint=path)
+            request_data: RequestData = run_keyword("get_request_data", path, method)
             params = request_data.params
             headers = request_data.headers
             dto = request_data.dto
@@ -169,11 +169,11 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         The keyword calls other keywords to generate the neccesary data to perform
         the desired operation and validate the response against the openapi document.
         """
-        json_data: dict[str, Any] | None = None
+        json_data: dict[str, Any] = {}
         original_data = {}
 
-        url: str = run_keyword("get_valid_url", path, method)
-        request_data: RequestData = self.get_request_data(method=method, endpoint=path)
+        url: str = run_keyword("get_valid_url", path)
+        request_data: RequestData = run_keyword("get_request_data", path, method)
         params = request_data.params
         headers = request_data.headers
         if request_data.has_body:
@@ -259,12 +259,12 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
             or request_data.has_optional_headers
         ):
             logger.info("Performing request without optional properties and parameters")
-            url = run_keyword("get_valid_url", path, method)
-            request_data = self.get_request_data(method=method, endpoint=path)
+            url = run_keyword("get_valid_url", path)
+            request_data = run_keyword("get_request_data", path, method)
             params = request_data.get_required_params()
             headers = request_data.get_required_headers()
             json_data = (
-                request_data.get_minimal_body_dict() if request_data.has_body else None
+                request_data.get_minimal_body_dict() if request_data.has_body else {}
             )
             original_data = {}
             if method == "PATCH":
@@ -290,8 +290,8 @@ class OpenApiExecutors(OpenApiLibCore):  # pylint: disable=too-many-instance-att
         If the GET request fails, an empty dict is returned.
         """
         original_data = {}
-        path = self.get_parameterized_endpoint_from_url(url)
-        get_request_data = self.get_request_data(endpoint=path, method="GET")
+        path = self.get_parameterized_path_from_url(url)
+        get_request_data: RequestData = run_keyword("get_request_data", path, "GET")
         get_params = get_request_data.params
         get_headers = get_request_data.headers
         response: Response = run_keyword(

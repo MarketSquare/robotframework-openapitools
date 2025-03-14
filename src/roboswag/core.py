@@ -60,9 +60,9 @@ class APIModel:
         self.logger.log_request(resp)
         self.logger.log_response(resp)
         if status is not None:
-            assert (
-                resp.status_code == status
-            ), f"Expected return status: {status} but received: {resp.status_code}"
+            assert resp.status_code == status, (
+                f"Expected return status: {status} but received: {resp.status_code}"
+            )
         return resp
 
     def post(self, *args, **kwargs):

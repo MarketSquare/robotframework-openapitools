@@ -13,7 +13,7 @@ ${ORIGIN}=      http://localhost:8000
 
 *** Test Cases ***
 Test ReadOnly Is Filtered From Request Data
-    ${request_data}=    Get Request Data    endpoint=/api/location    method=post
+    ${request_data}=    Get Request Data    path=/api/location    method=post
     ${json_data}=    Set Variable    ${request_data.dto.as_dict()}
     Should Not Contain    ${json_data}    id
     Should Contain    ${json_data}    locationId
