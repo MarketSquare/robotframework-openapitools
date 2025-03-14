@@ -56,7 +56,7 @@ Test Get Invalid Json Data For UniquePropertyValueConstraint
     Should Be Equal As Integers    ${response.status_code}    418
 
 Test Get Invalid Json Data For IdReference
-    ${url}=    Get Valid Url    path=/wagegroups/{wagegroup_id}    method=delete
+    ${url}=    Get Valid Url    path=/wagegroups/{wagegroup_id}
     ${request_data}=    Get Request Data    path=/wagegroups/{wagegroup_id}    method=delete
     ${invalid_json}=    Get Invalid Json Data
     ...    url=${url}
@@ -69,7 +69,7 @@ Test Get Invalid Json Data For IdReference
     Should Be Equal As Integers    ${response.status_code}    406
 
 Test Get Invalid Json Data For IdDependency
-    ${url}=    Get Valid Url    path=/employees    method=post
+    ${url}=    Get Valid Url    path=/employees
     ${request_data}=    Get Request Data    path=/employees    method=post
     ${invalid_json}=    Get Invalid Json Data
     ...    url=${url}
@@ -94,7 +94,7 @@ Test Get Invalid Json Data For Dto With Other Relations
     Should Be Equal As Integers    ${response.status_code}    403
 
 Test Get Invalid Json Data Can Invalidate Missing Optional Parameters
-    ${url}=    Get Valid Url    path=/employees/{emplyee_id}    method=patch
+    ${url}=    Get Valid Url    path=/employees/{emplyee_id}
     ${request_data}=    Get Request Data    path=/employees/{emplyee_id}    method=patch
     Evaluate    ${request_data.dto.__dict__.clear()} is None
     ${invalid_json}=    Get Invalid Json Data

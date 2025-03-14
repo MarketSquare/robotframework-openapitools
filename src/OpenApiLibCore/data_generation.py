@@ -137,7 +137,7 @@ def get_json_data_for_dto_class(
             except ValueError:
                 return None
         valid_id = pf.get_valid_id_for_path(
-            path=id_get_path, method="get", get_id_property_name=get_id_property_name
+            path=id_get_path, get_id_property_name=get_id_property_name
         )
         logger.debug(f"get_dependent_id for {id_get_path} returned {valid_id}")
         return valid_id

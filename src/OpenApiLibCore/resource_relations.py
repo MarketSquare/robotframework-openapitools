@@ -38,11 +38,7 @@ def ensure_in_use(
     )
     json_data = request_data.dto.as_dict()
     json_data[resource_relation.property_name] = resource_id
-    post_url: str = run_keyword(
-        "get_valid_url",
-        resource_relation.post_path,
-        "post",
-    )
+    post_url: str = run_keyword("get_valid_url", resource_relation.post_path)
     response: Response = run_keyword(
         "authorized_request",
         post_url,

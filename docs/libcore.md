@@ -87,7 +87,7 @@ Library            OpenApiLibCore
 
 *** Test Cases ***
 Getting Started
-    ${url}=    Get Valid Url    path=/employees/{employee_id}   method=get
+    ${url}=    Get Valid Url    path=/employees/{employee_id}
 
 ```
 

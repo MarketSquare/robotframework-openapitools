@@ -18,15 +18,15 @@ Test Get Parameterized Path From Url Raises For Invalid Endpoint
     ...    Get Parameterized Path From Url    url=${ORIGIN}/dummy
 
 Test Get Parameterized Path From Url With No Id
-    ${url}=    Get Valid Url    path=/events/    method=get
+    ${url}=    Get Valid Url    path=/events/
     ${endpoint}=    Get Parameterized Path From Url    url=${url}
     Should Be Equal    ${endpoint}    /events/
 
 Test Get Parameterized Path From Url With Single Id
-    ${url}=    Get Valid Url    path=/employees/{employee_id}    method=get
+    ${url}=    Get Valid Url    path=/employees/{employee_id}
     ${endpoint}=    Get Parameterized Path From Url    url=${url}
     Should Be Equal    ${endpoint}    /employees/{employee_id}
 
 # Test Get Parameterized Path From Url With Multiple Ids
-#    ${url}=    Get Valid Url    path=/events/    method=get
+#    ${url}=    Get Valid Url    path=/events/
 #    Get Parameterized Path From Url    url=${url}

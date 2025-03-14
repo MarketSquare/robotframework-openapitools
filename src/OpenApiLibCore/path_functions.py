@@ -60,15 +60,12 @@ def get_parametrized_path(path: str, openapi_spec: dict[str, Any]) -> str:
     raise ValueError(f"{path} matched to multiple paths: {candidates}")
 
 
-# FIXME: Refacor to no longer require `method`
 def get_valid_url(
     path: str,
-    method: str,
     base_url: str,
     get_dto_class: GetDtoClassType,
     openapi_spec: dict[str, Any],
 ) -> str:
-    method = method.lower()
     try:
         # path can be partially resolved or provided by a PathPropertiesConstraint
         parametrized_path = get_parametrized_path(path=path, openapi_spec=openapi_spec)
@@ -77,7 +74,7 @@ def get_valid_url(
         raise ValueError(
             f"{path} not found in paths section of the OpenAPI document."
         ) from None
-    dto_class = get_dto_class(path=path, method=method)
+    dto_class = get_dto_class(path=path, method="get")
     relations = dto_class.get_relations()
     paths = [p.path for p in relations if isinstance(p, PathPropertiesConstraint)]
     if paths:
@@ -89,7 +86,7 @@ def get_valid_url(
             type_path_parts = path_parts[slice(index)]
             type_path = "/".join(type_path_parts)
             existing_id: str | int | float = run_keyword(
-                "get_valid_id_for_path", type_path, method
+                "get_valid_id_for_path", type_path
             )
             path_parts[index] = str(existing_id)
     resolved_path = "/".join(path_parts)
@@ -97,14 +94,11 @@ def get_valid_url(
     return url
 
 
-# FIXME: Refacor to no longer require `method`
 def get_valid_id_for_path(
     path: str,
-    method: str,
     get_id_property_name: GetIdPropertyNameType,
 ) -> str | int:
-    method = method.lower()
-    url: str = run_keyword("get_valid_url", path, method)
+    url: str = run_keyword("get_valid_url", path)
     # Try to create a new resource to prevent conflicts caused by
     # operations performed on the same resource by other test cases
     request_data: RequestData = run_keyword("get_request_data", path, "post")

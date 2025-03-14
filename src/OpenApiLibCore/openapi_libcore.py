@@ -86,7 +86,7 @@ Library            OpenApiLibCore
 
 *** Test Cases ***
 Getting Started
-    ${url}=    Get Valid Url    path=/employees/{employee_id}   method=get
+    ${url}=    Get Valid Url    path=/employees/{employee_id}
 
 ```
 
@@ -514,11 +514,10 @@ class OpenApiLibCore:
 
     # endregion
     # region: path-related keywords
-    # FIXME: Refacor to no longer require `method`
     @keyword
-    def get_valid_url(self, path: str, method: str) -> str:
+    def get_valid_url(self, path: str) -> str:
         """
-        This keyword returns a valid url for the given `path` and `method`.
+        This keyword returns a valid url for the given `path`.
 
         If the `path` contains path parameters the Get Valid Id For Path
         keyword will be executed to retrieve valid ids for the path parameters.
@@ -529,14 +528,13 @@ class OpenApiLibCore:
         """
         return pf.get_valid_url(
             path=path,
-            method=method,
             base_url=self.base_url,
             get_dto_class=self.get_dto_class,
             openapi_spec=self.openapi_spec,
         )
 
     @keyword
-    def get_valid_id_for_path(self, path: str, method: str) -> str | int | float:
+    def get_valid_id_for_path(self, path: str) -> str | int | float:
         """
         Support keyword that returns the `id` for an existing resource at `path`.
 
@@ -544,7 +542,7 @@ class OpenApiLibCore:
         (by a POST operation) if possible.
         """
         return pf.get_valid_id_for_path(
-            path=path, method=method, get_id_property_name=self.get_id_property_name
+            path=path, get_id_property_name=self.get_id_property_name
         )
 
     @keyword
@@ -576,13 +574,12 @@ class OpenApiLibCore:
         self,
         valid_url: str,
         path: str = "",
-        method: str = "",
         expected_status_code: int = 404,
     ) -> str:
         """
         Return an url with all the path parameters in the `valid_url` replaced by a
-        random UUID if no PathPropertiesConstraint is mapped for the `path`, `method`
-        and `expected_status_code`.
+        random UUID if no PathPropertiesConstraint is mapped for the `"get"` operation
+        on the mapped `path` and `expected_status_code`.
         If a PathPropertiesConstraint is mapped, the `invalid_value` is returned.
 
         Raises ValueError if the valid_url cannot be invalidated.
@@ -590,7 +587,6 @@ class OpenApiLibCore:
         return pi.get_invalidated_url(
             valid_url=valid_url,
             path=path,
-            method=method,
             base_url=self.base_url,
             get_dto_class=self.get_dto_class,
             expected_status_code=expected_status_code,

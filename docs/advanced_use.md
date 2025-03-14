@@ -339,6 +339,7 @@ DTO_MAPPING = {
     ("/birthdays/{month}/{date}", "get"): BirthdaysDto
 }
 ```
+> Note: To take a `PathPropertiesConstraint` into use, the related Dto must be mapped to the `get` operation in the `DTO_MAPPING` even if no such endpoint exists in the API.
 
 ---
 

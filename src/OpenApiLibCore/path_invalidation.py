@@ -14,12 +14,11 @@ run_keyword = BuiltIn().run_keyword
 def get_invalidated_url(
     valid_url: str,
     path: str,
-    method: str,
     base_url: str,
     get_dto_class: GetDtoClassType,
     expected_status_code: int,
 ) -> str:
-    dto_class = get_dto_class(path=path, method=method)
+    dto_class = get_dto_class(path=path, method="get")
     relations = dto_class.get_relations()
     paths = [
         p.invalid_value

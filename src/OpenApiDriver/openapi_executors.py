@@ -84,7 +84,7 @@ class OpenApiExecutors(OpenApiLibCore):
         > Note: No headers or (json) body are send with the request. For security
         reasons, the authorization validation should be checked first.
         """
-        url: str = run_keyword("get_valid_url", path, method)
+        url: str = run_keyword("get_valid_url", path)
         response = self.session.request(
             method=method,
             url=url,
@@ -105,7 +105,7 @@ class OpenApiExecutors(OpenApiLibCore):
         > Note: No headers or (json) body are send with the request. For security
         reasons, the access rights validation should be checked first.
         """
-        url: str = run_keyword("get_valid_url", path, method)
+        url: str = run_keyword("get_valid_url", path)
         response: Response = run_keyword("authorized_request", url, method)
         if response.status_code != 403:
             raise AssertionError(f"Response {response.status_code} was not 403.")
@@ -130,11 +130,11 @@ class OpenApiExecutors(OpenApiLibCore):
         parameters are send with the request. The `require_body_for_invalid_url`
         parameter can be set to `True` if needed.
         """
-        valid_url: str = run_keyword("get_valid_url", path, method)
+        valid_url: str = run_keyword("get_valid_url", path)
 
         if not (
             url := run_keyword(
-                "get_invalidated_url", valid_url, path, method, expected_status_code
+                "get_invalidated_url", valid_url, path, expected_status_code
             )
         ):
             raise SkipExecution(
@@ -172,7 +172,7 @@ class OpenApiExecutors(OpenApiLibCore):
         json_data: dict[str, Any] = {}
         original_data = {}
 
-        url: str = run_keyword("get_valid_url", path, method)
+        url: str = run_keyword("get_valid_url", path)
         request_data: RequestData = run_keyword("get_request_data", path, method)
         params = request_data.params
         headers = request_data.headers
@@ -259,7 +259,7 @@ class OpenApiExecutors(OpenApiLibCore):
             or request_data.has_optional_headers
         ):
             logger.info("Performing request without optional properties and parameters")
-            url = run_keyword("get_valid_url", path, method)
+            url = run_keyword("get_valid_url", path)
             request_data = run_keyword("get_request_data", path, method)
             params = request_data.get_required_params()
             headers = request_data.get_required_headers()
