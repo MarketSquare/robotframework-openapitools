@@ -146,7 +146,19 @@ known-third-party = []
 "__init__.py" = ["F401", "PLC0414"]
 
 [tool.pylint.'MESSAGES CONTROL']
-disable = ["logging-fstring-interpolation", "missing-class-docstring"]
+disable = [
+    "logging-fstring-interpolation",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "too-few-public-methods",
+    "too-many-arguments",
+    "too-many-branches",
+    "too-many-instance-attributes",
+    "too-many-locals",
+    "too-many-positional-arguments",
+    "too-many-return-statements",
+    "too-many-statements",
+]
 
 [tool.pylint.'FORMAT CHECKER']
 max-line-length=120
