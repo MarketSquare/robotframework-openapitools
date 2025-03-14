@@ -33,8 +33,8 @@ def get_request_data(
 ) -> RequestData:
     method = method.lower()
     dto_cls_name = get_dto_cls_name(path=path, method=method)
-    # The endpoint can contain already resolved Ids that have to be matched
-    # against the parametrized endpoints in the paths section.
+    # The path can contain already resolved Ids that have to be matched
+    # against the parametrized paths in the paths section.
     spec_path = pf.get_parametrized_path(path=path, openapi_spec=openapi_spec)
     dto_class = get_dto_class(path=spec_path, method=method)
     try:
