@@ -6,8 +6,6 @@ from importlib.metadata import version
 from invoke.context import Context
 from invoke.tasks import task
 
-# from OpenApiLibCore import openapi_libcore
-
 ROOT = pathlib.Path(__file__).parent.resolve().as_posix()
 VERSION = version("robotframework-openapitools")
 
