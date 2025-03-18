@@ -15,11 +15,11 @@ Test Get Request Data For Schema With allOf
     ${request_data}=    Get Request Data    path=/hypermedia    method=post
     VAR    &{dict}=    &{EMPTY}
     VAR    @{list}=    @{EMPTY}
-    VAR    @{list_of_dict}=    ${dict}
     VAR    &{expected_headers}=    content-type=application/hal+json
     Length Should Be    ${request_data.dto.isan}    36
     Length Should Be    ${request_data.dto.published}    10
-    Should Be Equal    ${request_data.dto.tags}    ${list_of_dict}
+    Length Should Be    ${request_data.dto.tags}    1
+    Length Should Be    ${request_data.dto.tags}[0]    36
     Length Should Be    ${request_data.dto_schema}    4
     Length Should Be    ${request_data.dto_schema.get("properties")}    4
     Should Be Equal    ${request_data.parameters}    ${list}
