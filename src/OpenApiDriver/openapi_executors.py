@@ -1,6 +1,7 @@
 """Module containing the classes to perform automatic OpenAPI contract validation."""
 
 from collections.abc import Mapping, MutableMapping
+from http import HTTPStatus
 from pathlib import Path
 from random import choice
 from types import MappingProxyType
@@ -24,7 +25,7 @@ default_str_mapping: Mapping[str, str] = MappingProxyType({})
 class OpenApiExecutors(OpenApiLibCore):
     """Main class providing the keywords and core logic to perform endpoint validations."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         source: str,
         origin: str = "",
@@ -90,7 +91,7 @@ class OpenApiExecutors(OpenApiLibCore):
             url=url,
             verify=False,
         )
-        if response.status_code != 401:
+        if response.status_code != int(HTTPStatus.UNAUTHORIZED):
             raise AssertionError(f"Response {response.status_code} was not 401.")
 
     @keyword
@@ -107,7 +108,7 @@ class OpenApiExecutors(OpenApiLibCore):
         """
         url: str = run_keyword("get_valid_url", path)
         response: Response = run_keyword("authorized_request", url, method)
-        if response.status_code != 403:
+        if response.status_code != int(HTTPStatus.FORBIDDEN):
             raise AssertionError(f"Response {response.status_code} was not 403.")
 
     @keyword
@@ -182,7 +183,7 @@ class OpenApiExecutors(OpenApiLibCore):
         if method == "PATCH":
             original_data = self.get_original_data(url=url)
         # in case of a status code indicating an error, ensure the error occurs
-        if status_code >= 400:
+        if status_code >= int(HTTPStatus.BAD_REQUEST):
             invalidation_keyword_data = {
                 "get_invalid_json_data": [
                     "get_invalid_json_data",
@@ -253,7 +254,7 @@ class OpenApiExecutors(OpenApiLibCore):
             ),
             original_data,
         )
-        if status_code < 300 and (
+        if status_code < int(HTTPStatus.MULTIPLE_CHOICES) and (
             request_data.has_optional_properties
             or request_data.has_optional_params
             or request_data.has_optional_headers

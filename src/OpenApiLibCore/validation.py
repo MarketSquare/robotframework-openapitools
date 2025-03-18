@@ -2,6 +2,7 @@
 
 import json as _json
 from enum import Enum
+from http import HTTPStatus
 from typing import Any, Mapping
 
 from openapi_core.contrib.requests import (
@@ -126,7 +127,7 @@ def validate_response(
     openapi_spec: dict[str, Any],
     original_data: Mapping[str, Any],
 ) -> None:
-    if response.status_code == 204:
+    if response.status_code == int(HTTPStatus.NO_CONTENT):
         assert not response.content
         return None
 
