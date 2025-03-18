@@ -146,7 +146,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
     for an introduction and examples.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         source: str,
         origin: str = "",

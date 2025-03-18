@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 """
 The OpenApiLibCore package is intended to be used as a dependency for other
 Robot Framework libraries that facilitate the testing of OpenAPI / Swagger APIs.
@@ -32,7 +33,7 @@ from OpenApiLibCore.value_utils import IGNORE
 
 try:
     __version__ = version("robotframework-openapi-libcore")
-except Exception:  # pragma: no cover
+except Exception:  # pragma: no cover pylint: disable=broad-exception-caught
     pass
 
 
