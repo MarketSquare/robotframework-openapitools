@@ -11,7 +11,7 @@ import faker
 import rstr
 from robot.api import logger
 
-JSON = dict[str, "JSON"] | list["JSON"] | str | int | float | bool | None
+from OpenApiLibCore.annotations import JSON
 
 IGNORE = object()
 
@@ -106,7 +106,7 @@ def json_type_name_of_python_type(python_type: Any) -> str:
     raise ValueError(f"No json type mapping for Python type {python_type} available.")
 
 
-def python_type_by_json_type_name(type_name: str) -> Any:
+def python_type_by_json_type_name(type_name: str) -> type:
     """Return the Python type based on the JSON type name."""
     if type_name == "string":
         return str
@@ -125,7 +125,7 @@ def python_type_by_json_type_name(type_name: str) -> Any:
     raise ValueError(f"No Python type mapping for JSON type '{type_name}' available.")
 
 
-def get_valid_value(value_schema: Mapping[str, Any]) -> Any:
+def get_valid_value(value_schema: Mapping[str, Any]) -> JSON:
     """Return a random value that is valid under the provided value_schema."""
     value_schema = deepcopy(value_schema)
 
@@ -158,7 +158,7 @@ def get_invalid_value(
     value_schema: Mapping[str, Any],
     current_value: Any,
     values_from_constraint: Iterable[Any] = tuple(),
-) -> Any:
+) -> JSON:
     """Return a random value that violates the provided value_schema."""
     value_schema = deepcopy(value_schema)
 
@@ -323,7 +323,7 @@ def fake_string(string_format: str) -> str:
     return value
 
 
-def get_random_array(value_schema: Mapping[str, Any]) -> list[Any]:
+def get_random_array(value_schema: Mapping[str, Any]) -> list[JSON]:
     """Generate a list with random elements as specified by the schema."""
     minimum = value_schema.get("minItems", 0)
     maximum = value_schema.get("maxItems", 1)
@@ -338,7 +338,7 @@ def get_random_array(value_schema: Mapping[str, Any]) -> list[Any]:
 
 def get_invalid_value_from_constraint(
     values_from_constraint: list[Any], value_type: str
-) -> Any:
+) -> JSON | object:
     """
     Return a value of the same type as the values in the values_from_constraints that
     is not in the values_from_constraints, if possible. Otherwise returns None.
@@ -400,7 +400,7 @@ def get_invalid_value_from_constraint(
     return invalid_value if invalid_value else None
 
 
-def get_invalid_value_from_enum(values: list[Any], value_type: str) -> Any:
+def get_invalid_value_from_enum(values: list[Any], value_type: str) -> JSON:
     """Return a value not in the enum by combining the enum values."""
     if value_type == "string":
         invalid_value: Any = ""
@@ -434,7 +434,7 @@ def get_invalid_value_from_enum(values: list[Any], value_type: str) -> Any:
     return invalid_value
 
 
-def get_value_out_of_bounds(value_schema: Mapping[str, Any], current_value: Any) -> Any:
+def get_value_out_of_bounds(value_schema: Mapping[str, Any], current_value: Any) -> JSON:
     """
     Return a value just outside the value or length range if specified in the
     provided schema, otherwise None is returned.

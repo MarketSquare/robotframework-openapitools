@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from openapi_core import Spec
 from prance import ResolvingParser
 
-from OpenApiLibCore.annotations import ResponseValidatorType
+from OpenApiLibCore.protocols import ResponseValidatorType
 
 
 @dataclass

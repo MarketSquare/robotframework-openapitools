@@ -143,13 +143,13 @@ from robot.api.deco import keyword, library
 from robot.api.exceptions import FatalError
 from robot.libraries.BuiltIn import BuiltIn
 
-import OpenApiLibCore.data_generation as dg
+import OpenApiLibCore.data_generation as _data_generation
 import OpenApiLibCore.data_invalidation as di
 import OpenApiLibCore.path_functions as pf
 import OpenApiLibCore.path_invalidation as pi
 import OpenApiLibCore.resource_relations as rr
 import OpenApiLibCore.validation as val
-from OpenApiLibCore.annotations import ResponseValidatorType
+from OpenApiLibCore.protocols import ResponseValidatorType
 from OpenApiLibCore.dto_base import Dto, IdReference
 from OpenApiLibCore.dto_utils import (
     DEFAULT_ID_PROPERTY_NAME,
@@ -431,7 +431,7 @@ class OpenApiLibCore:
     @keyword
     def get_request_data(self, path: str, method: str) -> RequestData:
         """Return an object with valid request data for body, headers and query params."""
-        return dg.get_request_data(
+        return _data_generation.get_request_data(
             path=path,
             method=method,
             get_dto_class=self.get_dto_class,
@@ -443,13 +443,13 @@ class OpenApiLibCore:
     def get_json_data_for_dto_class(
         self,
         schema: dict[str, Any],
-        dto_class: Dto | type[Dto],
+        dto_class: type[Dto],
         operation_id: str = "",
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any] | list[Any] | None:
         """
-        Generate a valid (json-compatible) dict for all the `dto_class` properties.
+        Generate valid (json-compatible) data for the `dto_class`.
         """
-        return dg.get_json_data_for_dto_class(
+        return _data_generation.get_json_data_for_dto_class(
             schema=schema,
             dto_class=dto_class,
             get_id_property_name=self.get_id_property_name,

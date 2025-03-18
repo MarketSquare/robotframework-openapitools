@@ -17,7 +17,7 @@ from robot.api import logger
 from robot.api.exceptions import Failure
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore.annotations import ResponseValidatorType
+from OpenApiLibCore.protocols import ResponseValidatorType
 from OpenApiLibCore.dto_base import resolve_schema
 from OpenApiLibCore.request_data import RequestData, RequestValues
 

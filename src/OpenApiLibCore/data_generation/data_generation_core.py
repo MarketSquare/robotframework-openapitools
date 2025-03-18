@@ -1,20 +1,19 @@
 """
-Module holding the functions related to data generation
+Module holding the main functions related to data generation
 for the requests made as part of keyword exection.
 """
 
 import re
 from dataclasses import Field, field, make_dataclass
-from random import choice, sample
+from random import choice
 from typing import Any
 
 from robot.api import logger
 
 import OpenApiLibCore.path_functions as pf
-from OpenApiLibCore.annotations import GetDtoClassType, GetIdPropertyNameType
+from OpenApiLibCore.protocols import GetDtoClassType, GetIdPropertyNameType
 from OpenApiLibCore.dto_base import (
     Dto,
-    IdDependency,
     PropertyValueConstraint,
     ResourceRelation,
     resolve_schema,
@@ -22,6 +21,10 @@ from OpenApiLibCore.dto_base import (
 from OpenApiLibCore.dto_utils import DefaultDto
 from OpenApiLibCore.request_data import RequestData
 from OpenApiLibCore.value_utils import IGNORE, get_valid_value
+
+from .body_data_generation import (
+    get_json_data_for_dto_class as _get_json_data_for_dto_class,
+)
 
 
 def get_request_data(
@@ -49,15 +52,11 @@ def get_request_data(
         dto_class=dto_class, method_spec=method_spec
     )
     if (body_spec := method_spec.get("requestBody", None)) is None:
-        if dto_class == DefaultDto:
-            dto_instance: Dto = DefaultDto()
-        else:
-            dto_class = make_dataclass(
-                cls_name=method_spec.get("operationId", dto_cls_name),
-                fields=[],
-                bases=(dto_class,),
-            )
-            dto_instance = dto_class()
+        dto_instance = _get_dto_instance_for_empty_body(
+            dto_class=dto_class,
+            dto_cls_name=dto_cls_name,
+            method_spec=method_spec,
+        )
         return RequestData(
             dto=dto_instance,
             parameters=parameters,
@@ -65,25 +64,23 @@ def get_request_data(
             headers=headers,
             has_body=False,
         )
-    content_schema = resolve_schema(get_content_schema(body_spec))
+
     headers.update({"content-type": get_content_type(body_spec)})
-    dto_data = get_json_data_for_dto_class(
+
+    content_schema = resolve_schema(get_content_schema(body_spec))
+    dto_data = _get_json_data_for_dto_class(
         schema=content_schema,
         dto_class=dto_class,
         get_id_property_name=get_id_property_name,
         operation_id=method_spec.get("operationId", ""),
     )
-    if dto_data is None:
-        dto_instance = DefaultDto()
-    else:
-        fields = get_fields_from_dto_data(content_schema, dto_data)
-        dto_class = make_dataclass(
-            cls_name=method_spec.get("operationId", dto_cls_name),
-            fields=fields,
-            bases=(dto_class,),
-        )
-        dto_data = {get_safe_key(key): value for key, value in dto_data.items()}
-        dto_instance = dto_class(**dto_data)
+    dto_instance = _get_dto_instance_from_dto_data(
+        content_schema=content_schema,
+        dto_class=dto_class,
+        dto_data=dto_data,
+        method_spec=method_spec,
+        dto_cls_name=dto_cls_name,
+    )
     return RequestData(
         dto=dto_instance,
         dto_schema=content_schema,
@@ -93,127 +90,44 @@ def get_request_data(
     )
 
 
-def get_json_data_for_dto_class(
-    schema: dict[str, Any],
-    dto_class: Dto | type[Dto],
-    get_id_property_name: GetIdPropertyNameType,
-    operation_id: str = "",
-) -> dict[str, Any]:
-    def get_constrained_values(property_name: str) -> list[Any]:
-        relations = dto_class.get_relations()
-        values_list = [
-            c.values
-            for c in relations
-            if (
-                isinstance(c, PropertyValueConstraint)
-                and c.property_name == property_name
-            )
-        ]
-        # values should be empty or contain 1 list of allowed values
-        return values_list.pop() if values_list else []
-
-    def get_dependent_id(
-        property_name: str, operation_id: str
-    ) -> str | int | float | None:
-        relations = dto_class.get_relations()
-        # multiple get paths are possible based on the operation being performed
-        id_get_paths = [
-            (d.get_path, d.operation_id)
-            for d in relations
-            if (isinstance(d, IdDependency) and d.property_name == property_name)
-        ]
-        if not id_get_paths:
-            return None
-        if len(id_get_paths) == 1:
-            id_get_path, _ = id_get_paths.pop()
-        else:
-            try:
-                [id_get_path] = [
-                    path
-                    for path, operation in id_get_paths
-                    if operation == operation_id
-                ]
-            # There could be multiple get_paths, but not one for the current operation
-            except ValueError:
-                return None
-        valid_id = pf.get_valid_id_for_path(
-            path=id_get_path, get_id_property_name=get_id_property_name
+def _get_dto_instance_for_empty_body(
+    dto_class: type[Dto],
+    dto_cls_name: str,
+    method_spec: dict[str, Any],
+) -> Dto:
+    if dto_class == DefaultDto:
+        dto_instance: Dto = DefaultDto()
+    else:
+        dto_class = make_dataclass(
+            cls_name=method_spec.get("operationId", dto_cls_name),
+            fields=[],
+            bases=(dto_class,),
         )
-        logger.debug(f"get_dependent_id for {id_get_path} returned {valid_id}")
-        return valid_id
+        dto_instance = dto_class()
+    return dto_instance
 
-    json_data: dict[str, Any] = {}
 
-    property_names = []
-    for property_name in schema.get("properties", []):
-        if constrained_values := get_constrained_values(property_name):
-            # do not add properties that are configured to be ignored
-            if IGNORE in constrained_values:
-                continue
-        property_names.append(property_name)
+def _get_dto_instance_from_dto_data(
+    content_schema: dict[str, Any],
+    dto_class: type[Dto],
+    dto_data: dict[str, Any] | list[Any] | None,
+    method_spec: dict[str, Any],
+    dto_cls_name: str,
+) -> Dto:
+    if dto_data is None:
+        return DefaultDto()
 
-    max_properties = schema.get("maxProperties")
-    if max_properties and len(property_names) > max_properties:
-        required_properties = schema.get("required", [])
-        number_of_optional_properties = max_properties - len(required_properties)
-        optional_properties = [
-            name for name in property_names if name not in required_properties
-        ]
-        selected_optional_properties = sample(
-            optional_properties, number_of_optional_properties
-        )
-        property_names = required_properties + selected_optional_properties
+    if isinstance(dto_data, list):
+        raise NotImplementedError
 
-    for property_name in property_names:
-        properties_schema = schema["properties"][property_name]
-
-        property_type = properties_schema.get("type")
-        if property_type is None:
-            property_types = properties_schema.get("types")
-            if property_types is None:
-                if properties_schema.get("properties") is not None:
-                    nested_data = get_json_data_for_dto_class(
-                        schema=properties_schema,
-                        dto_class=DefaultDto,
-                        get_id_property_name=get_id_property_name,
-                    )
-                    json_data[property_name] = nested_data
-                    continue
-            selected_type_schema = choice(property_types)
-            property_type = selected_type_schema["type"]
-        if properties_schema.get("readOnly", False):
-            continue
-        if constrained_values := get_constrained_values(property_name):
-            json_data[property_name] = choice(constrained_values)
-            continue
-        if (
-            dependent_id := get_dependent_id(
-                property_name=property_name, operation_id=operation_id
-            )
-        ) is not None:
-            json_data[property_name] = dependent_id
-            continue
-        if property_type == "object":
-            object_data = get_json_data_for_dto_class(
-                schema=properties_schema,
-                dto_class=DefaultDto,
-                get_id_property_name=get_id_property_name,
-                operation_id="",
-            )
-            json_data[property_name] = object_data
-            continue
-        if property_type == "array":
-            array_data = get_json_data_for_dto_class(
-                schema=properties_schema["items"],
-                dto_class=DefaultDto,
-                get_id_property_name=get_id_property_name,
-                operation_id=operation_id,
-            )
-            json_data[property_name] = [array_data]
-            continue
-        json_data[property_name] = get_valid_value(properties_schema)
-
-    return json_data
+    fields = get_fields_from_dto_data(content_schema, dto_data)
+    dto_class_ = make_dataclass(
+        cls_name=method_spec.get("operationId", dto_cls_name),
+        fields=fields,
+        bases=(dto_class,),
+    )
+    dto_data = {get_safe_key(key): value for key, value in dto_data.items()}
+    return dto_class_(**dto_data)
 
 
 def get_fields_from_dto_data(
