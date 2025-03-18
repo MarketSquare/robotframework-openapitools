@@ -9,6 +9,7 @@ from typing import Any
 from robot.api import logger
 
 import OpenApiLibCore.path_functions as pf
+from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.dto_base import (
     Dto,
     IdDependency,
@@ -24,7 +25,7 @@ def get_json_data_for_dto_class(
     dto_class: type[Dto],
     get_id_property_name: GetIdPropertyNameType,
     operation_id: str = "",
-) -> dict[str, Any] | list[Any] | None:
+) -> JSON:
     match schema.get("type"):
         case "object":
             return get_dict_data_for_dto_class(
@@ -98,7 +99,7 @@ def get_data_for_property(
     get_id_property_name: GetIdPropertyNameType,
     dto_class: type[Dto],
     operation_id: str,
-) -> Any:
+) -> JSON:
     property_type = property_schema.get("type")
     if property_type is None:
         property_types = property_schema.get("types")
@@ -168,7 +169,7 @@ def get_value_constrained_by_nested_dto(
     nested_dto_class: type[Dto],
     get_id_property_name: GetIdPropertyNameType,
     operation_id: str,
-) -> Any:
+) -> JSON:
     nested_schema = get_schema_for_nested_dto(property_schema=property_schema)
     nested_value = get_json_data_for_dto_class(
         schema=nested_schema,
@@ -200,7 +201,7 @@ def get_property_names_to_process(
             dto_class=dto_class, property_name=property_name
         ):
             # do not add properties that are configured to be ignored
-            if IGNORE in constrained_values:
+            if IGNORE in constrained_values:  # type: ignore[comparison-overlap]
                 continue
         property_names.append(property_name)
 
@@ -219,7 +220,9 @@ def get_property_names_to_process(
     return property_names
 
 
-def get_constrained_values(dto_class: type[Dto], property_name: str) -> list[Any]:
+def get_constrained_values(
+    dto_class: type[Dto], property_name: str
+) -> list[JSON | type[Dto]]:
     relations = dto_class.get_relations()
     values_list = [
         c.values

@@ -230,12 +230,12 @@ class Dto(ABC):
                 if isinstance(r, IdDependency) and r.property_name == property_name
             ]
             if id_dependencies:
-                invalid_value = uuid4().hex
+                invalid_id = uuid4().hex
                 logger.debug(
                     f"Breaking IdDependency for status_code {status_code}: replacing "
-                    f"{properties[property_name]} with {invalid_value}"
+                    f"{properties[property_name]} with {invalid_id}"
                 )
-                properties[property_name] = invalid_value
+                properties[property_name] = invalid_id
                 return properties
 
             invalid_value_from_constraint = [
@@ -296,7 +296,7 @@ class Dto(ABC):
             )
             properties[property_name] = invalid_value
             logger.debug(
-                f"Property {property_name} changed to {invalid_value} (received from "
+                f"Property {property_name} changed to {invalid_value!r} (received from "
                 f"get_invalid_value)"
             )
             return properties

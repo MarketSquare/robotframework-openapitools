@@ -149,6 +149,7 @@ import OpenApiLibCore.path_functions as pf
 import OpenApiLibCore.path_invalidation as pi
 import OpenApiLibCore.resource_relations as rr
 import OpenApiLibCore.validation as val
+from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.dto_base import Dto, IdReference
 from OpenApiLibCore.dto_utils import (
     DEFAULT_ID_PROPERTY_NAME,
@@ -158,7 +159,7 @@ from OpenApiLibCore.dto_utils import (
 from OpenApiLibCore.oas_cache import PARSER_CACHE, CachedParser
 from OpenApiLibCore.protocols import ResponseValidatorType
 from OpenApiLibCore.request_data import RequestData, RequestValues
-from OpenApiLibCore.value_utils import FAKE, JSON
+from OpenApiLibCore.value_utils import FAKE
 
 run_keyword = BuiltIn().run_keyword
 default_str_mapping: Mapping[str, str] = MappingProxyType({})
@@ -166,7 +167,7 @@ default_any_mapping: Mapping[str, Any] = MappingProxyType({})
 
 
 @library(scope="SUITE", doc_format="ROBOT")
-class OpenApiLibCore:
+class OpenApiLibCore:  # pylint: disable=too-many-public-methods
     """
     Main class providing the keywords and core logic to interact with an OpenAPI server.
 
@@ -174,7 +175,7 @@ class OpenApiLibCore:
     for an introduction.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         source: str,
         origin: str = "",
@@ -445,7 +446,7 @@ class OpenApiLibCore:
         schema: dict[str, Any],
         dto_class: type[Dto],
         operation_id: str = "",
-    ) -> dict[str, Any] | list[Any] | None:
+    ) -> JSON:
         """
         Generate valid (json-compatible) data for the `dto_class`.
         """
@@ -787,7 +788,7 @@ class OpenApiLibCore:
     @cached_property
     def _openapi_spec(self) -> dict[str, Any]:
         parser, _, _ = self._load_specs_and_validator()
-        return parser.specification
+        return parser.specification  # type: ignore[no-any-return]
 
     @cached_property
     def response_validator(
@@ -824,7 +825,7 @@ class OpenApiLibCore:
         Spec,
         ResponseValidatorType,
     ]:
-        def recursion_limit_handler(limit: int, refstring: str, recursions: Any) -> Any:
+        def recursion_limit_handler(limit: int, refstring: str, recursions: Any) -> Any:  # pylint: disable=unused-argument
             return self._recursion_default
 
         try:
@@ -853,7 +854,7 @@ class OpenApiLibCore:
                     "Source was loaded, but no specification was present after parsing."
                 )
 
-            validation_spec = Spec.from_dict(parser.specification)
+            validation_spec = Spec.from_dict(parser.specification)  # pyright: ignore[reportArgumentType]
 
             json_types_from_spec: set[str] = self._get_json_types_from_spec(
                 parser.specification
@@ -861,9 +862,9 @@ class OpenApiLibCore:
             extra_deserializers = {
                 json_type: _json.loads for json_type in json_types_from_spec
             }
-            config = Config(extra_media_type_deserializers=extra_deserializers)
+            config = Config(extra_media_type_deserializers=extra_deserializers)  # type: ignore[arg-type]
             openapi = OpenAPI(spec=validation_spec, config=config)
-            response_validator: ResponseValidatorType = openapi.validate_response
+            response_validator: ResponseValidatorType = openapi.validate_response  # type: ignore[assignment]
 
             PARSER_CACHE[self._source] = CachedParser(
                 parser=parser,
@@ -883,4 +884,4 @@ class OpenApiLibCore:
             ) from exception
 
     def read_paths(self) -> dict[str, Any]:
-        return self.openapi_spec["paths"]
+        return self.openapi_spec["paths"]  # type: ignore[no-any-return]

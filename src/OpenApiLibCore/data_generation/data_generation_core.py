@@ -6,11 +6,12 @@ for the requests made as part of keyword exection.
 import re
 from dataclasses import Field, field, make_dataclass
 from random import choice
-from typing import Any
+from typing import Any, cast
 
 from robot.api import logger
 
 import OpenApiLibCore.path_functions as pf
+from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.dto_base import (
     Dto,
     PropertyValueConstraint,
@@ -110,11 +111,11 @@ def _get_dto_instance_for_empty_body(
 def _get_dto_instance_from_dto_data(
     content_schema: dict[str, Any],
     dto_class: type[Dto],
-    dto_data: dict[str, Any] | list[Any] | None,
+    dto_data: JSON,
     method_spec: dict[str, Any],
     dto_cls_name: str,
 ) -> Dto:
-    if dto_data is None:
+    if not isinstance(dto_data, (dict, list)):
         return DefaultDto()
 
     if isinstance(dto_data, list):
@@ -127,14 +128,14 @@ def _get_dto_instance_from_dto_data(
         bases=(dto_class,),
     )
     dto_data = {get_safe_key(key): value for key, value in dto_data.items()}
-    return dto_class_(**dto_data)
+    return cast(Dto, dto_class_(**dto_data))
 
 
 def get_fields_from_dto_data(
-    content_schema: dict[str, Any], dto_data: dict[str, Any]
-) -> list[str | tuple[str, type[Any]] | tuple[str, type[Any], Field[Any]]]:
+    content_schema: dict[str, Any], dto_data: dict[str, JSON]
+) -> list[tuple[str, type[Any], Field[Any]]]:
     """Get a dataclasses fields list based on the content_schema and dto_data."""
-    fields: list[str | tuple[str, type[Any]] | tuple[str, type[Any], Field[Any]]] = []
+    fields: list[tuple[str, type[Any], Field[Any]]] = []
     for key, value in dto_data.items():
         required_properties = content_schema.get("required", [])
         safe_key = get_safe_key(key)
@@ -142,11 +143,11 @@ def get_fields_from_dto_data(
         if key in required_properties:
             # The fields list is used to create a dataclass, so non-default fields
             # must go before fields with a default
-            fields.insert(0, (safe_key, type(value), field(metadata=metadata)))
+            field_ = cast(Field[Any], field(metadata=metadata))  # pylint: disable=invalid-field-call
+            fields.insert(0, (safe_key, type(value), field_))
         else:
-            fields.append(
-                (safe_key, type(value), field(default=None, metadata=metadata))
-            )
+            field_ = cast(Field[Any], field(default=None, metadata=metadata))  # pylint: disable=invalid-field-call
+            fields.append((safe_key, type(value), field_))
     return fields
 
 
