@@ -9,13 +9,13 @@ from typing import Any
 from robot.api import logger
 
 import OpenApiLibCore.path_functions as pf
-from OpenApiLibCore.protocols import GetIdPropertyNameType
 from OpenApiLibCore.dto_base import (
     Dto,
     IdDependency,
     PropertyValueConstraint,
 )
 from OpenApiLibCore.dto_utils import DefaultDto
+from OpenApiLibCore.protocols import GetIdPropertyNameType
 from OpenApiLibCore.value_utils import IGNORE, get_valid_value
 
 

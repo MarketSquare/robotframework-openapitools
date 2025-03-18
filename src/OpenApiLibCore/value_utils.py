@@ -434,7 +434,9 @@ def get_invalid_value_from_enum(values: list[Any], value_type: str) -> JSON:
     return invalid_value
 
 
-def get_value_out_of_bounds(value_schema: Mapping[str, Any], current_value: Any) -> JSON:
+def get_value_out_of_bounds(
+    value_schema: Mapping[str, Any], current_value: Any
+) -> JSON:
     """
     Return a value just outside the value or length range if specified in the
     provided schema, otherwise None is returned.

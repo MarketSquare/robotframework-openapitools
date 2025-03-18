@@ -149,7 +149,6 @@ import OpenApiLibCore.path_functions as pf
 import OpenApiLibCore.path_invalidation as pi
 import OpenApiLibCore.resource_relations as rr
 import OpenApiLibCore.validation as val
-from OpenApiLibCore.protocols import ResponseValidatorType
 from OpenApiLibCore.dto_base import Dto, IdReference
 from OpenApiLibCore.dto_utils import (
     DEFAULT_ID_PROPERTY_NAME,
@@ -157,6 +156,7 @@ from OpenApiLibCore.dto_utils import (
     get_id_property_name,
 )
 from OpenApiLibCore.oas_cache import PARSER_CACHE, CachedParser
+from OpenApiLibCore.protocols import ResponseValidatorType
 from OpenApiLibCore.request_data import RequestData, RequestValues
 from OpenApiLibCore.value_utils import FAKE, JSON
 

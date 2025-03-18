@@ -6,8 +6,8 @@ from typing import Any, Callable, Type, overload
 
 from robot.api import logger
 
-from OpenApiLibCore.protocols import GetDtoClassType, GetIdPropertyNameType
 from OpenApiLibCore.dto_base import Dto
+from OpenApiLibCore.protocols import GetDtoClassType, GetIdPropertyNameType
 
 
 @dataclass

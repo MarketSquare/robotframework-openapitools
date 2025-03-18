@@ -8,8 +8,8 @@ from typing import Any
 from requests import Response
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore.protocols import GetDtoClassType, GetIdPropertyNameType
 from OpenApiLibCore.dto_base import PathPropertiesConstraint
+from OpenApiLibCore.protocols import GetDtoClassType, GetIdPropertyNameType
 from OpenApiLibCore.request_data import RequestData
 
 run_keyword = BuiltIn().run_keyword

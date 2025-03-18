@@ -11,7 +11,6 @@ from typing import Any
 from robot.api import logger
 
 import OpenApiLibCore.path_functions as pf
-from OpenApiLibCore.protocols import GetDtoClassType, GetIdPropertyNameType
 from OpenApiLibCore.dto_base import (
     Dto,
     PropertyValueConstraint,
@@ -19,6 +18,7 @@ from OpenApiLibCore.dto_base import (
     resolve_schema,
 )
 from OpenApiLibCore.dto_utils import DefaultDto
+from OpenApiLibCore.protocols import GetDtoClassType, GetIdPropertyNameType
 from OpenApiLibCore.request_data import RequestData
 from OpenApiLibCore.value_utils import IGNORE, get_valid_value
 

@@ -17,8 +17,8 @@ from robot.api import logger
 from robot.api.exceptions import Failure
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore.protocols import ResponseValidatorType
 from OpenApiLibCore.dto_base import resolve_schema
+from OpenApiLibCore.protocols import ResponseValidatorType
 from OpenApiLibCore.request_data import RequestData, RequestValues
 
 run_keyword = BuiltIn().run_keyword
