@@ -1,4 +1,5 @@
 *** Settings ***
+Library         Collections
 Library         OpenApiLibCore
 ...                 source=${ORIGIN}/openapi.json
 ...                 origin=${ORIGIN}
@@ -28,11 +29,21 @@ Test Get Request Data For Endpoint With RequestBody
     VAR    &{dict}=    &{EMPTY}
     VAR    @{list}=    @{EMPTY}
     VAR    @{birthdays}=    1970-07-07    1980-08-08    1990-09-09
-    VAR    @{parttime_days}=    Monday    Tuesday    Wednesday    Thursday    Friday    ${NONE}
+    VAR    @{weekdays}=    Monday    Tuesday    Wednesday    Thursday    Friday
     Length Should Be    ${request_data.dto.name}    36
     Length Should Be    ${request_data.dto.wagegroup_id}    36
     Should Contain    ${birthdays}    ${request_data.dto.date_of_birth}
-    Should Contain    ${parttime_days}    ${request_data.dto.parttime_day}
+    VAR    ${generated_parttime_schedule}=    ${request_data.dto.parttime_schedule}
+    IF    $generated_parttime_schedule is not None
+        ${parttime_days}=    Get From Dictionary    ${generated_parttime_schedule}    parttime_days
+        Should Be True    1 <= len($parttime_days) <= 5
+        FOR    ${parttime_day}    IN    @{parttime_days}
+            ${weekday}=    Get From Dictionary    ${parttime_day}    weekday
+            Should Contain    ${weekdays}    ${weekday}
+            ${available_hours}=    Get From Dictionary    ${parttime_day}    available_hours
+            Should Be True    0 <= $available_hours < 8
+        END
+    END
     Should Not Be Empty    ${request_data.dto_schema}
     Should Be Equal    ${request_data.parameters}    ${list}
     Should Be Equal    ${request_data.params}    ${dict}

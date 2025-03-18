@@ -57,12 +57,12 @@ Test Headers That Can Be Invalidated
 
 Test Get Required Properties Dict
     ${request_data}=    Get Request Data    path=/employees    method=post
-    Should Contain    ${request_data.dto.as_dict()}    parttime_day
+    Should Contain    ${request_data.dto.as_dict()}    parttime_schedule
     Should Not Be Empty    ${request_data.dto.name}
     ${required_properties}=    Set Variable    ${request_data.get_required_properties_dict()}
     Should Contain    ${required_properties}    name
-    # parttime_day is configured with treat_as_mandatory=True
-    Should Contain    ${required_properties}    parttime_day
+    # parttime_schedule is configured with treat_as_mandatory=True
+    Should Contain    ${required_properties}    parttime_schedule
 
 Test Get Required Params
     ${request_data}=    Get Request Data    path=/available_employees    method=get
