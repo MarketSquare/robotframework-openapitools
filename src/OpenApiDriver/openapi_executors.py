@@ -5,7 +5,6 @@ from http import HTTPStatus
 from pathlib import Path
 from random import choice
 from types import MappingProxyType
-from typing import Any
 
 from requests import Response
 from requests.auth import AuthBase
@@ -16,6 +15,7 @@ from robot.api.exceptions import SkipExecution
 from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore import OpenApiLibCore, RequestData, RequestValues, ValidationLevel
+from OpenApiLibCore.annotations import JSON
 
 run_keyword = BuiltIn().run_keyword
 default_str_mapping: Mapping[str, str] = MappingProxyType({})
@@ -25,7 +25,7 @@ default_str_mapping: Mapping[str, str] = MappingProxyType({})
 class OpenApiExecutors(OpenApiLibCore):
     """Main class providing the keywords and core logic to perform endpoint validations."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(  # noqa: PLR0913, pylint: disable=dangerous-default-value
         self,
         source: str,
         origin: str = "",
@@ -38,7 +38,7 @@ class OpenApiExecutors(OpenApiLibCore):
         faker_locale: str | list[str] = "",
         require_body_for_invalid_url: bool = False,
         recursion_limit: int = 1,
-        recursion_default: Any = default_str_mapping,
+        recursion_default: JSON = {},
         username: str = "",
         password: str = "",
         security_token: str = "",
@@ -170,7 +170,7 @@ class OpenApiExecutors(OpenApiLibCore):
         The keyword calls other keywords to generate the neccesary data to perform
         the desired operation and validate the response against the openapi document.
         """
-        json_data: dict[str, Any] = {}
+        json_data: dict[str, JSON] = {}
         original_data = {}
 
         url: str = run_keyword("get_valid_url", path)
@@ -284,7 +284,7 @@ class OpenApiExecutors(OpenApiLibCore):
                 original_data,
             )
 
-    def get_original_data(self, url: str) -> dict[str, Any]:
+    def get_original_data(self, url: str) -> dict[str, JSON]:
         """
         Attempt to GET the current data for the given url and return it.
 
