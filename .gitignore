@@ -1,5 +1,5 @@
 # Byte-compiled / optimized / DLL files
-__pycache__/
+__pycache__
 *.py[cod]
 *$py.class
 
@@ -137,3 +137,9 @@ dmypy.json
 
 # default logs location for project
 tests/logs
+
+# RobotCode cache
+.robotcode_cache
+
+# generated test library
+tests/generated

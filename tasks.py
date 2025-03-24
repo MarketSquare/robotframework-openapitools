@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, unused-argument
+import os
 import pathlib
 import subprocess
 from importlib.metadata import version
@@ -24,6 +25,22 @@ def start_api(context: Context) -> None:
         f"--reload-dir {ROOT}/tests/server",
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
+
+
+@task
+def libgen(context: Context) -> None:
+    env = os.environ.copy()
+    env["USE_SUMMARY_AS_KEYWORD_NAME"] = "True"
+    cmd = [
+        "generate-library",
+        "-n",
+        "'My Generated Library'",
+        "-s",
+        f"{ROOT}/tests/files/mismatched_openapi.json",
+        "-d",
+        f"{ROOT}/tests/generated/",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False, env=env)
 
 
 @task

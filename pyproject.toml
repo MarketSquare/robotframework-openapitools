@@ -61,14 +61,17 @@ lint-and-format = [
 [project.urls]
 homepage = "https://github.com/MarketSquare/robotframework-openapitools"
 
+[project.scripts]
+generate-library = 'openapi_libgen.command_line:main'
+
 [tool.poetry]
 requires-poetry = ">=2.0"
 packages = [
     {include = "OpenApiDriver", from = "src"},
     {include = "OpenApiLibCore", from = "src"},
-    {include = "roboswag", from = "src"},
+    {include = "openapi_libgen", from = "src"},
 ]
-include = ["*.libspec"]
+include = ["*.libspec", "*.jinja"]
 
 [tool.poetry.group.dev.dependencies]
 invoke = ">=2.2.0"
