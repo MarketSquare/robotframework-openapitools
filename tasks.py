@@ -66,13 +66,14 @@ def utests(context: Context) -> None:
     subprocess.run(" ".join(cmd), shell=True, check=False)
 
 
-@task
+@task(libgen)
 def atests(context: Context) -> None:
     cmd = [
         "coverage",
         "run",
         "-m",
         "robot",
+        f"--pythonpath={ROOT}/tests/generated",
         f"--argumentfile={ROOT}/tests/rf_cli.args",
         f"--variable=root:{ROOT}",
         f"--outputdir={ROOT}/tests/logs",
