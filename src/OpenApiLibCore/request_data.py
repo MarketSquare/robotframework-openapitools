@@ -23,6 +23,23 @@ class RequestValues:
     headers: dict[str, str] = field(default_factory=dict)
     json_data: dict[str, Any] = field(default_factory=dict)
 
+    def override_body_value(self, name: str, value: Any) -> None:
+        if name in self.json_data:
+            self.json_data[name] = value
+
+    def override_header_value(self, name: str, value: Any) -> None:
+        if name in self.headers:
+            self.headers[name] = value
+
+    def override_param_value(self, name: str, value: str) -> None:
+        if name in self.params:
+            self.params[name] = str(value)
+
+    def override_request_value(self, name: str, value: Any) -> None:
+        self.override_body_value(name=name, value=value)
+        self.override_header_value(name=name, value=value)
+        self.override_param_value(name=name, value=value)
+
 
 @dataclass
 class RequestData:

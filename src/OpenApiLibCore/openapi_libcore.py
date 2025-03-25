@@ -430,7 +430,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
     # endregion
     # region: data generation keywords
     @keyword
-    def get_request_values(self, path: str, method: str) -> RequestValues:
+    def get_request_values(
+        self, path: str, method: str, overrides: dict[str, Any] = {}
+    ) -> RequestValues:
         """Return an object with all (valid) request values needed to make a request."""
         json_data: dict[str, JSON] = {}
 
@@ -441,13 +443,27 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         if request_data.has_body:
             json_data = request_data.dto.as_dict()
 
-        return RequestValues(
+        request_values = RequestValues(
             url=url,
             method=method,
             params=params,
             headers=headers,
             json_data=json_data,
         )
+
+        for name, value in overrides.items():
+            if name.startswith(("body_", "header_", "query_")):
+                location, _, name_ = name.partition("_")
+                if location == "body":
+                    request_values.override_body_value(name=name_, value=value)
+                if location == "header":
+                    request_values.override_header_value(name=name_, value=value)
+                if location == "query":
+                    request_values.override_param_value(name=name_, value=value)
+            else:
+                request_values.override_request_value(name=name, value=value)
+
+        return request_values
 
     @keyword
     def get_request_data(self, path: str, method: str) -> RequestData:

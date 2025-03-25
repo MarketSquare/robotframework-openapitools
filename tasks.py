@@ -31,6 +31,7 @@ def start_api(context: Context) -> None:
 def libgen(context: Context) -> None:
     env = os.environ.copy()
     env["USE_SUMMARY_AS_KEYWORD_NAME"] = "True"
+    env["EXPAND_BODY_ARGUMENTS"] = "True"
     cmd = [
         "generate-library",
         "-n",
@@ -95,7 +96,7 @@ def type_check(context: Context) -> None:
     subprocess.run(f"mypy {ROOT}/src", shell=True, check=False)
     subprocess.run(f"pyright {ROOT}/src", shell=True, check=False)
     subprocess.run(
-        f"robotcode analyze code {ROOT}/tests/driver {ROOT}/tests/libcore",
+        f"robotcode analyze code {ROOT}/tests",
         shell=True,
         check=False,
     )

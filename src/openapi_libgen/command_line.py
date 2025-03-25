@@ -34,7 +34,6 @@ def main() -> None:
 
     if not (source := args.source):
         source = input("Please provide a source for the generation: ")
-        source = "./tests/files/mismatched_openapi.json"
 
     parser = ResolvingParser(
         source,
