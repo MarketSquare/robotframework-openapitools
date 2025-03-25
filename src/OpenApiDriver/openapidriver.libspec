@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2025-03-14T10:36:03+00:00" specversion="6" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapidriver.py" lineno="357">
+<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2025-03-21T09:12:33+00:00" specversion="6" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapidriver.py" lineno="358">
 <version>1.0.0</version>
 <doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;</doc>
 <tags>
 </tags>
 <inits>
-<init name="__init__" lineno="149">
-<arguments repr="source: str, origin: str = , base_path: str = , included_paths: Iterable[str] = frozenset(), ignored_paths: Iterable[str] = frozenset(), ignored_responses: Iterable[int] = frozenset(), ignored_testcases: Iterable[tuple[str, str, int]] = frozenset(), response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, mappings_path: str | Path = , invalid_property_default_response: int = 422, default_id_property_name: str = id, faker_locale: str | list[str] = , require_body_for_invalid_url: bool = False, recursion_limit: int = 1, recursion_default: Any = {}, username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, cert: str | tuple[str, str] = , verify_tls: bool | str = True, extra_headers: Mapping[str, str] = {}, cookies: MutableMapping[str, str] | RequestsCookieJar | None = None, proxies: MutableMapping[str, str] | None = None">
+<init name="__init__" lineno="150">
+<arguments repr="source: str, origin: str = , base_path: str = , included_paths: Iterable[str] = frozenset(), ignored_paths: Iterable[str] = frozenset(), ignored_responses: Iterable[int] = frozenset(), ignored_testcases: Iterable[tuple[str, str, int]] = frozenset(), response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, mappings_path: str | Path = , invalid_property_default_response: int = 422, default_id_property_name: str = id, faker_locale: str | list[str] = , require_body_for_invalid_url: bool = False, recursion_limit: int = 1, recursion_default: dict[str, JSON] | list[JSON] | str | bytes | int | float | bool | None = {}, username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, cert: str | tuple[str, str] = , verify_tls: bool | str = True, extra_headers: Mapping[str, str] = {}, cookies: MutableMapping[str, str] | RequestsCookieJar | None = None, proxies: MutableMapping[str, str] | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="source: str">
 <name>source</name>
 <type name="str" typedoc="string"/>
@@ -101,9 +101,23 @@
 <type name="int" typedoc="integer"/>
 <default>1</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="recursion_default: Any = {}">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="recursion_default: dict[str, JSON] | list[JSON] | str | bytes | int | float | bool | None = {}">
 <name>recursion_default</name>
-<type name="Any" typedoc="Any"/>
+<type name="Union" union="true">
+<type name="dict" typedoc="dictionary">
+<type name="str" typedoc="string"/>
+<type name="JSON"/>
+</type>
+<type name="list" typedoc="list">
+<type name="JSON"/>
+</type>
+<type name="str" typedoc="string"/>
+<type name="bytes" typedoc="bytes"/>
+<type name="int" typedoc="integer"/>
+<type name="float" typedoc="float"/>
+<type name="bool" typedoc="boolean"/>
+<type name="None" typedoc="None"/>
+</type>
 <default>{}</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="username: str = ">
@@ -247,7 +261,7 @@
 </init>
 </inits>
 <keywords>
-<kw name="Test Endpoint" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="164">
+<kw name="Test Endpoint" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="162">
 <arguments repr="path: str, method: str, status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
@@ -267,7 +281,7 @@
 &lt;p&gt;The keyword calls other keywords to generate the neccesary data to perform the desired operation and validate the response against the openapi document.&lt;/p&gt;</doc>
 <shortdoc>Validate that performing the `method` operation on `path` results in a `status_code` response.</shortdoc>
 </kw>
-<kw name="Test Forbidden" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="100">
+<kw name="Test Forbidden" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="98">
 <arguments repr="path: str, method: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
@@ -283,7 +297,7 @@
 &lt;p&gt;For this keyword to pass, the authorization parameters used to initialize the library should grant insufficient access rights to the target endpoint. &amp;gt; Note: No headers or (json) body are send with the request. For security reasons, the access rights validation should be checked first.&lt;/p&gt;</doc>
 <shortdoc>Perform a request for `method` on the `path`, with the provided authorization.</shortdoc>
 </kw>
-<kw name="Test Invalid Url" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="117">
+<kw name="Test Invalid Url" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="115">
 <arguments repr="path: str, method: str, expected_status_code: int = 404">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
@@ -305,7 +319,7 @@
 &lt;p&gt;&amp;gt; Note: Depending on API design, the url may be validated before or after validation of headers, query parameters and / or (json) body. By default, no parameters are send with the request. The &lt;span class="name"&gt;require_body_for_invalid_url&lt;/span&gt; parameter can be set to &lt;span class="name"&gt;True&lt;/span&gt; if needed.&lt;/p&gt;</doc>
 <shortdoc>Perform a request for the provided 'path' and 'method' where the url for the `path` is invalidated.</shortdoc>
 </kw>
-<kw name="Test Unauthorized" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="76">
+<kw name="Test Unauthorized" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="77">
 <arguments repr="path: str, method: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
@@ -323,15 +337,6 @@
 </kw>
 </keywords>
 <typedocs>
-<type name="Any" type="Standard">
-<doc>&lt;p&gt;Any value is accepted. No conversion is done.&lt;/p&gt;</doc>
-<accepts>
-<type>Any</type>
-</accepts>
-<usages>
-<usage>__init__</usage>
-</usages>
-</type>
 <type name="boolean" type="Standard">
 <doc>&lt;p&gt;Strings &lt;code&gt;TRUE&lt;/code&gt;, &lt;code&gt;YES&lt;/code&gt;, &lt;code&gt;ON&lt;/code&gt; and &lt;code&gt;1&lt;/code&gt; are converted to Boolean &lt;code&gt;True&lt;/code&gt;, the empty string as well as strings &lt;code&gt;FALSE&lt;/code&gt;, &lt;code&gt;NO&lt;/code&gt;, &lt;code&gt;OFF&lt;/code&gt; and &lt;code&gt;0&lt;/code&gt; are converted to Boolean &lt;code&gt;False&lt;/code&gt;, and the string &lt;code&gt;NONE&lt;/code&gt; is converted to the Python &lt;code&gt;None&lt;/code&gt; object. Other strings and other accepted values are passed as-is, allowing keywords to handle them specially if needed. All string comparisons are case-insensitive.&lt;/p&gt;
 &lt;p&gt;Examples: &lt;code&gt;TRUE&lt;/code&gt; (converted to &lt;code&gt;True&lt;/code&gt;), &lt;code&gt;off&lt;/code&gt; (converted to &lt;code&gt;False&lt;/code&gt;), &lt;code&gt;example&lt;/code&gt; (used as-is)&lt;/p&gt;</doc>
@@ -345,6 +350,17 @@
 <usage>__init__</usage>
 </usages>
 </type>
+<type name="bytes" type="Standard">
+<doc>&lt;p&gt;Strings are converted to bytes so that each Unicode code point below 256 is directly mapped to a matching byte. Higher code points are not allowed. Robot Framework's &lt;code&gt;\xHH&lt;/code&gt; escape syntax is convenient with bytes having non-printable values.&lt;/p&gt;
+&lt;p&gt;Examples: &lt;code&gt;good&lt;/code&gt;, &lt;code&gt;hyvä&lt;/code&gt; (same as &lt;code&gt;hyv\xE4&lt;/code&gt;), &lt;code&gt;\x00&lt;/code&gt; (the null byte)&lt;/p&gt;</doc>
+<accepts>
+<type>string</type>
+<type>bytearray</type>
+</accepts>
+<usages>
+<usage>__init__</usage>
+</usages>
+</type>
 <type name="dictionary" type="Standard">
 <doc>&lt;p&gt;Strings must be Python &lt;a href="https://docs.python.org/library/stdtypes.html#dict"&gt;dictionary&lt;/a&gt; literals. They are converted to actual dictionaries using the &lt;a href="https://docs.python.org/library/ast.html#ast.literal_eval"&gt;ast.literal_eval&lt;/a&gt; function. They can contain any values &lt;code&gt;ast.literal_eval&lt;/code&gt; supports, including dictionaries and other containers.&lt;/p&gt;
 &lt;p&gt;If the type has nested types like &lt;code&gt;dict[str, int]&lt;/code&gt;, items are converted to those types automatically. This in new in Robot Framework 6.0.&lt;/p&gt;
@@ -352,6 +368,18 @@
 <accepts>
 <type>string</type>
 <type>Mapping</type>
+</accepts>
+<usages>
+<usage>__init__</usage>
+</usages>
+</type>
+<type name="float" type="Standard">
+<doc>&lt;p&gt;Conversion is done using Python's &lt;a href="https://docs.python.org/library/functions.html#float"&gt;float&lt;/a&gt; built-in function.&lt;/p&gt;
+&lt;p&gt;Starting from RF 4.1, spaces and underscores can be used as visual separators for digit grouping purposes.&lt;/p&gt;
+&lt;p&gt;Examples: &lt;code&gt;3.14&lt;/code&gt;, &lt;code&gt;2.9979e8&lt;/code&gt;, &lt;code&gt;10 000.000 01&lt;/code&gt;&lt;/p&gt;</doc>
+<accepts>
+<type>string</type>
+<type>Real</type>
 </accepts>
 <usages>
 <usage>__init__</usage>

@@ -125,7 +125,7 @@ data types and properties. The following list details the most important ones:
 from collections.abc import Mapping, MutableMapping
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, Iterable
+from typing import Iterable
 
 from DataDriver.DataDriver import DataDriver
 from requests.auth import AuthBase
@@ -135,6 +135,7 @@ from robot.api.deco import library
 from OpenApiDriver.openapi_executors import OpenApiExecutors
 from OpenApiDriver.openapi_reader import OpenApiReader
 from OpenApiLibCore import ValidationLevel
+from OpenApiLibCore.annotations import JSON
 
 default_str_mapping: Mapping[str, str] = MappingProxyType({})
 
@@ -146,7 +147,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
     for an introduction and examples.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(  # noqa: PLR0913, pylint: disable=dangerous-default-value
         self,
         source: str,
         origin: str = "",
@@ -163,7 +164,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         faker_locale: str | list[str] = "",
         require_body_for_invalid_url: bool = False,
         recursion_limit: int = 1,
-        recursion_default: Any = default_str_mapping,
+        recursion_default: JSON = {},
         username: str = "",
         password: str = "",
         security_token: str = "",
