@@ -60,6 +60,30 @@ class WagegroupDeleteDto(Dto):
         return relations
 
 
+class ParttimeDayDto(Dto):
+    @staticmethod
+    def get_relations() -> list[ResourceRelation]:
+        relations: list[ResourceRelation] = [
+            PropertyValueConstraint(
+                property_name="weekday",
+                values=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            ),
+        ]
+        return relations
+
+
+class ParttimeScheduleDto(Dto):
+    @staticmethod
+    def get_relations() -> list[ResourceRelation]:
+        relations: list[ResourceRelation] = [
+            PropertyValueConstraint(
+                property_name="parttime_days",
+                values=[ParttimeDayDto],
+            ),
+        ]
+        return relations
+
+
 class EmployeeDto(Dto):
     @staticmethod
     def get_relations() -> list[ResourceRelation]:
@@ -77,8 +101,8 @@ class EmployeeDto(Dto):
                 error_code=422,
             ),
             PropertyValueConstraint(
-                property_name="parttime_day",
-                values=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                property_name="parttime_schedule",
+                values=[ParttimeScheduleDto],
                 treat_as_mandatory=True,
             ),
         ]

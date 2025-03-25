@@ -2,6 +2,7 @@
 
 import json as _json
 from enum import Enum
+from http import HTTPStatus
 from typing import Any, Mapping
 
 from openapi_core.contrib.requests import (
@@ -17,8 +18,8 @@ from robot.api import logger
 from robot.api.exceptions import Failure
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore.annotations import ResponseValidatorType
 from OpenApiLibCore.dto_base import resolve_schema
+from OpenApiLibCore.protocols import ResponseValidatorType
 from OpenApiLibCore.request_data import RequestData, RequestValues
 
 run_keyword = BuiltIn().run_keyword
@@ -126,7 +127,7 @@ def validate_response(
     openapi_spec: dict[str, Any],
     original_data: Mapping[str, Any],
 ) -> None:
-    if response.status_code == 204:
+    if response.status_code == int(HTTPStatus.NO_CONTENT):
         assert not response.content
         return None
 

@@ -165,10 +165,11 @@ disable = [
 ]
 
 [tool.pylint.'FORMAT CHECKER']
-max-line-length=120
+max-line-length=140
 
 [tool.pylint.'SIMILARITIES CHECKER']
 ignore-imports="yes"
+min-similarity-lines=10
 
 [tool.robotidy]
 line_length = 120
@@ -178,11 +179,12 @@ spacecount = 4
 filetypes = [".robot", ".resource"]
 configure = [
     "line-too-long:line_length:120",
-    "too-many-calls-in-test-case:max_calls:15"
+    "too-long-test-case:max_len:30",
+    "too-many-calls-in-test-case:max_calls:25",
 ]
 exclude = [
     "missing-doc-suite",
     "missing-doc-test-case",
     "missing-doc-keyword",
-    "too-few-calls-in-test-case"
+    "too-few-calls-in-test-case",
 ]

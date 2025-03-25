@@ -143,13 +143,13 @@ from robot.api.deco import keyword, library
 from robot.api.exceptions import FatalError
 from robot.libraries.BuiltIn import BuiltIn
 
-import OpenApiLibCore.data_generation as dg
+import OpenApiLibCore.data_generation as _data_generation
 import OpenApiLibCore.data_invalidation as di
 import OpenApiLibCore.path_functions as pf
 import OpenApiLibCore.path_invalidation as pi
 import OpenApiLibCore.resource_relations as rr
 import OpenApiLibCore.validation as val
-from OpenApiLibCore.annotations import ResponseValidatorType
+from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.dto_base import Dto, IdReference
 from OpenApiLibCore.dto_utils import (
     DEFAULT_ID_PROPERTY_NAME,
@@ -157,16 +157,17 @@ from OpenApiLibCore.dto_utils import (
     get_id_property_name,
 )
 from OpenApiLibCore.oas_cache import PARSER_CACHE, CachedParser
+from OpenApiLibCore.protocols import ResponseValidatorType
 from OpenApiLibCore.request_data import RequestData, RequestValues
-from OpenApiLibCore.value_utils import FAKE, JSON
+from OpenApiLibCore.value_utils import FAKE
 
 run_keyword = BuiltIn().run_keyword
 default_str_mapping: Mapping[str, str] = MappingProxyType({})
-default_any_mapping: Mapping[str, Any] = MappingProxyType({})
+default_any_mapping: Mapping[str, object] = MappingProxyType({})
 
 
 @library(scope="SUITE", doc_format="ROBOT")
-class OpenApiLibCore:
+class OpenApiLibCore:  # pylint: disable=too-many-public-methods
     """
     Main class providing the keywords and core logic to interact with an OpenAPI server.
 
@@ -174,7 +175,7 @@ class OpenApiLibCore:
     for an introduction.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913, pylint: disable=dangerous-default-value
         self,
         source: str,
         origin: str = "",
@@ -187,7 +188,7 @@ class OpenApiLibCore:
         faker_locale: str | list[str] = "",
         require_body_for_invalid_url: bool = False,
         recursion_limit: int = 1,
-        recursion_default: Any = default_str_mapping,
+        recursion_default: JSON = {},
         username: str = "",
         password: str = "",
         security_token: str = "",
@@ -324,7 +325,7 @@ class OpenApiLibCore:
         self.response_validation = response_validation
         self.disable_server_validation = disable_server_validation
         self._recursion_limit = recursion_limit
-        self._recursion_default = recursion_default
+        self._recursion_default = deepcopy(recursion_default)
         self.session = Session()
         # Only username and password, security_token or auth object should be provided
         # if multiple are provided, username and password take precedence
@@ -431,7 +432,7 @@ class OpenApiLibCore:
     @keyword
     def get_request_data(self, path: str, method: str) -> RequestData:
         """Return an object with valid request data for body, headers and query params."""
-        return dg.get_request_data(
+        return _data_generation.get_request_data(
             path=path,
             method=method,
             get_dto_class=self.get_dto_class,
@@ -442,14 +443,14 @@ class OpenApiLibCore:
     @keyword
     def get_json_data_for_dto_class(
         self,
-        schema: dict[str, Any],
-        dto_class: Dto | type[Dto],
+        schema: dict[str, JSON],
+        dto_class: type[Dto],
         operation_id: str = "",
-    ) -> dict[str, Any]:
+    ) -> JSON:
         """
-        Generate a valid (json-compatible) dict for all the `dto_class` properties.
+        Generate valid (json-compatible) data for the `dto_class`.
         """
-        return dg.get_json_data_for_dto_class(
+        return _data_generation.get_json_data_for_dto_class(
             schema=schema,
             dto_class=dto_class,
             get_id_property_name=self.get_id_property_name,
@@ -463,7 +464,7 @@ class OpenApiLibCore:
         method: str,
         status_code: int,
         request_data: RequestData,
-    ) -> dict[str, Any]:
+    ) -> dict[str, JSON]:
         """
         Return `json_data` based on the `dto` on the `request_data` that will cause
         the provided `status_code` for the `method` operation on the `url`.
@@ -484,7 +485,7 @@ class OpenApiLibCore:
         self,
         status_code: int,
         request_data: RequestData,
-    ) -> tuple[dict[str, Any], dict[str, str]]:
+    ) -> tuple[dict[str, JSON], dict[str, str]]:
         """
         Returns a version of `params, headers` as present on `request_data` that has
         been modified to cause the provided `status_code`.
@@ -498,7 +499,7 @@ class OpenApiLibCore:
     @keyword
     def get_json_data_with_conflict(
         self, url: str, method: str, dto: Dto, conflict_status_code: int
-    ) -> dict[str, Any]:
+    ) -> dict[str, JSON]:
         """
         Return `json_data` based on the `UniquePropertyValueConstraint` that must be
         returned by the `get_relations` implementation on the `dto` for the given
@@ -664,7 +665,7 @@ class OpenApiLibCore:
         path: str,
         status_code: int,
         request_values: RequestValues,
-        original_data: Mapping[str, Any] = default_any_mapping,
+        original_data: Mapping[str, object] = default_any_mapping,
     ) -> None:
         """
         This keyword first calls the Authorized Request keyword, then the Validate
@@ -694,7 +695,7 @@ class OpenApiLibCore:
 
     @keyword
     def assert_href_to_resource_is_valid(
-        self, href: str, referenced_resource: dict[str, Any]
+        self, href: str, referenced_resource: dict[str, JSON]
     ) -> None:
         """
         Attempt to GET the resource referenced by the `href` and validate it's equal
@@ -712,7 +713,7 @@ class OpenApiLibCore:
         self,
         path: str,
         response: Response,
-        original_data: Mapping[str, Any] = default_any_mapping,
+        original_data: Mapping[str, object] = default_any_mapping,
     ) -> None:
         """
         Validate the `response` by performing the following validations:
@@ -738,7 +739,7 @@ class OpenApiLibCore:
 
     @keyword
     def validate_resource_properties(
-        self, resource: dict[str, Any], schema: dict[str, Any]
+        self, resource: dict[str, JSON], schema: dict[str, JSON]
     ) -> None:
         """
         Validate that the `resource` does not contain any properties that are not
@@ -753,7 +754,7 @@ class OpenApiLibCore:
     @keyword
     def validate_send_response(
         response: Response,
-        original_data: Mapping[str, Any] = default_any_mapping,
+        original_data: Mapping[str, object] = default_any_mapping,
     ) -> None:
         """
         Validate that each property that was send that is in the response has the value
@@ -779,15 +780,15 @@ class OpenApiLibCore:
         return validation_spec
 
     @property
-    def openapi_spec(self) -> dict[str, Any]:
+    def openapi_spec(self) -> dict[str, JSON]:
         """Return a deepcopy of the parsed openapi document."""
         # protect the parsed openapi spec from being mutated by reference
         return deepcopy(self._openapi_spec)
 
     @cached_property
-    def _openapi_spec(self) -> dict[str, Any]:
+    def _openapi_spec(self) -> dict[str, JSON]:
         parser, _, _ = self._load_specs_and_validator()
-        return parser.specification
+        return parser.specification  # type: ignore[no-any-return]
 
     @cached_property
     def response_validator(
@@ -796,11 +797,11 @@ class OpenApiLibCore:
         _, _, response_validator = self._load_specs_and_validator()
         return response_validator
 
-    def _get_json_types_from_spec(self, spec: dict[str, Any]) -> set[str]:
+    def _get_json_types_from_spec(self, spec: dict[str, JSON]) -> set[str]:
         json_types: set[str] = set(self._get_json_types(spec))
         return {json_type for json_type in json_types if json_type is not None}
 
-    def _get_json_types(self, item: Any) -> Generator[str, None, None]:
+    def _get_json_types(self, item: object) -> Generator[str, None, None]:
         if isinstance(item, dict):
             content_dict = item.get("content")
             if content_dict is None:
@@ -824,7 +825,11 @@ class OpenApiLibCore:
         Spec,
         ResponseValidatorType,
     ]:
-        def recursion_limit_handler(limit: int, refstring: str, recursions: Any) -> Any:
+        def recursion_limit_handler(
+            limit: int,
+            refstring: str,
+            recursions: JSON,  # pylint: disable=unused-argument
+        ) -> JSON:
             return self._recursion_default
 
         try:
@@ -853,7 +858,7 @@ class OpenApiLibCore:
                     "Source was loaded, but no specification was present after parsing."
                 )
 
-            validation_spec = Spec.from_dict(parser.specification)
+            validation_spec = Spec.from_dict(parser.specification)  # pyright: ignore[reportArgumentType]
 
             json_types_from_spec: set[str] = self._get_json_types_from_spec(
                 parser.specification
@@ -861,9 +866,9 @@ class OpenApiLibCore:
             extra_deserializers = {
                 json_type: _json.loads for json_type in json_types_from_spec
             }
-            config = Config(extra_media_type_deserializers=extra_deserializers)
+            config = Config(extra_media_type_deserializers=extra_deserializers)  # type: ignore[arg-type]
             openapi = OpenAPI(spec=validation_spec, config=config)
-            response_validator: ResponseValidatorType = openapi.validate_response
+            response_validator: ResponseValidatorType = openapi.validate_response  # type: ignore[assignment]
 
             PARSER_CACHE[self._source] = CachedParser(
                 parser=parser,
@@ -882,5 +887,5 @@ class OpenApiLibCore:
                 f"ValidationError while trying to load openapi spec: {exception}"
             ) from exception
 
-    def read_paths(self) -> dict[str, Any]:
-        return self.openapi_spec["paths"]
+    def read_paths(self) -> dict[str, JSON]:
+        return self.openapi_spec["paths"]  # type: ignore[return-value]

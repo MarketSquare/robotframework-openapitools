@@ -231,7 +231,7 @@ def ensure_parameter_in_parameters(
             parameter_data["in"] == "header"
             and parameter_to_invalidate not in headers.keys()
         ):
-            headers[parameter_to_invalidate] = valid_value
+            headers[parameter_to_invalidate] = str(valid_value)
     return params, headers
 
 

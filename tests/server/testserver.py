@@ -39,6 +39,15 @@ class WeekDay(str, Enum):
     Friday = "Friday"
 
 
+class ParttimeDay(BaseModel):
+    weekday: WeekDay
+    available_hours: int = Field(4, ge=0, lt=8)
+
+
+class ParttimeSchedule(BaseModel):
+    parttime_days: list[ParttimeDay] = Field(..., min_length=1, max_length=5)
+
+
 class Wing(str, Enum):
     N = "North"
     E = "East"
@@ -71,14 +80,14 @@ class EmployeeDetails(BaseModel):
     employee_number: int
     wagegroup_id: str
     date_of_birth: datetime.date
-    parttime_day: WeekDay | None = None
+    parttime_schedule: ParttimeSchedule | None = None
 
 
 class Employee(BaseModel):
     name: str
     wagegroup_id: str
     date_of_birth: datetime.date
-    parttime_day: WeekDay | None = None
+    parttime_schedule: ParttimeSchedule | None = None
 
 
 class EmployeeUpdate(BaseModel):
@@ -86,7 +95,7 @@ class EmployeeUpdate(BaseModel):
     employee_number: int | None = None
     wagegroup_id: str | None = None
     date_of_birth: datetime.date | None = None
-    parttime_day: WeekDay | None = None
+    parttime_schedule: ParttimeSchedule | None = None
 
 
 WAGE_GROUPS: dict[str, WageGroup] = {}
@@ -280,10 +289,16 @@ def post_employee(employee: Employee) -> EmployeeDetails:
         raise HTTPException(
             status_code=403, detail="An employee must be at least 18 years old."
         )
+    parttime_schedule = employee.parttime_schedule
+    if parttime_schedule is not None:
+        parttime_schedule = ParttimeSchedule.model_validate(parttime_schedule)
     new_employee = EmployeeDetails(
         identification=uuid4().hex,
+        name=employee.name,
         employee_number=next(EMPLOYEE_NUMBERS),
-        **employee.model_dump(),
+        wagegroup_id=employee.wagegroup_id,
+        date_of_birth=employee.date_of_birth,
+        parttime_schedule=parttime_schedule,
     )
     EMPLOYEES[new_employee.identification] = new_employee
     return new_employee
@@ -349,12 +364,28 @@ def patch_employee(employee_id: str, employee: EmployeeUpdate) -> JSONResponse:
             )
 
     updated_employee = stored_employee_data.model_copy(update=employee_update_data)
+    if updated_employee.parttime_schedule is not None:
+        parttime_schedule = ParttimeSchedule.model_validate(
+            updated_employee.parttime_schedule
+        )
+        updated_employee.parttime_schedule = parttime_schedule
     EMPLOYEES[employee_id] = updated_employee
     return JSONResponse(content=True)
 
 
 @app.get("/available_employees", status_code=200, response_model=list[EmployeeDetails])
 def get_available_employees(weekday: WeekDay = Query(...)) -> list[EmployeeDetails]:
-    return [
-        e for e in EMPLOYEES.values() if getattr(e, "parttime_day", None) != weekday
-    ]
+    available_employees: list[EmployeeDetails] = []
+    for employee in EMPLOYEES.values():
+        if not employee.parttime_schedule:
+            continue
+
+        weekday_availability = [
+            d.available_hours
+            for d in employee.parttime_schedule.parttime_days
+            if d.weekday == weekday
+        ]
+        if weekday_availability and weekday_availability[0] > 0:
+            available_employees.append(employee)
+
+    return available_employees
