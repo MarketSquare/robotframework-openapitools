@@ -431,7 +431,10 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
     # region: data generation keywords
     @keyword
     def get_request_values(
-        self, path: str, method: str, overrides: dict[str, Any] = {}
+        self,
+        path: str,
+        method: str,
+        overrides: Mapping[str, object] = default_any_mapping,
     ) -> RequestValues:
         """Return an object with all (valid) request values needed to make a request."""
         json_data: dict[str, JSON] = {}
@@ -459,7 +462,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
                 if location == "header":
                     request_values.override_header_value(name=name_, value=value)
                 if location == "query":
-                    request_values.override_param_value(name=name_, value=value)
+                    request_values.override_param_value(name=name_, value=str(value))
             else:
                 request_values.override_request_value(name=name, value=value)
 
@@ -862,8 +865,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         ResponseValidatorType,
     ]:
         def recursion_limit_handler(
-            limit: int,
-            refstring: str,
+            limit: int,  # pylint: disable=unused-argument
+            refstring: str,  # pylint: disable=unused-argument
             recursions: JSON,  # pylint: disable=unused-argument
         ) -> JSON:
             return self._recursion_default
