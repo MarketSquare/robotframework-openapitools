@@ -78,7 +78,6 @@ def atests(context: Context) -> None:
         f"--variable=root:{ROOT}",
         f"--outputdir={ROOT}/tests/logs",
         "--loglevel=TRACE:DEBUG",
-        "--exclude=roboswag",
         f"{ROOT}/tests",
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
@@ -108,7 +107,6 @@ def lint(context: Context) -> None:
     subprocess.run(f"ruff check {ROOT}/src/OpenApiLibCore", shell=True, check=False)
     subprocess.run(f"pylint {ROOT}/src/OpenApiDriver", shell=True, check=False)
     subprocess.run(f"pylint {ROOT}/src/OpenApiLibCore", shell=True, check=False)
-    # subprocess.run(f"pylint {ROOT}/src/roboswag", shell=True, check=False)
     subprocess.run(f"robocop {ROOT}/tests", shell=True, check=False)
 
 

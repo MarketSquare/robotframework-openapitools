@@ -118,9 +118,7 @@ check_untyped_defs = true
 disallow_untyped_defs = true
 strict = true
 show_error_codes = true
-exclude = [
-  "src/roboswag",
-]
+exclude = []
 
 [[tool.mypy.overrides]]
 module = [
@@ -133,7 +131,7 @@ ignore_missing_imports = true
 
 [tool.pyright]
 include = ["src"]
-exclude = ["src/roboswag"]
+exclude = []
 
 [tool.ruff]
 line-length = 88
