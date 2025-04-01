@@ -30,14 +30,14 @@ def start_api(context: Context) -> None:
 @task
 def libgen(context: Context) -> None:
     env = os.environ.copy()
-    env["USE_SUMMARY_AS_KEYWORD_NAME"] = "True"
-    env["EXPAND_BODY_ARGUMENTS"] = "True"
+    env["USE_SUMMARY_AS_KEYWORD_NAME"] = "true"
+    env["EXPAND_BODY_ARGUMENTS"] = "false"
     cmd = [
         "generate-library",
         "-n",
         "'My Generated Library'",
         "-s",
-        f"{ROOT}/tests/files/mismatched_openapi.json",
+        "http://127.0.0.1:8000/openapi.json",
         "-d",
         f"{ROOT}/tests/generated/",
     ]
