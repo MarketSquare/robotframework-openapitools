@@ -3,7 +3,10 @@ from os import getenv
 from string import Template
 from typing import Any, Generator
 
+from robot.utils import is_truthy
+
 from openapi_libgen.parsing_utils import remove_unsafe_characters_from_string
+from OpenApiLibCore.parameter_utils import get_safe_name_for_oas_name
 from OpenApiLibCore.value_utils import python_type_by_json_type_name
 
 KEYWORD_TEMPLATE = r"""@keyword
@@ -13,6 +16,8 @@ KEYWORD_TEMPLATE = r"""@keyword
 SIGNATURE_TEMPLATE = r"def {keyword_name}(self{arguments}) -> Response:"
 
 BODY_TEMPLATE_ = r"""overrides = {key: value for key, value in locals().items() if value is not UNSET and key != "self"}
+        body_data = overrides.pop("body", {})
+        overrides.update(body_data)
         updated_path: str = substitute_path_parameters(path="{path_value}", substitution_dict=overrides)
         request_values: RequestValues = self.get_request_values(path=f"{updated_path}", method="{method_value}", overrides=overrides)
         return self._perform_request(request_values=request_values)"""
@@ -99,7 +104,7 @@ def get_keyword_signature(operation_details: OperationDetails) -> str:
     USE_SUMMARY_AS_KEYWORD_NAME = getenv("USE_SUMMARY_AS_KEYWORD_NAME")
     EXPAND_BODY_ARGUMENTS = getenv("EXPAND_BODY_ARGUMENTS")
 
-    if USE_SUMMARY_AS_KEYWORD_NAME:
+    if is_truthy(USE_SUMMARY_AS_KEYWORD_NAME):
         keyword_name = remove_unsafe_characters_from_string(
             operation_details.summary
         ).lower()
@@ -122,12 +127,15 @@ def get_keyword_signature(operation_details: OperationDetails) -> str:
     keyword_argument_names: set[str] = set()
 
     for parameter in path_parameters:
-        parameter_json_type = parameter.schema["type"]
-        parameter_python_type = python_type_by_json_type_name(
-            parameter_json_type
-        ).__name__
+        if "anyOf" in parameter.schema:
+            parameter_python_type = "Any"
+        else:
+            parameter_json_type = parameter.schema["type"]
+            parameter_python_type = python_type_by_json_type_name(
+                parameter_json_type
+            ).__name__
         annotation = f"{parameter_python_type} = UNSET"
-        safe_name = remove_unsafe_characters_from_string(parameter.name)
+        safe_name = get_safe_name_for_oas_name(parameter.name)
         keyword_argument_names.add(safe_name)
         argument = f", {safe_name}: {annotation}"
         argument_parts.append(argument)
@@ -136,15 +144,18 @@ def get_keyword_signature(operation_details: OperationDetails) -> str:
     if body_details:
         body_json_type = body_details.schema["type"]
         body_python_type = python_type_by_json_type_name(body_json_type).__name__
-        if body_python_type == "dict" and EXPAND_BODY_ARGUMENTS:
+        if body_python_type == "dict" and is_truthy(EXPAND_BODY_ARGUMENTS):
             body_properties = body_details.schema["properties"]
             for property_name, property_data in body_properties.items():
-                property_json_type = property_data["type"]
-                property_python_type = python_type_by_json_type_name(
-                    property_json_type
-                ).__name__
+                if "anyOf" in property_data:
+                    property_python_type = "Any"
+                else:
+                    property_json_type = property_data["type"]
+                    property_python_type = python_type_by_json_type_name(
+                        property_json_type
+                    ).__name__
                 annotation = f"{property_python_type} = UNSET"
-                safe_name = remove_unsafe_characters_from_string(property_name)
+                safe_name = get_safe_name_for_oas_name(property_name)
                 if safe_name in keyword_argument_names:
                     safe_name = "body_" + safe_name
                 keyword_argument_names.add(safe_name)
@@ -156,12 +167,15 @@ def get_keyword_signature(operation_details: OperationDetails) -> str:
             arguments += argument
 
     for parameter in query_parameters:
-        parameter_json_type = parameter.schema["type"]
-        parameter_python_type = python_type_by_json_type_name(
-            parameter_json_type
-        ).__name__
+        if "anyOf" in parameter.schema:
+            parameter_python_type = "Any"
+        else:
+            parameter_json_type = parameter.schema["type"]
+            parameter_python_type = python_type_by_json_type_name(
+                parameter_json_type
+            ).__name__
         annotation = f"{parameter_python_type} = UNSET"
-        safe_name = remove_unsafe_characters_from_string(parameter.name)
+        safe_name = get_safe_name_for_oas_name(parameter.name)
         if safe_name in keyword_argument_names:
             safe_name = "query_" + safe_name
         keyword_argument_names.add(safe_name)
@@ -169,12 +183,15 @@ def get_keyword_signature(operation_details: OperationDetails) -> str:
         arguments += argument
 
     for parameter in header_parameters:
-        parameter_json_type = parameter.schema["type"]
-        parameter_python_type = python_type_by_json_type_name(
-            parameter_json_type
-        ).__name__
+        if "anyOf" in parameter.schema:
+            parameter_python_type = "Any"
+        else:
+            parameter_json_type = parameter.schema["type"]
+            parameter_python_type = python_type_by_json_type_name(
+                parameter_json_type
+            ).__name__
         annotation = f"{parameter_python_type} = UNSET"
-        safe_name = remove_unsafe_characters_from_string(parameter.name)
+        safe_name = get_safe_name_for_oas_name(parameter.name)
         if safe_name in keyword_argument_names:
             safe_name = "header_" + safe_name
         keyword_argument_names.add(safe_name)

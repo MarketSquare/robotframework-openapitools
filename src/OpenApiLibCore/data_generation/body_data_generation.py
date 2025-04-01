@@ -16,6 +16,7 @@ from OpenApiLibCore.dto_base import (
     PropertyValueConstraint,
 )
 from OpenApiLibCore.dto_utils import DefaultDto
+from OpenApiLibCore.parameter_utils import get_safe_name_for_oas_name
 from OpenApiLibCore.protocols import GetIdPropertyNameType
 from OpenApiLibCore.value_utils import IGNORE, get_valid_value
 
@@ -197,6 +198,8 @@ def get_property_names_to_process(
     property_names = []
 
     for property_name in schema.get("properties", []):
+        # register the oas_name
+        _ = get_safe_name_for_oas_name(property_name)
         if constrained_values := get_constrained_values(
             dto_class=dto_class, property_name=property_name
         ):

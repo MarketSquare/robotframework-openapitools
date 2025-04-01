@@ -157,6 +157,10 @@ from OpenApiLibCore.dto_utils import (
     get_id_property_name,
 )
 from OpenApiLibCore.oas_cache import PARSER_CACHE, CachedParser
+from OpenApiLibCore.parameter_utils import (
+    get_oas_name_from_safe_name,
+    register_path_parameters,
+)
 from OpenApiLibCore.protocols import ResponseValidatorType
 from OpenApiLibCore.request_data import RequestData, RequestValues
 from OpenApiLibCore.value_utils import FAKE
@@ -457,14 +461,16 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         for name, value in overrides.items():
             if name.startswith(("body_", "header_", "query_")):
                 location, _, name_ = name.partition("_")
+                oas_name = get_oas_name_from_safe_name(name_)
                 if location == "body":
-                    request_values.override_body_value(name=name_, value=value)
+                    request_values.override_body_value(name=oas_name, value=value)
                 if location == "header":
-                    request_values.override_header_value(name=name_, value=value)
+                    request_values.override_header_value(name=oas_name, value=value)
                 if location == "query":
-                    request_values.override_param_value(name=name_, value=str(value))
+                    request_values.override_param_value(name=oas_name, value=str(value))
             else:
-                request_values.override_request_value(name=name, value=value)
+                oas_name = get_oas_name_from_safe_name(name)
+                request_values.override_request_value(name=oas_name, value=value)
 
         return request_values
 
@@ -827,7 +833,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
     @cached_property
     def _openapi_spec(self) -> dict[str, JSON]:
         parser, _, _ = self._load_specs_and_validator()
-        return parser.specification  # type: ignore[no-any-return]
+        spec_dict: dict[str, JSON] = parser.specification
+        register_path_parameters(spec_dict["paths"])
+        return spec_dict
 
     @cached_property
     def response_validator(
