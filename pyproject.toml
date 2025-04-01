@@ -1,6 +1,6 @@
 [project]
 name="robotframework-openapitools"
-version = "1.0.0"
+version = "1.0.0b1"
 description = "A set of Robot Framework libraries to test APIs for which the OAS is available."
 authors = [
     {name = "Robin Mackaij", email = "r.a.mackaij@gmail.com"},
