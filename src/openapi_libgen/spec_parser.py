@@ -13,14 +13,17 @@ KEYWORD_TEMPLATE = r"""@keyword
     {signature}
         {body}"""
 
-SIGNATURE_TEMPLATE = r"def {keyword_name}(self{arguments}) -> Response:"
+SIGNATURE_TEMPLATE = r"def {keyword_name}(self{arguments}, validate_against_schema: bool = True) -> Response:"
 
 BODY_TEMPLATE_ = r"""overrides = {key: value for key, value in locals().items() if value is not UNSET and key != "self"}
         body_data = overrides.pop("body", {})
         overrides.update(body_data)
         updated_path: str = substitute_path_parameters(path="{path_value}", substitution_dict=overrides)
         request_values: RequestValues = self.get_request_values(path=f"{updated_path}", method="{method_value}", overrides=overrides)
-        return self._perform_request(request_values=request_values)"""
+        response = self._perform_request(request_values=request_values)
+        if validate_against_schema:
+            run_keyword('validate_response_using_validator', response)
+        return response"""
 
 
 class BodyTemplate(Template):

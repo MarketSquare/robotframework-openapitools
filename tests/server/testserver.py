@@ -329,7 +329,9 @@ def get_employee(employee_id: str) -> EmployeeDetails:
     "/employees/{employee_id}",
     status_code=200,
     responses={
+        403: {"model": Detail},
         404: {"model": Detail},
+        451: {"model": Detail},
         200: {
             "description": "A JSON boolean response",
             "content": {

@@ -383,11 +383,12 @@ def validate_send_response(
 
 
 def validate_response_using_validator(
-    request: RequestsOpenAPIRequest,
-    response: RequestsOpenAPIResponse,
+    response: Response,
     response_validator: ResponseValidatorType,
 ) -> None:
-    response_validator(request=request, response=response)
+    openapi_request = RequestsOpenAPIRequest(response.request)
+    openapi_response = RequestsOpenAPIResponse(response)
+    response_validator(request=openapi_request, response=openapi_response)
 
 
 def _validate_response(
@@ -400,8 +401,7 @@ def _validate_response(
 ) -> None:
     try:
         validate_response_using_validator(
-            RequestsOpenAPIRequest(response.request),
-            RequestsOpenAPIResponse(response),
+            response=response,
             response_validator=response_validator,
         )
     except (ResponseValidationError, ServerNotFound) as exception:

@@ -7,7 +7,10 @@ from typing import Generator
 
 from OpenApiLibCore.annotations import JSON
 
-PARAMETER_REGISTRY: dict[str, str] = {"body": "body"}
+PARAMETER_REGISTRY: dict[str, str] = {
+    "body": "body",
+    "validate_against_schema": "validate_against_schema",
+}
 
 
 def get_oas_name_from_safe_name(safe_name: str) -> str:

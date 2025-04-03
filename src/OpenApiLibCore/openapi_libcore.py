@@ -726,14 +726,13 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
 
     @keyword
     def validate_response_using_validator(
-        self, request: RequestsOpenAPIRequest, response: RequestsOpenAPIResponse
+        self, response: Response
     ) -> None:
         """
-        Validate the `response` for a given `request` against the OpenAPI Spec that is
+        Validate the `response` against the OpenAPI Spec that is
         loaded during library initialization.
         """
         val.validate_response_using_validator(
-            request=request,
             response=response,
             response_validator=self.response_validator,
         )
