@@ -128,10 +128,6 @@ from types import MappingProxyType
 from typing import Any, Generator
 
 from openapi_core import Config, OpenAPI, Spec
-from openapi_core.contrib.requests import (
-    RequestsOpenAPIRequest,
-    RequestsOpenAPIResponse,
-)
 from openapi_core.validation.exceptions import ValidationError
 from prance import ResolvingParser
 from prance.util.url import ResolutionError
@@ -725,9 +721,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         )
 
     @keyword
-    def validate_response_using_validator(
-        self, response: Response
-    ) -> None:
+    def validate_response_using_validator(self, response: Response) -> None:
         """
         Validate the `response` against the OpenAPI Spec that is
         loaded during library initialization.

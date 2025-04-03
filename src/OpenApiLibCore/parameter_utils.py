@@ -9,7 +9,6 @@ from OpenApiLibCore.annotations import JSON
 
 PARAMETER_REGISTRY: dict[str, str] = {
     "body": "body",
-    "validate_against_schema": "validate_against_schema",
 }
 
 
