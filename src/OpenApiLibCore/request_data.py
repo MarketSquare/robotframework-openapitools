@@ -40,6 +40,12 @@ class RequestValues:
         self.override_header_value(name=name, value=value)
         self.override_param_value(name=name, value=value)
 
+    def remove_parameters(self, parameters: list[str]) -> None:
+        for parameter in parameters:
+            _ = self.params.pop(parameter, None)
+            _ = self.headers.pop(parameter, None)
+            _ = self.json_data.pop(parameter, None)
+
 
 @dataclass
 class RequestData:

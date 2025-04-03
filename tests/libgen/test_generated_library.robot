@@ -40,3 +40,19 @@ Test Generated Keywords: Post WageGroup
     # ${response}=    Post Wagegroup    hourly_rate=99.99
     Should Be Equal As Integers    ${response.status_code}    201
     Should Be Equal As Numbers    ${response.json()}[hourly-rate]    99.99
+
+Test Generated Keywords: Get Energy Label
+    ${response}=    Get Energy Label
+    ...    zipcode=1111AA
+    ...    home_number=10
+    ...    extension=too long to be acceptable
+    ...    validate_against_schema=${FALSE}
+    Should Be Equal As Integers    ${response.status_code}    422
+
+    VAR    @{omit}    extension
+    ${response}=    Get Energy Label
+    ...    zipcode=1111AA
+    ...    home_number=10
+    ...    extension=too long to be acceptable
+    ...    omit_parameters=${omit}
+    Should Be Equal As Integers    ${response.status_code}    200
