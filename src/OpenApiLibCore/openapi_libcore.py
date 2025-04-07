@@ -152,6 +152,7 @@ from OpenApiLibCore.dto_utils import (
     get_dto_class,
     get_id_property_name,
 )
+from OpenApiLibCore.models import OpenApiObject
 from OpenApiLibCore.oas_cache import PARSER_CACHE, CachedParser
 from OpenApiLibCore.parameter_utils import (
     get_oas_name_from_safe_name,
@@ -827,7 +828,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
     def _openapi_spec(self) -> dict[str, JSON]:
         parser, _, _ = self._load_specs_and_validator()
         spec_dict: dict[str, JSON] = parser.specification
-        register_path_parameters(spec_dict["paths"])
+        spec_model = OpenApiObject.model_validate(spec_dict)
+        register_path_parameters(spec_model.paths)
         return spec_dict
 
     @cached_property

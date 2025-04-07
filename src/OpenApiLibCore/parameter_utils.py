@@ -5,7 +5,7 @@ names and the original names in the parsed OpenApi Specification document.
 
 from typing import Generator
 
-from OpenApiLibCore.annotations import JSON
+from OpenApiLibCore.models import ParameterObject, PathItemObject
 
 PARAMETER_REGISTRY: dict[str, str] = {
     "body": "body",
@@ -80,12 +80,18 @@ def convert_string_to_python_identifier(string: str, verbose: bool = False) -> s
     return converted_string
 
 
-def register_path_parameters(paths_data: dict[str, dict[str, JSON]]) -> None:
-    for operations_data in paths_data.values():
-        for method_data in operations_data.values():
-            parameters_data: list[dict[str, str]] = method_data.get("parameters", [])
-            path_parameter_names = [
-                p["name"] for p in parameters_data if p["in"] == "path"
-            ]
-            for name in path_parameter_names:
-                _ = get_safe_name_for_oas_name(name)
+def register_path_parameters(paths_data: dict[str, PathItemObject]) -> None:
+    def _register_path_parameter(parameter_object: ParameterObject) -> None:
+        if parameter_object.in_ == "path":
+            _ = get_safe_name_for_oas_name(parameter_object.name)
+
+    for path_item in paths_data.values():
+        if parameters := path_item.parameters:
+            for parameter in path_item.parameters:
+                _register_path_parameter(parameter_object=parameter)
+
+        operations = path_item.get_operations()
+        for operation in operations:
+            if parameters := operation.parameters:
+                for parameter in parameters:
+                    _register_path_parameter(parameter_object=parameter)
