@@ -6,11 +6,15 @@ from functools import cached_property
 from random import sample
 from typing import Any
 
-from OpenApiLibCore.dto_base import (
-    Dto,
-    resolve_schema,
-)
+from OpenApiLibCore.annotations import JSON
+from OpenApiLibCore.dto_base import Dto
 from OpenApiLibCore.dto_utils import DefaultDto
+from OpenApiLibCore.models import (
+    ObjectSchema,
+    ParameterObject,
+    ResolvedSchemaObjectTypes,
+    UnionTypeSchema,
+)
 
 
 @dataclass
@@ -19,23 +23,23 @@ class RequestValues:
 
     url: str
     method: str
-    params: dict[str, Any] = field(default_factory=dict)
-    headers: dict[str, str] = field(default_factory=dict)
-    json_data: dict[str, Any] = field(default_factory=dict)
+    params: dict[str, JSON] = field(default_factory=dict)
+    headers: dict[str, JSON] = field(default_factory=dict)
+    json_data: dict[str, JSON] = field(default_factory=dict)
 
-    def override_body_value(self, name: str, value: Any) -> None:
+    def override_body_value(self, name: str, value: JSON) -> None:
         if name in self.json_data:
             self.json_data[name] = value
 
-    def override_header_value(self, name: str, value: Any) -> None:
+    def override_header_value(self, name: str, value: JSON) -> None:
         if name in self.headers:
             self.headers[name] = value
 
-    def override_param_value(self, name: str, value: str) -> None:
+    def override_param_value(self, name: str, value: JSON) -> None:
         if name in self.params:
             self.params[name] = str(value)
 
-    def override_request_value(self, name: str, value: Any) -> None:
+    def override_request_value(self, name: str, value: JSON) -> None:
         self.override_body_value(name=name, value=value)
         self.override_header_value(name=name, value=value)
         self.override_param_value(name=name, value=value)
@@ -52,16 +56,14 @@ class RequestData:
     """Helper class to manage parameters used when making requests."""
 
     dto: Dto | DefaultDto = field(default_factory=DefaultDto)
-    dto_schema: dict[str, Any] = field(default_factory=dict)
-    parameters: list[dict[str, Any]] = field(default_factory=list)
-    params: dict[str, Any] = field(default_factory=dict)
-    headers: dict[str, Any] = field(default_factory=dict)
+    body_schema: ObjectSchema | None = None
+    parameters: list[ParameterObject] = field(default_factory=list)
+    params: dict[str, JSON] = field(default_factory=dict)
+    headers: dict[str, JSON] = field(default_factory=dict)
     has_body: bool = True
 
     def __post_init__(self) -> None:
         # prevent modification by reference
-        self.dto_schema = deepcopy(self.dto_schema)
-        self.parameters = deepcopy(self.parameters)
         self.params = deepcopy(self.params)
         self.headers = deepcopy(self.headers)
 
@@ -70,10 +72,16 @@ class RequestData:
         """Whether or not the dto data (json data) contains optional properties."""
 
         def is_required_property(property_name: str) -> bool:
-            return property_name in self.dto_schema.get("required", [])
+            return property_name in self.required_property_names
 
         properties = (self.dto.as_dict()).keys()
         return not all(map(is_required_property, properties))
+
+    @property
+    def required_property_names(self) -> list[str]:
+        if self.body_schema:
+            return self.body_schema.required
+        return []
 
     @property
     def has_optional_params(self) -> bool:
@@ -81,9 +89,7 @@ class RequestData:
 
         def is_optional_param(query_param: str) -> bool:
             optional_params = [
-                p.get("name")
-                for p in self.parameters
-                if p.get("in") == "query" and not p.get("required")
+                p.name for p in self.parameters if p.in_ == "query" and not p.required
             ]
             return query_param in optional_params
 
@@ -96,47 +102,26 @@ class RequestData:
         restrictions, data type or by not providing them in a request.
         """
         result = set()
-        params = [h for h in self.parameters if h.get("in") == "query"]
+        params = [h for h in self.parameters if h.in_ == "query"]
         for param in params:
             # required params can be omitted to invalidate a request
-            if param["required"]:
-                result.add(param["name"])
+            if param.required:
+                result.add(param.name)
                 continue
 
-            schema = resolve_schema(param["schema"])
-            if schema.get("type", None):
-                param_types = [schema]
+            if param.schema_ is None:
+                continue
+
+            possible_schemas: list[ResolvedSchemaObjectTypes] = []
+            if isinstance(param.schema_, UnionTypeSchema):
+                possible_schemas = param.schema_.resolved_schemas
             else:
-                param_types = schema["types"]
-            for param_type in param_types:
-                # any basic non-string type except "null" can be invalidated by
-                # replacing it with a string
-                if param_type["type"] not in ["string", "array", "object", "null"]:
-                    result.add(param["name"])
-                    continue
-                # enums, strings and arrays with boundaries can be invalidated
-                if set(param_type.keys()).intersection(
-                    {
-                        "enum",
-                        "minLength",
-                        "maxLength",
-                        "minItems",
-                        "maxItems",
-                    }
-                ):
-                    result.add(param["name"])
-                    continue
-                # an array of basic non-string type can be invalidated by replacing the
-                # items in the array with strings
-                if param_type["type"] == "array" and param_type["items"][
-                    "type"
-                ] not in [
-                    "string",
-                    "array",
-                    "object",
-                    "null",
-                ]:
-                    result.add(param["name"])
+                possible_schemas = [param.schema_]
+
+            for param_schema in possible_schemas:
+                if param_schema.can_be_invalidated:
+                    result.add(param.name)
+
         return result
 
     @property
@@ -145,9 +130,7 @@ class RequestData:
 
         def is_optional_header(header: str) -> bool:
             optional_headers = [
-                p.get("name")
-                for p in self.parameters
-                if p.get("in") == "header" and not p.get("required")
+                p.name for p in self.parameters if p.in_ == "header" and not p.required
             ]
             return header in optional_headers
 
@@ -160,47 +143,26 @@ class RequestData:
         restrictions or by not providing them in a request.
         """
         result = set()
-        headers = [h for h in self.parameters if h.get("in") == "header"]
+        headers = [h for h in self.parameters if h.in_ == "header"]
         for header in headers:
             # required headers can be omitted to invalidate a request
-            if header["required"]:
-                result.add(header["name"])
+            if header.required:
+                result.add(header.name)
                 continue
 
-            schema = resolve_schema(header["schema"])
-            if schema.get("type", None):
-                header_types = [schema]
+            if header.schema_ is None:
+                continue
+
+            possible_schemas: list[ResolvedSchemaObjectTypes] = []
+            if isinstance(header.schema_, UnionTypeSchema):
+                possible_schemas = header.schema_.resolved_schemas
             else:
-                header_types = schema["types"]
-            for header_type in header_types:
-                # any basic non-string type except "null" can be invalidated by
-                # replacing it with a string
-                if header_type["type"] not in ["string", "array", "object", "null"]:
-                    result.add(header["name"])
-                    continue
-                # enums, strings and arrays with boundaries can be invalidated
-                if set(header_type.keys()).intersection(
-                    {
-                        "enum",
-                        "minLength",
-                        "maxLength",
-                        "minItems",
-                        "maxItems",
-                    }
-                ):
-                    result.add(header["name"])
-                    continue
-                # an array of basic non-string type can be invalidated by replacing the
-                # items in the array with strings
-                if header_type["type"] == "array" and header_type["items"][
-                    "type"
-                ] not in [
-                    "string",
-                    "array",
-                    "object",
-                    "null",
-                ]:
-                    result.add(header["name"])
+                possible_schemas = [header.schema_]
+
+            for param_schema in possible_schemas:
+                if param_schema.can_be_invalidated:
+                    result.add(header.name)
+
         return result
 
     def get_required_properties_dict(self) -> dict[str, Any]:
@@ -211,7 +173,7 @@ class RequestData:
             for relation in relations
             if getattr(relation, "treat_as_mandatory", False)
         ]
-        required_properties: list[str] = self.dto_schema.get("required", [])
+        required_properties = self.body_schema.required if self.body_schema else []
         required_properties.extend(mandatory_properties)
 
         required_properties_dict: dict[str, Any] = {}
@@ -223,7 +185,10 @@ class RequestData:
     def get_minimal_body_dict(self) -> dict[str, Any]:
         required_properties_dict = self.get_required_properties_dict()
 
-        min_properties = self.dto_schema.get("minProperties", 0)
+        min_properties = 0
+        if self.body_schema and self.body_schema.minProperties is not None:
+            min_properties = self.body_schema.minProperties
+
         number_of_optional_properties_to_add = min_properties - len(
             required_properties_dict
         )
@@ -247,13 +212,13 @@ class RequestData:
 
         return {**required_properties_dict, **optional_properties_dict}
 
-    def get_required_params(self) -> dict[str, str]:
+    def get_required_params(self) -> dict[str, JSON]:
         """Get the params dict containing only the required query parameters."""
         return {
             k: v for k, v in self.params.items() if k in self.required_parameter_names
         }
 
-    def get_required_headers(self) -> dict[str, str]:
+    def get_required_headers(self) -> dict[str, JSON]:
         """Get the headers dict containing only the required headers."""
         return {
             k: v for k, v in self.headers.items() if k in self.required_parameter_names
@@ -271,11 +236,11 @@ class RequestData:
             for relation in relations
             if getattr(relation, "treat_as_mandatory", False)
         ]
-        parameter_names = [p["name"] for p in self.parameters]
+        parameter_names = [p.name for p in self.parameters]
         mandatory_parameters = [
             p for p in mandatory_property_names if p in parameter_names
         ]
 
-        required_parameters = [p["name"] for p in self.parameters if p.get("required")]
+        required_parameters = [p.name for p in self.parameters if p.required]
         required_parameters.extend(mandatory_parameters)
         return required_parameters

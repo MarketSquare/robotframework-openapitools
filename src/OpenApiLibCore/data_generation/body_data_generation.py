@@ -16,18 +16,62 @@ from OpenApiLibCore.dto_base import (
     PropertyValueConstraint,
 )
 from OpenApiLibCore.dto_utils import DefaultDto
+from OpenApiLibCore.models import (
+    ArraySchema,
+    ObjectSchema,
+    RequestBodyObject,
+    SchemaObjectTypes,
+    UnionTypeSchema,
+)
 from OpenApiLibCore.parameter_utils import get_safe_name_for_oas_name
 from OpenApiLibCore.protocols import GetIdPropertyNameType
-from OpenApiLibCore.value_utils import IGNORE, get_valid_value
+from OpenApiLibCore.value_utils import IGNORE
 
 
-def get_json_data_for_dto_class(
-    schema: dict[str, Any],
+def get_request_body_data(
+    request_body_schema: RequestBodyObject,
     dto_class: type[Dto],
     get_id_property_name: GetIdPropertyNameType,
     operation_id: str = "",
 ) -> JSON:
-    match schema.get("type"):
+    media_type_dict = request_body_schema.content
+    supported_types = [v for k, v in media_type_dict.items() if "json" in k]
+    supported_schemas = [t.schema_ for t in supported_types if t.schema_ is not None]
+
+    if not supported_schemas:
+        raise ValueError(f"No supported content schema found: {media_type_dict}")
+
+    if len(supported_schemas) > 1:
+        logger.warn(
+            f"Multiple JSON media types defined for requestBody, using the first candidate {media_type_dict}"
+        )
+
+    schema = supported_schemas[0]
+
+    return get_json_data_for_dto_class(
+        schema=schema,
+        dto_class=dto_class,
+        get_id_property_name=get_id_property_name,
+        operation_id=operation_id,
+    )
+
+
+def get_json_data_for_dto_class(
+    schema: SchemaObjectTypes,
+    dto_class: type[Dto],
+    get_id_property_name: GetIdPropertyNameType,
+    operation_id: str | None = None,
+) -> JSON:
+    if isinstance(schema, UnionTypeSchema):
+        chosen_schema = choice(schema.resolved_schemas)
+        return get_json_data_for_dto_class(
+            schema=chosen_schema,
+            dto_class=dto_class,
+            get_id_property_name=get_id_property_name,
+            operation_id=operation_id,
+        )
+
+    match schema.type:
         case "object":
             return get_dict_data_for_dto_class(
                 schema=schema,
@@ -43,22 +87,22 @@ def get_json_data_for_dto_class(
                 operation_id=operation_id,
             )
         case _:
-            return get_valid_value(value_schema=schema)
+            return schema.get_valid_value()
 
 
 def get_dict_data_for_dto_class(
-    schema: dict[str, Any],
+    schema: ObjectSchema,
     dto_class: type[Dto],
     get_id_property_name: GetIdPropertyNameType,
-    operation_id: str = "",
+    operation_id: str | None = None,
 ) -> dict[str, Any]:
     json_data: dict[str, Any] = {}
 
     property_names = get_property_names_to_process(schema=schema, dto_class=dto_class)
 
     for property_name in property_names:
-        property_schema = schema["properties"][property_name]
-        if property_schema.get("readOnly", False):
+        property_schema = schema.properties.root[property_name]
+        if property_schema.readOnly:
             continue
 
         json_data[property_name] = get_data_for_property(
@@ -73,15 +117,15 @@ def get_dict_data_for_dto_class(
 
 
 def get_list_data_for_dto_class(
-    schema: dict[str, Any],
+    schema: ArraySchema,
     dto_class: type[Dto],
     get_id_property_name: GetIdPropertyNameType,
-    operation_id: str = "",
-) -> list[Any]:
-    json_data: list[Any] = []
-    list_item_schema = schema.get("items", {})
-    min_items = schema.get("minItems", 0)
-    max_items = schema.get("maxItems", 1)
+    operation_id: str | None = None,
+) -> list[JSON]:
+    json_data: list[JSON] = []
+    list_item_schema = schema.items
+    min_items = schema.minItems if schema.minItems is not None else 0
+    max_items = schema.maxItems if schema.maxItems is not None else 1
     number_of_items_to_generate = randint(min_items, max_items)
     for _ in range(number_of_items_to_generate):
         list_item_data = get_json_data_for_dto_class(
@@ -96,29 +140,11 @@ def get_list_data_for_dto_class(
 
 def get_data_for_property(
     property_name: str,
-    property_schema: dict[str, Any],
+    property_schema: SchemaObjectTypes,
     get_id_property_name: GetIdPropertyNameType,
     dto_class: type[Dto],
-    operation_id: str,
+    operation_id: str | None,
 ) -> JSON:
-    property_type = property_schema.get("type")
-    if property_type is None:
-        property_types = property_schema.get("types")
-        if property_types is None:
-            if property_schema.get("properties") is None:
-                raise NotImplementedError
-
-            nested_data = get_json_data_for_dto_class(
-                schema=property_schema,
-                dto_class=DefaultDto,
-                get_id_property_name=get_id_property_name,
-            )
-            return nested_data
-
-        selected_type_schema = choice(property_types)
-        property_type = selected_type_schema["type"]
-        property_schema = selected_type_schema
-
     if constrained_values := get_constrained_values(
         dto_class=dto_class, property_name=property_name
     ):
@@ -144,32 +170,18 @@ def get_data_for_property(
     ) is not None:
         return dependent_id
 
-    if property_type == "object":
-        object_data = get_json_data_for_dto_class(
-            schema=property_schema,
-            dto_class=DefaultDto,
-            get_id_property_name=get_id_property_name,
-            operation_id="",
-        )
-        return object_data
-
-    if property_type == "array":
-        array_data = get_json_data_for_dto_class(
-            schema=property_schema["items"],
-            dto_class=DefaultDto,
-            get_id_property_name=get_id_property_name,
-            operation_id=operation_id,
-        )
-        return [array_data]
-
-    return get_valid_value(property_schema)
+    return get_json_data_for_dto_class(
+        schema=property_schema,
+        dto_class=DefaultDto,
+        get_id_property_name=get_id_property_name,
+    )
 
 
 def get_value_constrained_by_nested_dto(
-    property_schema: dict[str, Any],
+    property_schema: SchemaObjectTypes,
     nested_dto_class: type[Dto],
     get_id_property_name: GetIdPropertyNameType,
-    operation_id: str,
+    operation_id: str | None,
 ) -> JSON:
     nested_schema = get_schema_for_nested_dto(property_schema=property_schema)
     nested_value = get_json_data_for_dto_class(
@@ -181,23 +193,21 @@ def get_value_constrained_by_nested_dto(
     return nested_value
 
 
-def get_schema_for_nested_dto(property_schema: dict[str, Any]) -> dict[str, Any]:
-    if property_schema.get("type"):
-        return property_schema
+def get_schema_for_nested_dto(property_schema: SchemaObjectTypes) -> SchemaObjectTypes:
+    if isinstance(property_schema, UnionTypeSchema):
+        chosen_schema = choice(property_schema.resolved_schemas)
+        return get_schema_for_nested_dto(chosen_schema)
 
-    if possible_types := property_schema.get("types"):
-        return choice(possible_types)
-
-    raise NotImplementedError
+    return property_schema
 
 
 def get_property_names_to_process(
-    schema: dict[str, Any],
+    schema: ObjectSchema,
     dto_class: type[Dto],
 ) -> list[str]:
     property_names = []
 
-    for property_name in schema.get("properties", []):
+    for property_name in schema.properties.root:
         # register the oas_name
         _ = get_safe_name_for_oas_name(property_name)
         if constrained_values := get_constrained_values(
@@ -208,9 +218,9 @@ def get_property_names_to_process(
                 continue
         property_names.append(property_name)
 
-    max_properties = schema.get("maxProperties")
+    max_properties = schema.maxProperties
     if max_properties and len(property_names) > max_properties:
-        required_properties = schema.get("required", [])
+        required_properties = schema.required
         number_of_optional_properties = max_properties - len(required_properties)
         optional_properties = [
             name for name in property_names if name not in required_properties
@@ -239,7 +249,7 @@ def get_constrained_values(
 def get_dependent_id(
     dto_class: type[Dto],
     property_name: str,
-    operation_id: str,
+    operation_id: str | None,
     get_id_property_name: GetIdPropertyNameType,
 ) -> str | int | float | None:
     relations = dto_class.get_relations()

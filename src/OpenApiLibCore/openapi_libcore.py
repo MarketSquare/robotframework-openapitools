@@ -152,7 +152,8 @@ from OpenApiLibCore.dto_utils import (
     get_dto_class,
     get_id_property_name,
 )
-from OpenApiLibCore.models import OpenApiObject
+from OpenApiLibCore.localized_faker import FAKE
+from OpenApiLibCore.models import OpenApiObject, PathItemObject
 from OpenApiLibCore.oas_cache import PARSER_CACHE, CachedParser
 from OpenApiLibCore.parameter_utils import (
     get_oas_name_from_safe_name,
@@ -160,7 +161,6 @@ from OpenApiLibCore.parameter_utils import (
 )
 from OpenApiLibCore.protocols import ResponseValidatorType
 from OpenApiLibCore.request_data import RequestData, RequestValues
-from OpenApiLibCore.value_utils import FAKE
 
 run_keyword = BuiltIn().run_keyword
 default_str_mapping: Mapping[str, str] = MappingProxyType({})
@@ -482,25 +482,25 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             openapi_spec=self.openapi_spec,
         )
 
-    @keyword
-    def get_json_data_for_dto_class(
-        self,
-        schema: dict[str, JSON],
-        dto_class: type[Dto],
-        operation_id: str = "",
-    ) -> JSON:
-        """
-        Generate valid (json-compatible) data for the `dto_class`.
-        """
-        return _data_generation.get_json_data_for_dto_class(
-            schema=schema,
-            dto_class=dto_class,
-            get_id_property_name=self.get_id_property_name,
-            operation_id=operation_id,
-        )
+    # @keyword
+    # def get_request_body_data(
+    #     self,
+    #     schema: dict[str, JSON],
+    #     dto_class: type[Dto],
+    #     operation_id: str = "",
+    # ) -> JSON:
+    #     """
+    #     Generate valid (json-compatible) data for the `dto_class`.
+    #     """
+    #     return _data_generation.get_request_body_data(
+    #         request_body_schema=schema,
+    #         dto_class=dto_class,
+    #         get_id_property_name=self.get_id_property_name,
+    #         operation_id=operation_id,
+    #     )
 
     @keyword
-    def get_invalid_json_data(
+    def get_invalid_body_data(
         self,
         url: str,
         method: str,
@@ -514,7 +514,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         > Note: applicable UniquePropertyValueConstraint and IdReference Relations are
             considered before changes to `json_data` are made.
         """
-        return di.get_invalid_json_data(
+        return di.get_invalid_body_data(
             url=url,
             method=method,
             status_code=status_code,
@@ -819,18 +819,17 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         return validation_spec
 
     @property
-    def openapi_spec(self) -> dict[str, JSON]:
+    def openapi_spec(self) -> OpenApiObject:
         """Return a deepcopy of the parsed openapi document."""
         # protect the parsed openapi spec from being mutated by reference
         return deepcopy(self._openapi_spec)
 
     @cached_property
-    def _openapi_spec(self) -> dict[str, JSON]:
+    def _openapi_spec(self) -> OpenApiObject:
         parser, _, _ = self._load_specs_and_validator()
-        spec_dict: dict[str, JSON] = parser.specification
-        spec_model = OpenApiObject.model_validate(spec_dict)
+        spec_model = OpenApiObject.model_validate(parser.specification)
         register_path_parameters(spec_model.paths)
-        return spec_dict
+        return spec_model
 
     @cached_property
     def response_validator(
@@ -929,5 +928,5 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
                 f"ValidationError while trying to load openapi spec: {exception}"
             ) from exception
 
-    def read_paths(self) -> dict[str, JSON]:
-        return self.openapi_spec["paths"]  # type: ignore[return-value]
+    def read_paths(self) -> dict[str, PathItemObject]:
+        return self.openapi_spec.paths

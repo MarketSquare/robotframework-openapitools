@@ -18,7 +18,7 @@ from robot.api import logger
 from robot.api.exceptions import Failure
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore.dto_base import resolve_schema
+from OpenApiLibCore.models import OpenApiObject
 from OpenApiLibCore.protocols import ResponseValidatorType
 from OpenApiLibCore.request_data import RequestData, RequestValues
 
@@ -124,7 +124,7 @@ def validate_response(
     disable_server_validation: bool,
     invalid_property_default_response: int,
     response_validation: str,
-    openapi_spec: dict[str, Any],
+    openapi_spec: OpenApiObject,
     original_data: Mapping[str, Any],
 ) -> None:
     if response.status_code == int(HTTPStatus.NO_CONTENT):
@@ -489,9 +489,11 @@ def _validate_type_of_extra_properties(
 
 
 def _get_response_spec(
-    path: str, method: str, status_code: int, openapi_spec: dict[str, Any]
+    path: str, method: str, status_code: int, openapi_spec: OpenApiObject
 ) -> dict[str, Any]:
     method = method.lower()
     status = str(status_code)
-    spec: dict[str, Any] = {**openapi_spec}["paths"][path][method]["responses"][status]
+    path_item = openapi_spec.paths[path]
+    method_spec = getattr(path_item, method)
+    spec: dict[str, Any] = method_spec.responses[status]
     return spec

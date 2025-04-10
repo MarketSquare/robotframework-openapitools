@@ -185,8 +185,8 @@ class OpenApiExecutors(OpenApiLibCore):
         # in case of a status code indicating an error, ensure the error occurs
         if status_code >= int(HTTPStatus.BAD_REQUEST):
             invalidation_keyword_data = {
-                "get_invalid_json_data": [
-                    "get_invalid_json_data",
+                "get_invalid_body_data": [
+                    "get_invalid_body_data",
                     url,
                     method,
                     status_code,
@@ -201,13 +201,13 @@ class OpenApiExecutors(OpenApiLibCore):
             invalidation_keywords = []
 
             if request_data.dto.get_body_relations_for_error_code(status_code):
-                invalidation_keywords.append("get_invalid_json_data")
+                invalidation_keywords.append("get_invalid_body_data")
             if request_data.dto.get_parameter_relations_for_error_code(status_code):
                 invalidation_keywords.append("get_invalidated_parameters")
             if invalidation_keywords:
                 if (
                     invalidation_keyword := choice(invalidation_keywords)
-                ) == "get_invalid_json_data":
+                ) == "get_invalid_body_data":
                     json_data = run_keyword(
                         *invalidation_keyword_data[invalidation_keyword]
                     )
@@ -225,13 +225,13 @@ class OpenApiExecutors(OpenApiLibCore):
                     params, headers = run_keyword(
                         *invalidation_keyword_data["get_invalidated_parameters"]
                     )
-                    if request_data.dto_schema:
+                    if request_data.body_schema:
                         json_data = run_keyword(
-                            *invalidation_keyword_data["get_invalid_json_data"]
+                            *invalidation_keyword_data["get_invalid_body_data"]
                         )
-                elif request_data.dto_schema:
+                elif request_data.body_schema:
                     json_data = run_keyword(
-                        *invalidation_keyword_data["get_invalid_json_data"]
+                        *invalidation_keyword_data["get_invalid_body_data"]
                     )
                 else:
                     raise SkipExecution(

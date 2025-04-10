@@ -11,6 +11,7 @@ from requests import Response
 from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
+from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.dto_base import (
     NOT_SET,
     Dto,
@@ -18,33 +19,34 @@ from OpenApiLibCore.dto_base import (
     PathPropertiesConstraint,
     PropertyValueConstraint,
     UniquePropertyValueConstraint,
-    resolve_schema,
 )
+from OpenApiLibCore.models import ParameterObject, UnionTypeSchema
 from OpenApiLibCore.request_data import RequestData
-from OpenApiLibCore.value_utils import IGNORE, get_invalid_value, get_valid_value
+from OpenApiLibCore.value_utils import IGNORE, get_invalid_value
 
 run_keyword = BuiltIn().run_keyword
 
 
-def get_invalid_json_data(
+def get_invalid_body_data(
     url: str,
     method: str,
     status_code: int,
     request_data: RequestData,
     invalid_property_default_response: int,
 ) -> dict[str, Any]:
+    if request_data.body_schema is None:
+        raise ValueError(
+            "Failed to invalidate: request_data does not contain a body_schema."
+        )
+
     method = method.lower()
     data_relations = request_data.dto.get_relations_for_error_code(status_code)
     data_relations = [
         r for r in data_relations if not isinstance(r, PathPropertiesConstraint)
     ]
     if not data_relations:
-        if not request_data.dto_schema:
-            raise ValueError(
-                "Failed to invalidate: no data_relations and empty schema."
-            )
         json_data = request_data.dto.get_invalidated_data(
-            schema=request_data.dto_schema,
+            schema=request_data.body_schema,
             status_code=status_code,
             invalid_property_default_code=invalid_property_default_response,
         )
@@ -63,7 +65,7 @@ def get_invalid_json_data(
         json_data = request_data.dto.as_dict()
     else:
         json_data = request_data.dto.get_invalidated_data(
-            schema=request_data.dto_schema,
+            schema=request_data.body_schema,
             status_code=status_code,
             invalid_property_default_code=invalid_property_default_response,
         )
@@ -115,7 +117,7 @@ def get_invalidated_parameters(
 
     # Dto mappings may contain generic mappings for properties that are not present
     # in this specific schema
-    request_data_parameter_names = [p.get("name") for p in request_data.parameters]
+    request_data_parameter_names = [p.name for p in request_data.parameters]
     additional_relation_property_names = {
         n for n in relation_property_names if n not in request_data_parameter_names
     }
@@ -140,7 +142,7 @@ def get_invalidated_parameters(
         [parameter_data] = [
             data
             for data in request_data.parameters
-            if data["name"] == parameter_to_invalidate
+            if data.name == parameter_to_invalidate
         ]
     except Exception:
         raise ValueError(
@@ -186,7 +188,13 @@ def get_invalidated_parameters(
         else:
             valid_value = headers[parameter_to_invalidate]
 
-        value_schema = resolve_schema(parameter_data["schema"])
+        value_schema = parameter_data.schema_
+        if value_schema is None:
+            raise ValueError(f"No schema defined for parameter: {parameter_data}.")
+
+        if isinstance(value_schema, UnionTypeSchema):
+            value_schema = choice(value_schema.resolved_schemas)
+
         invalid_value = get_invalid_value(
             value_schema=value_schema,
             current_value=valid_value,
@@ -204,11 +212,11 @@ def get_invalidated_parameters(
 
 def ensure_parameter_in_parameters(
     parameter_to_invalidate: str,
-    params: dict[str, Any],
-    headers: dict[str, str],
-    parameter_data: dict[str, Any],
-    values_from_constraint: list[Any],
-) -> tuple[dict[str, Any], dict[str, str]]:
+    params: dict[str, str],
+    headers: dict[str, JSON],
+    parameter_data: ParameterObject,
+    values_from_constraint: list[JSON],
+) -> tuple[dict[str, str], dict[str, JSON]]:
     """
     Returns the params, headers tuple with parameter_to_invalidate with a valid
     value to params or headers if not originally present.
@@ -220,15 +228,20 @@ def ensure_parameter_in_parameters(
         if values_from_constraint:
             valid_value = choice(values_from_constraint)
         else:
-            parameter_schema = resolve_schema(parameter_data["schema"])
-            valid_value = get_valid_value(parameter_schema)
+            value_schema = parameter_data.schema_
+            if value_schema is None:
+                raise ValueError(f"No schema defined for parameter: {parameter_data}.")
+
+            if isinstance(value_schema, UnionTypeSchema):
+                value_schema = choice(value_schema.resolved_schemas)
+            valid_value = value_schema.get_valid_value()
         if (
-            parameter_data["in"] == "query"
+            parameter_data.in_ == "query"
             and parameter_to_invalidate not in params.keys()
         ):
             params[parameter_to_invalidate] = valid_value
         if (
-            parameter_data["in"] == "header"
+            parameter_data.in_ == "header"
             and parameter_to_invalidate not in headers.keys()
         ):
             headers[parameter_to_invalidate] = str(valid_value)

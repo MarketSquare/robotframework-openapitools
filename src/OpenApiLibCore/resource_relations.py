@@ -1,13 +1,12 @@
 """Module holding the functions related to relations between resources."""
 
-from typing import Any
-
 from requests import Response
 from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
 import OpenApiLibCore.path_functions as pf
 from OpenApiLibCore.dto_base import IdReference
+from OpenApiLibCore.models import OpenApiObject
 from OpenApiLibCore.request_data import RequestData
 
 run_keyword = BuiltIn().run_keyword
@@ -16,7 +15,7 @@ run_keyword = BuiltIn().run_keyword
 def ensure_in_use(
     url: str,
     base_url: str,
-    openapi_spec: dict[str, Any],
+    openapi_spec: OpenApiObject,
     resource_relation: IdReference,
 ) -> None:
     resource_id = ""

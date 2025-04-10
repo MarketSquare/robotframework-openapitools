@@ -5,6 +5,8 @@ from typing import Any
 from DataDriver.AbstractReaderClass import AbstractReaderClass
 from DataDriver.ReaderConfig import TestCaseData
 
+from OpenApiLibCore.models import PathItemObject
+
 
 class Test:
     """
@@ -33,7 +35,7 @@ class OpenApiReader(AbstractReaderClass):
         test_data: list[TestCaseData] = []
 
         read_paths_method = getattr(self, "read_paths_method")
-        paths: dict[str, Any] = read_paths_method()
+        paths: dict[str, PathItemObject] = read_paths_method()
         self._filter_paths(paths)
 
         ignored_responses_ = [

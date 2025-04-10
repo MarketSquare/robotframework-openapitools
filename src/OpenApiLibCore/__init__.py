@@ -21,7 +21,6 @@ from OpenApiLibCore.dto_base import (
     PropertyValueConstraint,
     ResourceRelation,
     UniquePropertyValueConstraint,
-    resolve_schema,
 )
 from OpenApiLibCore.dto_utils import DefaultDto
 from OpenApiLibCore.openapi_libcore import (
@@ -52,5 +51,4 @@ __all__ = [
     "ResourceRelation",
     "UniquePropertyValueConstraint",
     "ValidationLevel",
-    "resolve_schema",
 ]
