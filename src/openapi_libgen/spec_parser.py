@@ -40,11 +40,13 @@ BODY_TEMPLATE = BodyTemplate(BODY_TEMPLATE_)
 class OperationDetails:
     path: str
     method: str
-    operation_id: str
     parameters: list[dict[str, Any]]
     request_body: dict[str, Any]
     summary: str
     description: str
+    operation_id: str | None = (
+        None  # operationId MUST be unique within the spec, so no default ""
+    )
 
 
 @dataclass
@@ -65,7 +67,7 @@ def get_path_items(paths: dict[str, Any]) -> Generator[OperationDetails, None, N
             operation_details = OperationDetails(
                 path=path,
                 method=method,
-                operation_id=method_item["operationId"],
+                operation_id=method_item.get("operationId", None),
                 parameters=method_item.get("parameters", []),
                 request_body=method_item.get("requestBody", {}),
                 summary=method_item.get("summary"),
@@ -114,10 +116,14 @@ def get_keyword_signature(operation_details: OperationDetails) -> str:
         keyword_name = remove_unsafe_characters_from_string(
             operation_details.summary
         ).lower()
-    else:
+    elif operation_details.operation_id:
         keyword_name = remove_unsafe_characters_from_string(
             operation_details.operation_id
         ).lower()
+    else:
+        keyword_name = remove_unsafe_characters_from_string(
+            f"{operation_details.method}_{operation_details.path}"
+        )
 
     parameters = get_parameter_details(operation_details=operation_details)
     path_parameters = [p for p in parameters if p.type == "path"]
