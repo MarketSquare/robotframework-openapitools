@@ -6,10 +6,12 @@ OpenApiTools is a set of libraries centered around the OpenAPI Specification:
 - [OpenApiLibCore](./libcore.md)
 
 
+## New in OpenApiTools v1.0.0
+
 Inspired by the work Bartlomiej and Mateusz did on #roboswag, I've created a CLI tool that generates a fully functional Robot Framework (Python) library that builds on OpenApiLibCore for automatic request data generation and request execution.
 
-## So how does it work? 
-After installing / updating to the v1.0.0 beta (`pip install robotframework-openapitools==1.0.0b2`) , there's a new CLI command available in your (virtual) environment: `generate-library`. You'll have to provide a path to the openapi spec (json or yaml, can be a url or path to the file), provide a path to where to generate the library and (optionally) a name for the library:
+### So how does it work?
+After installing / updating to the v1.0.0 beta (`pip install robotframework-openapitools==1.0.0b3`) , there's a new CLI command available in your (virtual) environment: `generate-library`. You'll have to provide a path to the openapi spec (json or yaml, can be a url or path to the file), provide a path to where to generate the library and (optionally) a name for the library:
 
 ```
 $ generate-library
@@ -88,7 +90,8 @@ Test Generated Keywords: Get Energy Label
     Should Be Equal As Integers    ${response.status_code}    200
 ```
 
-## Contribute
+### Contributions and feedback
+
 So now I need your feedback! Does the library generator work for your openapi spec? Does the library work / do all the generated keywords work? Please let me know of any issues you run into!
 Things I'd like to address / improve before an official release:
 - parameters with union types (e.g. int or float) are currently annotated as Any.
