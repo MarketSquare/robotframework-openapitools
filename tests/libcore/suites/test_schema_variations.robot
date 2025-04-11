@@ -20,8 +20,8 @@ Test Get Request Data For Schema With allOf
     Length Should Be    ${request_data.dto.published}    10
     Length Should Be    ${request_data.dto.tags}    1
     Length Should Be    ${request_data.dto.tags}[0]    36
-    Length Should Be    ${request_data.dto_schema}    4
-    Length Should Be    ${request_data.dto_schema.get("properties")}    4
+    Length Should Be    ${request_data.body_schema}    4
+    Length Should Be    ${request_data.body_schema.get("properties")}    4
     Should Be Equal    ${request_data.parameters}    ${list}
     Should Be Equal    ${request_data.params}    ${dict}
     Should Be Equal    ${request_data.headers}    ${expected_headers}

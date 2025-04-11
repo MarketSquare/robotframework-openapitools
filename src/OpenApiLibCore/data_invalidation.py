@@ -34,17 +34,16 @@ def get_invalid_body_data(
     request_data: RequestData,
     invalid_property_default_response: int,
 ) -> dict[str, Any]:
-    if request_data.body_schema is None:
-        raise ValueError(
-            "Failed to invalidate: request_data does not contain a body_schema."
-        )
-
     method = method.lower()
     data_relations = request_data.dto.get_relations_for_error_code(status_code)
     data_relations = [
         r for r in data_relations if not isinstance(r, PathPropertiesConstraint)
     ]
     if not data_relations:
+        if request_data.body_schema is None:
+            raise ValueError(
+                "Failed to invalidate: request_data does not contain a body_schema."
+            )
         json_data = request_data.dto.get_invalidated_data(
             schema=request_data.body_schema,
             status_code=status_code,
@@ -64,6 +63,10 @@ def get_invalid_body_data(
         run_keyword("ensure_in_use", url, resource_relation)
         json_data = request_data.dto.as_dict()
     else:
+        if request_data.body_schema is None:
+            raise ValueError(
+                "Failed to invalidate: request_data does not contain a body_schema."
+            )
         json_data = request_data.dto.get_invalidated_data(
             schema=request_data.body_schema,
             status_code=status_code,
@@ -193,6 +196,7 @@ def get_invalidated_parameters(
             raise ValueError(f"No schema defined for parameter: {parameter_data}.")
 
         if isinstance(value_schema, UnionTypeSchema):
+            # FIXME: extra handling may be needed in case of values_from_constraint
             value_schema = choice(value_schema.resolved_schemas)
 
         invalid_value = get_invalid_value(

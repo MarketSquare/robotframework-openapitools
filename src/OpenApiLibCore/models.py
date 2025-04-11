@@ -1,5 +1,6 @@
 import base64
 from abc import abstractmethod
+from collections import ChainMap
 from random import choice, randint, uniform
 from typing import Generator, Literal, TypeAlias, TypeVar
 
@@ -330,8 +331,8 @@ class PropertiesMapping(RootModel):
 
 class ObjectSchema(SchemaBase, frozen=True):
     type: Literal["object"]
-    properties: PropertiesMapping
-    additionalProperties: bool | dict[str, PropertiesMapping] = True
+    properties: PropertiesMapping | None = None
+    additionalProperties: "bool | SchemaObjectTypes" = True
     required: list[str] = []
     maxProperties: int | None = None
     minProperties: int | None = None
@@ -383,8 +384,7 @@ class UnionTypeSchema(SchemaBase, frozen=True):
     oneOf: list["SchemaObjectTypes"] = []
 
     def get_valid_value(self) -> JsonValue:
-        schemas_to_choose_from = self.anyOf + self.oneOf
-        chosen_schema = choice(schemas_to_choose_from)
+        chosen_schema = choice(self.resolved_schemas)
         return chosen_schema.get_valid_value()
 
     def get_values_out_of_bounds(self, current_value: JsonValue) -> list[JsonValue]:
@@ -395,11 +395,53 @@ class UnionTypeSchema(SchemaBase, frozen=True):
         return list(self._get_resolved_schemas())
 
     def _get_resolved_schemas(self) -> Generator[ResolvedSchemaObjectTypes, None, None]:
-        for schema in self.anyOf:
-            if isinstance(schema, ResolvedSchemaObjectTypes):
-                yield schema
-            else:
-                yield from schema._get_resolved_schemas()
+        if self.allOf:
+            properties_list: list[PropertiesMapping] = []
+            additional_properties_list = []
+            required_list = []
+            max_properties_list = []
+            min_properties_list = []
+            nullable_list = []
+
+            for schema in self.allOf:
+                if not isinstance(schema, ObjectSchema):
+                    raise NotImplementedError("allOf only supported for ObjectSchemas")
+
+                if schema.const is not None:
+                    raise ValueError("allOf and models with a const are not compatible")
+
+                if schema.enum:
+                    raise ValueError("allOf and models with enums are not compatible")
+
+                if schema.properties:
+                    properties_list.append(schema.properties)
+                additional_properties_list.append(schema.additionalProperties)
+                required_list.append(schema.required)
+                max_properties_list.append(schema.maxProperties)
+                min_properties_list.append(schema.minProperties)
+                nullable_list.append(schema.nullable)
+
+            properties_dicts = [mapping.root for mapping in properties_list]
+            properties = ChainMap(*properties_dicts)
+            max_properties = [max for max in max_properties_list if max is not None]
+            min_properties = [min for min in min_properties_list if min is not None]
+
+            merged_schema = ObjectSchema(
+                type="object",
+                properties=properties,
+                additionalProperties=additional_properties_list,
+                required=required_list,
+                maxProperties=max(max_properties),
+                minProperties=min(min_properties),
+                nullable=all(nullable_list),
+            )
+            yield merged_schema
+        else:
+            for schema in self.anyOf + self.oneOf:
+                if isinstance(schema, ResolvedSchemaObjectTypes):
+                    yield schema
+                else:
+                    yield from schema._get_resolved_schemas()
 
 
 SchemaObjectTypes: TypeAlias = ResolvedSchemaObjectTypes | UnionTypeSchema
@@ -423,7 +465,17 @@ class RequestBodyObject(BaseModel):
     description: str = ""
 
 
-# class ResponseObject(BaseModel): ...
+class HeaderObject(BaseModel): ...
+
+
+class LinkObject(BaseModel): ...
+
+
+class ResponseObject(BaseModel):
+    description: str
+    content: dict[str, MediaTypeObject] = {}
+    headers: dict[str, HeaderObject] = {}
+    links: dict[str, LinkObject] = {}
 
 
 # class ComponentsObject(BaseModel):
@@ -434,9 +486,10 @@ class OperationObject(BaseModel):
     operationId: str | None = None
     summary: str = ""
     description: str = ""
+    tags: list[str] = []
     parameters: list[ParameterObject] | None = None
     requestBody: RequestBodyObject | None = None
-    # responses: list[ResponseObject] = []
+    responses: dict[str, ResponseObject] = {}
 
 
 class PathItemObject(BaseModel):
@@ -449,8 +502,10 @@ class PathItemObject(BaseModel):
     description: str = ""
     parameters: list[ParameterObject] | None = None
 
-    def get_operations(self) -> list[OperationObject]:
-        return [v for v in self.__dict__.values() if isinstance(v, OperationObject)]
+    def get_operations(self) -> dict[str, OperationObject]:
+        return {
+            k: v for k, v in self.__dict__.items() if isinstance(v, OperationObject)
+        }
 
 
 class OpenApiObject(BaseModel):

@@ -45,15 +45,12 @@ class OpenApiReader(AbstractReaderClass):
         ignored_tests = [Test(*test) for test in getattr(self, "ignored_testcases", [])]
 
         for path, path_item in paths.items():
+            path_operations = path_item.get_operations()
+
             # by reseversing the items, post/put operations come before get and delete
-            for item_name, item_data in reversed(path_item.items()):
-                # this level of the OAS also contains data that's not related to a
-                # path operation
-                if item_name not in ["get", "put", "post", "delete", "patch"]:
-                    continue
-                method, method_data = item_name, item_data
-                tags_from_spec = method_data.get("tags", [])
-                for response in method_data.get("responses"):
+            for method, operation_data in reversed(path_operations.items()):
+                tags_from_spec = operation_data.tags
+                for response in operation_data.responses.keys():
                     # 'default' applies to all status codes that are not specified, in
                     # which case we don't know what to expect and therefore can't verify
                     if (

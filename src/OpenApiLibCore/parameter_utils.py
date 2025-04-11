@@ -91,7 +91,7 @@ def register_path_parameters(paths_data: dict[str, PathItemObject]) -> None:
                 _register_path_parameter(parameter_object=parameter)
 
         operations = path_item.get_operations()
-        for operation in operations:
+        for operation in operations.values():
             if parameters := operation.parameters:
                 for parameter in parameters:
                     _register_path_parameter(parameter_object=parameter)

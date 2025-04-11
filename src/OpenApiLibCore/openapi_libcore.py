@@ -153,7 +153,11 @@ from OpenApiLibCore.dto_utils import (
     get_id_property_name,
 )
 from OpenApiLibCore.localized_faker import FAKE
-from OpenApiLibCore.models import OpenApiObject, PathItemObject
+from OpenApiLibCore.models import (
+    OpenApiObject,
+    PathItemObject,
+    ResolvedSchemaObjectTypes,
+)
 from OpenApiLibCore.oas_cache import PARSER_CACHE, CachedParser
 from OpenApiLibCore.parameter_utils import (
     get_oas_name_from_safe_name,
@@ -774,19 +778,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             response_validation=self.response_validation,
             openapi_spec=self.openapi_spec,
             original_data=original_data,
-        )
-
-    @keyword
-    def validate_resource_properties(
-        self, resource: dict[str, JSON], schema: dict[str, JSON]
-    ) -> None:
-        """
-        Validate that the `resource` does not contain any properties that are not
-        defined in the `schema_properties`.
-        """
-        val.validate_resource_properties(
-            resource=resource,
-            schema=schema,
         )
 
     @staticmethod

@@ -81,17 +81,14 @@ def get_invalid_value(
     if not isinstance(current_value, python_type_by_json_type_name(value_type)):
         current_value = value_schema.get_valid_value()
 
-    if (
-        values_from_constraint
-        and (
-            invalid_value := get_invalid_value_from_constraint(
+    if values_from_constraint:
+        try:
+            return get_invalid_value_from_constraint(
                 values_from_constraint=list(values_from_constraint),
                 value_type=value_type,
             )
-        )
-        is not None
-    ):
-        invalid_values.append(invalid_value)
+        except ValueError:
+            pass
 
     # If an enum is possible, combine the values from the enum to invalidate the value
     if value_schema.has_const_or_enum:
@@ -142,7 +139,9 @@ def get_invalid_value_from_constraint(
         value_type not in ["string", "integer", "number", "array", "object"]
         or not values_from_constraint
     ):
-        return None
+        raise ValueError(
+            f"Cannot get invalid value for {value_type} from {values_from_constraint}"
+        )
 
     values_from_constraint = deepcopy(values_from_constraint)
     # for objects, keep the keys intact but update the values
@@ -185,8 +184,9 @@ def get_invalid_value_from_constraint(
 
     str_or_bytes_list = cast(list[str] | list[bytes], values_from_constraint)
     invalid_value = get_invalid_str_or_bytes(values_from_constraint=str_or_bytes_list)
-    # None for empty string
-    return invalid_value if invalid_value else None
+    if not invalid_value:
+        raise ValueError("Value invalidation yielded an empty string.")
+    return invalid_value
 
 
 def get_invalid_int_or_number(values_from_constraint: list[int | float]) -> int | float:
