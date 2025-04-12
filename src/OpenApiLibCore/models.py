@@ -416,23 +416,40 @@ class UnionTypeSchema(SchemaBase, frozen=True):
                 if schema.properties:
                     properties_list.append(schema.properties)
                 additional_properties_list.append(schema.additionalProperties)
-                required_list.append(schema.required)
+                required_list += schema.required
                 max_properties_list.append(schema.maxProperties)
                 min_properties_list.append(schema.minProperties)
                 nullable_list.append(schema.nullable)
 
             properties_dicts = [mapping.root for mapping in properties_list]
-            properties = ChainMap(*properties_dicts)
+            properties = dict(ChainMap(*properties_dicts))
+
+            if True in additional_properties_list:
+                additional_properties_value = True
+            else:
+                additional_properties_types = []
+                for additional_properties_item in additional_properties_list:
+                    if isinstance(additional_properties_item, ResolvedSchemaObjectTypes):
+                        additional_properties_types.append(additional_properties_item)
+                if not additional_properties_types:
+                    additional_properties_value = False
+                else:
+                    additional_properties_value = UnionTypeSchema(
+                        anyOf=additional_properties_types,
+                    )
+
             max_properties = [max for max in max_properties_list if max is not None]
             min_properties = [min for min in min_properties_list if min is not None]
+            max_propeties_value = max(max_properties) if max_properties else None
+            min_propeties_value = min(min_properties) if min_properties else None
 
             merged_schema = ObjectSchema(
                 type="object",
                 properties=properties,
-                additionalProperties=additional_properties_list,
+                additionalProperties=additional_properties_value,
                 required=required_list,
-                maxProperties=max(max_properties),
-                minProperties=min(min_properties),
+                maxProperties=max_propeties_value,
+                minProperties=min_propeties_value,
                 nullable=all(nullable_list),
             )
             yield merged_schema

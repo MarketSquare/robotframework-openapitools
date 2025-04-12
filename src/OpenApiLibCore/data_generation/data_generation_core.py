@@ -24,6 +24,7 @@ from OpenApiLibCore.models import (
     OperationObject,
     ParameterObject,
     RequestBodyObject,
+    UnionTypeSchema,
 )
 from OpenApiLibCore.parameter_utils import get_safe_name_for_oas_name
 from OpenApiLibCore.protocols import GetDtoClassType, GetIdPropertyNameType
@@ -78,7 +79,6 @@ def get_request_data(
 
     headers.update({"content-type": get_content_type(operation_spec.requestBody)})
 
-    # content_schema = resolve_schema(get_content_schema(operation_spec.requestBody))
     body_schema = operation_spec.requestBody
     media_type_dict = body_schema.content
     supported_types = [v for k, v in media_type_dict.items() if "json" in k]
@@ -93,8 +93,11 @@ def get_request_data(
         )
 
     schema = supported_schemas[0]
+    if isinstance(schema, UnionTypeSchema):
+        resolved_schemas = schema.resolved_schemas
+        schema = choice(resolved_schemas)
     if not isinstance(schema, ObjectSchema):
-        raise ValueError(f"Selected schema is not an object schema {schema}")
+        raise ValueError(f"Selected schema is not an object schema: {schema}")
 
     dto_data = _get_json_data_for_dto_class(
         schema=schema,
