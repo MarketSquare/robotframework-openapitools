@@ -18,11 +18,11 @@ Test Template       Validate Test Endpoint Keyword
 @{EXPECTED_FAILURES}
 ...                     GET /reactions/ 200
 ...                     POST /events/ 201
-...                     POST /employees 201
-...                     GET /employees 200
-...                     PATCH /employees/{employee_id} 200
-...                     GET /employees/{employee_id} 200
-...                     GET /available_employees 200
+# ...                     POST /employees 201
+# ...                     GET /employees 200
+# ...                     PATCH /employees/{employee_id} 200
+# ...                     GET /employees/{employee_id} 200
+# ...                     GET /available_employees 200
 
 
 *** Test Cases ***

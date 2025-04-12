@@ -117,6 +117,7 @@ components:
       properties:
         tags:
           type: array
+          minItems: 1
           items:
             type: string
 #   Including Hypermedia intermediate schema to play with composite schema definitions.
@@ -126,9 +127,9 @@ components:
       allOf:
         - $ref: '#/components/schemas/MediaMetadata'
         - $ref: '#/components/schemas/Images'
-        #- $ref: '#/components/schemas/Video'
-        #- $ref: '#/components/schemas/Tags'
-        #- $ref: '#/components/schemas/Reviews'
+        - $ref: '#/components/schemas/Video'
+        - $ref: '#/components/schemas/Tags'
+        - $ref: '#/components/schemas/Reviews'
     Image:
       title: image
       type: object

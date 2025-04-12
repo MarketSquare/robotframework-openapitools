@@ -143,6 +143,11 @@ class MessageDto(Dto):
                 error_code=401,
             ),
             PropertyValueConstraint(
+                property_name="dummy",  # note: error code and property don't exist
+                values=[42],
+                error_code=402,
+            ),
+            PropertyValueConstraint(
                 property_name="seal",
                 values=[IGNORE],
                 error_code=403,

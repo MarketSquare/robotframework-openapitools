@@ -15,7 +15,7 @@ ${ORIGIN}=      http://localhost:8000
 *** Test Cases ***
 Test Get Invalid Body Data Raises If Data Cannot Be Invalidated
     ${request_data}=    Get Request Data    path=/    method=get
-    Run Keyword And Expect Error    ValueError: Failed to invalidate: no data_relations and empty schema.
+    Run Keyword And Expect Error    ValueError: Failed to invalidate: request_data does not contain a body_schema.
     ...    Get Invalid Body Data
     ...    url=none
     ...    method=none
