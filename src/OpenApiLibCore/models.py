@@ -1,30 +1,40 @@
+from _collections_abc import dict_keys
 import base64
 from abc import abstractmethod
 from collections import ChainMap
 from random import choice, randint, uniform
-from typing import Generator, Literal, TypeAlias, TypeVar
+from typing import (
+    Generator,
+    Literal,
+    TypeAlias,
+    TypeVar,
+    Sequence,
+    Mapping,
+    Generic,
+)
 
 import rstr
-from pydantic import BaseModel, Field, JsonValue, RootModel
+from pydantic import BaseModel, Field, RootModel
 
+from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.localized_faker import FAKE, fake_string
 
 O = TypeVar("O")
 
 
-class SchemaBase(BaseModel, frozen=True):
+class SchemaBase(BaseModel, Generic[O], frozen=True):
     readOnly: bool = False
     writeOnly: bool = False
 
     @abstractmethod
-    def get_valid_value(self) -> JsonValue: ...
+    def get_valid_value(self) -> JSON: ...
 
     @abstractmethod
     def get_values_out_of_bounds(self, current_value: O) -> list[O]: ...
 
 
-class NullSchema(SchemaBase, frozen=True):
-    type: Literal["null"]
+class NullSchema(SchemaBase[None], frozen=True):
+    type: Literal["null"] = "null"
 
     def get_valid_value(self) -> None:
         return None
@@ -41,8 +51,8 @@ class NullSchema(SchemaBase, frozen=True):
         return False
 
 
-class BooleanSchema(SchemaBase, frozen=True):
-    type: Literal["boolean"]
+class BooleanSchema(SchemaBase[bool], frozen=True):
+    type: Literal["boolean"] = "boolean"
     const: bool | None = None
     nullable: bool = False
 
@@ -63,8 +73,8 @@ class BooleanSchema(SchemaBase, frozen=True):
         return self.const is not None
 
 
-class StringSchema(SchemaBase, frozen=True):
-    type: Literal["string"]
+class StringSchema(SchemaBase[str], frozen=True):
+    type: Literal["string"] = "string"
     format: str = ""
     pattern: str = ""
     maxLength: int | None = None
@@ -131,8 +141,8 @@ class StringSchema(SchemaBase, frozen=True):
         return False
 
 
-class IntegerSchema(SchemaBase, frozen=True):
-    type: Literal["integer"]
+class IntegerSchema(SchemaBase[int], frozen=True):
+    type: Literal["integer"] = "integer"
     format: str = ""
     maximum: int | None = None
     exclusiveMaximum: int | bool | None = None
@@ -189,8 +199,8 @@ class IntegerSchema(SchemaBase, frozen=True):
         return False
 
 
-class NumberSchema(SchemaBase, frozen=True):
-    type: Literal["number"]
+class NumberSchema(SchemaBase[float], frozen=True):
+    type: Literal["number"] = "number"
     format: str = ""
     maximum: int | float | None = None
     exclusiveMaximum: int | float | bool | None = None
@@ -272,36 +282,37 @@ class NumberSchema(SchemaBase, frozen=True):
         return False
 
 
-class ArraySchema(SchemaBase, frozen=True):
-    type: Literal["array"]
+class ArraySchema(SchemaBase[list[JSON]], frozen=True):
+    type: Literal["array"] = "array"
     items: "SchemaObjectTypes"
     maxItems: int | None = None
     minItems: int | None = None
     uniqueItems: bool = False
-    const: list[JsonValue] | None = None
-    enum: list[list[JsonValue]] | None = None
+    const: list[JSON] | None = None
+    enum: list[list[JSON]] | None = None
     nullable: bool = False
 
-    def get_valid_value(self) -> list[JsonValue]:
+    def get_valid_value(self) -> list[JSON]:
         if self.const is not None:
             return self.const
-        """Generate a list with random elements as specified by the schema."""
+
+        if self.enum is not None:
+            return choice(self.enum)
+
         minimum = self.minItems if self.minItems is not None else 0
         maximum = self.maxItems if self.maxItems is not None else 1
         maximum = max(minimum, maximum)
         items_schema = self.items
-        value = []
+
+        value: list[JSON] = []
         for _ in range(maximum):
-            if self.enum is not None:
-                item_value = choice(self.enum)
-            else:
-                item_value = items_schema.get_valid_value()
+            item_value = items_schema.get_valid_value()
             value.append(item_value)
         return value
 
     def get_values_out_of_bounds(
-        self, current_value: list[JsonValue]
-    ) -> list[list[JsonValue]]:
+        self, current_value: Sequence[JSON]
+    ) -> list[list[JSON]]:
         raise ValueError
 
     @property
@@ -325,27 +336,26 @@ class ArraySchema(SchemaBase, frozen=True):
         return False
 
 
-class PropertiesMapping(RootModel):
-    root: dict[str, "SchemaObjectTypes"]
+class PropertiesMapping(RootModel[dict[str, "SchemaObjectTypes"]]): ...
 
 
-class ObjectSchema(SchemaBase, frozen=True):
-    type: Literal["object"]
+class ObjectSchema(SchemaBase[dict], frozen=True):
+    type: Literal["object"] = "object"
     properties: PropertiesMapping | None = None
     additionalProperties: "bool | SchemaObjectTypes" = True
     required: list[str] = []
     maxProperties: int | None = None
     minProperties: int | None = None
-    const: dict[str, JsonValue] | None = None
-    enum: list[dict[str, JsonValue]] | None = None
+    const: dict[str, JSON] | None = None
+    enum: list[dict[str, JSON]] | None = None
     nullable: bool = False
 
-    def get_valid_value(self) -> dict[str, JsonValue]:
+    def get_valid_value(self) -> dict[str, JSON]:
         raise NotImplementedError
 
     def get_values_out_of_bounds(
-        self, current_value: dict[str, JsonValue]
-    ) -> list[dict[str, JsonValue]]:
+        self, current_value: Mapping[str, JSON]
+    ) -> list[dict[str, JSON]]:
         raise ValueError
 
     @property
@@ -383,11 +393,11 @@ class UnionTypeSchema(SchemaBase, frozen=True):
     anyOf: list["SchemaObjectTypes"] = []
     oneOf: list["SchemaObjectTypes"] = []
 
-    def get_valid_value(self) -> JsonValue:
+    def get_valid_value(self) -> JSON:
         chosen_schema = choice(self.resolved_schemas)
         return chosen_schema.get_valid_value()
 
-    def get_values_out_of_bounds(self, current_value: JsonValue) -> list[JsonValue]:
+    def get_values_out_of_bounds(self, current_value: JSON) -> list[JSON]:
         raise ValueError
 
     @property
@@ -429,7 +439,9 @@ class UnionTypeSchema(SchemaBase, frozen=True):
             else:
                 additional_properties_types = []
                 for additional_properties_item in additional_properties_list:
-                    if isinstance(additional_properties_item, ResolvedSchemaObjectTypes):
+                    if isinstance(
+                        additional_properties_item, ResolvedSchemaObjectTypes
+                    ):
                         additional_properties_types.append(additional_properties_item)
                 if not additional_properties_types:
                     additional_properties_value = False

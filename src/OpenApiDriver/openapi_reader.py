@@ -1,6 +1,6 @@
 """Module holding the OpenApiReader reader_class implementation."""
 
-from typing import Any
+from typing import Sequence
 
 from DataDriver.AbstractReaderClass import AbstractReaderClass
 from DataDriver.ReaderConfig import TestCaseData
@@ -18,7 +18,7 @@ class Test:
         self.method = method.lower()
         self.response = str(response)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return False
         return (
@@ -75,7 +75,7 @@ class OpenApiReader(AbstractReaderClass):
                     )
         return test_data
 
-    def _filter_paths(self, paths: dict[str, Any]) -> None:
+    def _filter_paths(self, paths: dict[str, PathItemObject]) -> None:
         def matches_include_pattern(path: str) -> bool:
             for included_path in included_paths:
                 if path == included_path:
@@ -110,5 +110,5 @@ class OpenApiReader(AbstractReaderClass):
                     paths.pop(path)
 
 
-def _get_tag_list(tags: list[str], method: str, response: str) -> list[str]:
+def _get_tag_list(tags: Sequence[str], method: str, response: str) -> list[str]:
     return [*tags, f"Method: {method.upper()}", f"Response: {response}"]

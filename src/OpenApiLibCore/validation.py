@@ -20,7 +20,6 @@ from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore.models import (
     OpenApiObject,
-    ObjectSchema,
     ResponseObject,
     UnionTypeSchema,
 )
@@ -279,7 +278,6 @@ def validate_send_response(
             "the received response was not a representation of a resource."
         )
         return None
-
 
     # FIXME: this applies to removed code
     # POST on /resource_type/{id}/array_item/ will return the updated {id} resource
