@@ -42,7 +42,8 @@ class TestDefaults(unittest.TestCase):
 
     def test_object_schema(self) -> None:
         schema = ObjectSchema()
-        self.assertRaises(NotImplementedError, schema.get_valid_value)
+        with self.assertRaises(NotImplementedError):
+            schema.get_valid_value()
         # value = schema.get_valid_value()
         # self.assertIsInstance(value, dict)
         # self.assertDictEqual(value, {})
@@ -97,7 +98,8 @@ class TestGetValidValueFromConst(unittest.TestCase):
     def test_object_schema(self) -> None:
         const = {"foo": 42, "bar": 3.14}
         schema = ObjectSchema(const=const)
-        self.assertRaises(NotImplementedError, schema.get_valid_value)
+        with self.assertRaises(NotImplementedError):
+            schema.get_valid_value()
         # self.assertEqual(schema.has_const_or_enum, True)
         # self.assertEqual(schema.get_valid_value(), const)
 
@@ -138,9 +140,78 @@ class TestGetValidValueFromEnum(unittest.TestCase):
     def test_object_schema(self) -> None:
         enum: list[dict[str, int | float]] = [{"foo": 42, "bar": 3.14}]
         schema = ObjectSchema(enum=enum)
-        self.assertRaises(NotImplementedError, schema.get_valid_value)
+        with self.assertRaises(NotImplementedError):
+            schema.get_valid_value()
         # self.assertEqual(schema.has_const_or_enum, True)
         # self.assertIn(schema.get_valid_value(), enum)
+
+
+class TestStringSchemaVariations(unittest.TestCase):
+    def test_default_min_max(self) -> None:
+        schema = StringSchema(maxLength=0)
+        value = schema.get_valid_value()
+        self.assertEqual(value, "")
+
+        schema = StringSchema(minLength=36)
+        value = schema.get_valid_value()
+        self.assertEqual(len(value), 36)
+
+    def test_min_max(self) -> None:
+        schema = StringSchema(minLength=42, maxLength=42)
+        value = schema.get_valid_value()
+        self.assertEqual(len(value), 42)
+
+        schema = StringSchema(minLength=42)
+        value = schema.get_valid_value()
+        self.assertEqual(len(value), 42)
+
+    def test_datetime(self) -> None:
+        schema = StringSchema(format="date-time")
+        value = schema.get_valid_value()
+        matcher = r"^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)((-(\d{2}):(\d{2})|Z)?)$"
+        self.assertRegex(value, matcher)
+
+    def test_date(self) -> None:
+        schema = StringSchema(format="date")
+        value = schema.get_valid_value()
+        matcher = r"^(\d{4})-(\d{2})-(\d{2})$"
+        self.assertRegex(value, matcher)
+
+    def test_pattern(self) -> None:
+        pattern = r"^[1-9][0-9]{3} ?(?!sa|sd|ss|SA|SD|SS)[A-Za-z]{2}$"
+        schema = StringSchema(pattern=pattern)
+        value = schema.get_valid_value()
+        self.assertRegex(value, pattern)
+
+    def test_byte(self) -> None:
+        schema = StringSchema(format="byte")
+        value = schema.get_valid_value()
+        self.assertIsInstance(value, bytes)
+
+
+class TestArraySchemaVariations(unittest.TestCase):
+    def test_default_min_max(self) -> None:
+        schema = ArraySchema(items=StringSchema())
+        value = schema.get_valid_value()
+        self.assertEqual(len(value), 1)
+
+        schema = {"maxItems": 0, "items": {"type": "string"}}
+        schema = ArraySchema(items=StringSchema(), maxItems=0)
+        value = schema.get_valid_value()
+        self.assertEqual(value, [])
+
+    def test_min_max(self) -> None:
+        schema = ArraySchema(items=StringSchema(), maxItems=3)
+        value = schema.get_valid_value()
+        self.assertEqual(len(value), 3)
+
+        schema = ArraySchema(items=StringSchema(), minItems=5)
+        value = schema.get_valid_value()
+        self.assertEqual(len(value), 5)
+
+        schema = ArraySchema(items=StringSchema(), minItems=7, maxItems=5)
+        value = schema.get_valid_value()
+        self.assertEqual(len(value), 7)
 
 
 if __name__ == "__main__":

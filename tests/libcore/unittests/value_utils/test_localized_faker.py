@@ -2,16 +2,16 @@
 import datetime
 import unittest
 
-from OpenApiLibCore import value_utils
+from OpenApiLibCore.localized_faker import LocalizedFaker
 
 
 class TestLocalizedFaker(unittest.TestCase):
     def test_default_locale(self) -> None:
-        default_faker = value_utils.LocalizedFaker()
+        default_faker = LocalizedFaker()
         self.assertEqual(default_faker.fake.locales, ["en_US"])
 
     def test_set_locale(self) -> None:
-        faker = value_utils.LocalizedFaker()
+        faker = LocalizedFaker()
 
         faker.set_locale("nl_NL")
         self.assertEqual(faker.fake.locales, ["nl_NL"])
@@ -20,7 +20,7 @@ class TestLocalizedFaker(unittest.TestCase):
         self.assertEqual(faker.fake.locales, ["ar_AA", "zh_TW"])
 
     def test_custom_provider_types(self) -> None:
-        faker = value_utils.LocalizedFaker()
+        faker = LocalizedFaker()
 
         self.assertIsInstance(faker.date(), str)
         self.assertIsInstance(faker.date_time(), datetime.datetime)
