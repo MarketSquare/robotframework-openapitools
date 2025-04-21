@@ -77,7 +77,7 @@ def get_invalid_body_data(
 
 def get_invalidated_parameters(
     status_code: int, request_data: RequestData, invalid_property_default_response: int
-) -> tuple[dict[str, Any], dict[str, str]]:
+) -> tuple[dict[str, JSON], dict[str, JSON]]:
     if not request_data.parameters:
         raise ValueError("No params or headers to invalidate.")
 
@@ -216,11 +216,11 @@ def get_invalidated_parameters(
 
 def ensure_parameter_in_parameters(
     parameter_to_invalidate: str,
-    params: dict[str, str],
+    params: dict[str, JSON],
     headers: dict[str, JSON],
     parameter_data: ParameterObject,
     values_from_constraint: list[JSON],
-) -> tuple[dict[str, str], dict[str, JSON]]:
+) -> tuple[dict[str, JSON], dict[str, JSON]]:
     """
     Returns the params, headers tuple with parameter_to_invalidate with a valid
     value to params or headers if not originally present.
