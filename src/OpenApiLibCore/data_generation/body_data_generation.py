@@ -19,41 +19,12 @@ from OpenApiLibCore.dto_utils import DefaultDto
 from OpenApiLibCore.models import (
     ArraySchema,
     ObjectSchema,
-    RequestBodyObject,
     SchemaObjectTypes,
     UnionTypeSchema,
 )
 from OpenApiLibCore.parameter_utils import get_safe_name_for_oas_name
 from OpenApiLibCore.protocols import GetIdPropertyNameType
 from OpenApiLibCore.value_utils import IGNORE
-
-
-def get_request_body_data(
-    request_body_schema: RequestBodyObject,
-    dto_class: type[Dto],
-    get_id_property_name: GetIdPropertyNameType,
-    operation_id: str = "",
-) -> JSON:
-    media_type_dict = request_body_schema.content
-    supported_types = [v for k, v in media_type_dict.items() if "json" in k]
-    supported_schemas = [t.schema_ for t in supported_types if t.schema_ is not None]
-
-    if not supported_schemas:
-        raise ValueError(f"No supported content schema found: {media_type_dict}")
-
-    if len(supported_schemas) > 1:
-        logger.warn(
-            f"Multiple JSON media types defined for requestBody, using the first candidate {media_type_dict}"
-        )
-
-    schema = supported_schemas[0]
-
-    return get_json_data_for_dto_class(
-        schema=schema,
-        dto_class=dto_class,
-        get_id_property_name=get_id_property_name,
-        operation_id=operation_id,
-    )
 
 
 def get_json_data_for_dto_class(

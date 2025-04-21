@@ -156,7 +156,6 @@ from OpenApiLibCore.localized_faker import FAKE
 from OpenApiLibCore.models import (
     OpenApiObject,
     PathItemObject,
-    ResolvedSchemaObjectTypes,
 )
 from OpenApiLibCore.oas_cache import PARSER_CACHE, CachedParser
 from OpenApiLibCore.parameter_utils import (
@@ -168,7 +167,7 @@ from OpenApiLibCore.request_data import RequestData, RequestValues
 
 run_keyword = BuiltIn().run_keyword
 default_str_mapping: Mapping[str, str] = MappingProxyType({})
-default_any_mapping: Mapping[str, object] = MappingProxyType({})
+default_json_mapping: Mapping[str, JSON] = MappingProxyType({})
 
 
 @library(scope="SUITE", doc_format="ROBOT")
@@ -439,7 +438,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         self,
         path: str,
         method: str,
-        overrides: Mapping[str, object] = default_any_mapping,
+        overrides: Mapping[str, JSON] = default_json_mapping,
     ) -> RequestValues:
         """Return an object with all (valid) request values needed to make a request."""
         json_data: dict[str, JSON] = {}
@@ -486,23 +485,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             openapi_spec=self.openapi_spec,
         )
 
-    # @keyword
-    # def get_request_body_data(
-    #     self,
-    #     schema: dict[str, JSON],
-    #     dto_class: type[Dto],
-    #     operation_id: str = "",
-    # ) -> JSON:
-    #     """
-    #     Generate valid (json-compatible) data for the `dto_class`.
-    #     """
-    #     return _data_generation.get_request_body_data(
-    #         request_body_schema=schema,
-    #         dto_class=dto_class,
-    #         get_id_property_name=self.get_id_property_name,
-    #         operation_id=operation_id,
-    #     )
-
     @keyword
     def get_invalid_body_data(
         self,
@@ -531,7 +513,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         self,
         status_code: int,
         request_data: RequestData,
-    ) -> tuple[dict[str, JSON], dict[str, str]]:
+    ) -> tuple[dict[str, JSON], dict[str, JSON]]:
         """
         Returns a version of `params, headers` as present on `request_data` that has
         been modified to cause the provided `status_code`.
@@ -711,7 +693,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         path: str,
         status_code: int,
         request_values: RequestValues,
-        original_data: Mapping[str, object] = default_any_mapping,
+        original_data: Mapping[str, JSON] = default_json_mapping,
     ) -> None:
         """
         This keyword first calls the Authorized Request keyword, then the Validate
@@ -756,7 +738,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         self,
         path: str,
         response: Response,
-        original_data: Mapping[str, object] = default_any_mapping,
+        original_data: Mapping[str, JSON] = default_json_mapping,
     ) -> None:
         """
         Validate the `response` by performing the following validations:
@@ -784,7 +766,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
     @keyword
     def validate_send_response(
         response: Response,
-        original_data: Mapping[str, object] = default_any_mapping,
+        original_data: Mapping[str, JSON] = default_json_mapping,
     ) -> None:
         """
         Validate that each property that was send that is in the response has the value

@@ -93,9 +93,11 @@ def get_request_data(
         )
 
     schema = supported_schemas[0]
+
     if isinstance(schema, UnionTypeSchema):
         resolved_schemas = schema.resolved_schemas
         schema = choice(resolved_schemas)
+
     if not isinstance(schema, ObjectSchema):
         raise ValueError(f"Selected schema is not an object schema: {schema}")
 
@@ -194,13 +196,6 @@ def get_dto_cls_name(path: str, method: str) -> str:
     path_parts = [p.capitalize() for p in path_parts]
     result = "".join([method, *path_parts])
     return result
-
-
-# def get_content_schema(body_spec: dict[str, Any]) -> dict[str, Any]:
-#     """Get the content schema from the requestBody spec."""
-#     content_type = get_content_type(body_spec)
-#     content_schema = body_spec["content"][content_type]["schema"]
-#     return resolve_schema(content_schema)
 
 
 def get_content_type(body_spec: RequestBodyObject) -> str:
