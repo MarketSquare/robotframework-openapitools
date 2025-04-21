@@ -1,16 +1,17 @@
-from _collections_abc import dict_keys
 import base64
 from abc import abstractmethod
 from collections import ChainMap
+from functools import cached_property
 from random import choice, randint, uniform
+from sys import float_info
 from typing import (
     Generator,
+    Generic,
     Literal,
+    Mapping,
+    Sequence,
     TypeAlias,
     TypeVar,
-    Sequence,
-    Mapping,
-    Generic,
 )
 
 import rstr
@@ -18,6 +19,8 @@ from pydantic import BaseModel, Field, RootModel
 
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.localized_faker import FAKE, fake_string
+
+EPSILON = float_info.epsilon
 
 O = TypeVar("O")
 
@@ -143,15 +146,57 @@ class StringSchema(SchemaBase[str], frozen=True):
 
 class IntegerSchema(SchemaBase[int], frozen=True):
     type: Literal["integer"] = "integer"
-    format: str = ""
+    format: str = "int32"
     maximum: int | None = None
     exclusiveMaximum: int | bool | None = None
     minimum: int | None = None
     exclusiveMinimum: int | bool | None = None
-    multipleOf: int | None = None  # FIXME: implement support
+    multipleOf: int | None = None  # TODO: implement support
     const: int | None = None
     enum: list[int] | None = None
     nullable: bool = False
+
+    @cached_property
+    def _max_int(self) -> int:
+        if self.format == "int64":
+            return 9223372036854775807
+        return 2147483647
+
+    @cached_property
+    def _min_int(self) -> int:
+        if self.format == "int64":
+            return -9223372036854775808
+        return -2147483648
+
+    @cached_property
+    def _max_value(self) -> int:
+        # OAS 3.0: exclusiveMinimum/Maximum is a bool in combination with minimum/maximum
+        # OAS 3.1: exclusiveMinimum/Maximum is an integer
+        if type(self.exclusiveMaximum) == int:
+            return self.exclusiveMaximum - 1
+
+        if isinstance(self.maximum, int):
+            if self.exclusiveMaximum is True:
+                return self.maximum - 1
+            else:
+                return self.maximum
+
+        return self._max_int
+
+    @cached_property
+    def _min_value(self) -> int:
+        # OAS 3.0: exclusiveMinimum/Maximum is a bool in combination with minimum/maximum
+        # OAS 3.1: exclusiveMinimum/Maximum is an integer
+        if type(self.exclusiveMinimum) == int:
+            return self.exclusiveMinimum + 1
+
+        if isinstance(self.minimum, int):
+            if self.exclusiveMinimum is True:
+                return self.minimum + 1
+            else:
+                return self.minimum
+
+        return self._min_int
 
     def get_valid_value(self) -> int:
         """Generate a random int within the min/max range of the schema, if specified."""
@@ -159,33 +204,21 @@ class IntegerSchema(SchemaBase[int], frozen=True):
             return self.const
         if self.enum is not None:
             return choice(self.enum)
-        # Use int32 integers if "format" does not specify int64
-        property_format = self.format if self.format else "int32"
-        if property_format == "int64":
-            min_int = -9223372036854775808
-            max_int = 9223372036854775807
-        else:
-            min_int = -2147483648
-            max_int = 2147483647
-        # OAS 3.0: exclusiveMinimum/Maximum is a bool in combination with minimum/maximum
-        # OAS 3.1: exclusiveMinimum/Maximum is an integer
-        minimum = self.minimum if self.minimum is not None else min_int
-        maximum = self.maximum if self.maximum is not None else max_int
-        if (exclusive_minimum := self.exclusiveMinimum) is not None:
-            if isinstance(exclusive_minimum, bool):
-                if exclusive_minimum:
-                    minimum += 1
-            else:
-                minimum = exclusive_minimum + 1
-        if (exclusive_maximum := self.exclusiveMaximum) is not None:
-            if isinstance(exclusive_maximum, bool):
-                if exclusive_maximum:
-                    maximum -= 1
-            else:
-                maximum = exclusive_maximum - 1
-        return randint(minimum, maximum)
+
+        return randint(self._min_value, self._max_value)
 
     def get_values_out_of_bounds(self, current_value: int) -> list[int]:
+        invalid_values: list[int] = []
+
+        if self._min_value > self._min_int:
+            invalid_values.append(self._min_value - 1)
+
+        if self._max_value < self._max_int:
+            invalid_values.append(self._max_value + 1)
+
+        if invalid_values:
+            return invalid_values
+
         raise ValueError
 
     @property
@@ -201,15 +234,52 @@ class IntegerSchema(SchemaBase[int], frozen=True):
 
 class NumberSchema(SchemaBase[float], frozen=True):
     type: Literal["number"] = "number"
-    format: str = ""
     maximum: int | float | None = None
     exclusiveMaximum: int | float | bool | None = None
     minimum: int | float | None = None
     exclusiveMinimum: int | float | bool | None = None
-    multipleOf: int | None = None  # FIXME: implement support
+    multipleOf: int | None = None  # TODO: implement support
     const: int | float | None = None
     enum: list[int | float] | None = None
     nullable: bool = False
+
+    @cached_property
+    def _max_float(self) -> float:
+        return 9223372036854775807.0
+
+    @cached_property
+    def _min_float(self) -> float:
+        return -9223372036854775808.0
+
+    @cached_property
+    def _max_value(self) -> float:
+        # OAS 3.0: exclusiveMinimum/Maximum is a bool in combination with minimum/maximum
+        # OAS 3.1: exclusiveMinimum/Maximum is an integer or a float
+        if type(self.exclusiveMaximum) in [int, float]:
+            return self.exclusiveMaximum - 0.0000000001
+
+        if isinstance(self.maximum, (int, float)):
+            if self.exclusiveMaximum is True:
+                return self.maximum - 0.0000000001
+            else:
+                return self.maximum
+
+        return self._max_float
+
+    @cached_property
+    def _min_value(self) -> float:
+        # OAS 3.0: exclusiveMinimum/Maximum is a bool in combination with minimum/maximum
+        # OAS 3.1: exclusiveMinimum/Maximum is an integer or a float
+        if type(self.exclusiveMinimum) in [int, float]:
+            return self.exclusiveMinimum + 0.0000000001
+
+        if isinstance(self.minimum, (int, float)):
+            if self.exclusiveMinimum is True:
+                return self.minimum + 0.0000000001
+            else:
+                return self.minimum
+
+        return self._min_float
 
     def get_valid_value(self) -> float:
         """Generate a random float within the min/max range of the schema, if specified."""
@@ -217,58 +287,21 @@ class NumberSchema(SchemaBase[float], frozen=True):
             return self.const
         if self.enum is not None:
             return choice(self.enum)
-        # Python floats are already double precision, so no check for "format"
-        minimum = self.minimum
-        maximum = self.maximum
-        if minimum is None:
-            if maximum is None:
-                minimum = -1.0
-                maximum = 1.0
-            else:
-                minimum = maximum - 1.0
-        else:
-            if maximum is None:
-                maximum = minimum + 1.0
-            if maximum < minimum:
-                raise ValueError(
-                    f"maximum of {maximum} is less than minimum of {minimum}"
-                )
 
-        # For simplicity's sake, exclude both boundaries if one boundary is exclusive
-        exclude_boundaries = False
-
-        exclusive_minimum = (
-            self.exclusiveMinimum if self.exclusiveMinimum is not None else False
-        )
-        exclusive_maximum = (
-            self.exclusiveMaximum if self.exclusiveMaximum is not None else False
-        )
-        # OAS 3.0: exclusiveMinimum/Maximum is a bool in combination with minimum/maximum
-        # OAS 3.1: exclusiveMinimum/Maximum is an integer or number
-        if not isinstance(exclusive_minimum, bool):
-            exclude_boundaries = True
-            minimum = exclusive_minimum
-        else:
-            exclude_boundaries = exclusive_minimum
-        if not isinstance(exclusive_maximum, bool):
-            exclude_boundaries = True
-            maximum = exclusive_maximum
-        else:
-            exclude_boundaries = exclusive_minimum or exclusive_maximum
-
-        if exclude_boundaries and minimum == maximum:
-            raise ValueError(
-                f"maximum of {maximum} is equal to minimum of {minimum} and "
-                f"exclusiveMinimum or exclusiveMaximum is specified"
-            )
-
-        while exclude_boundaries:
-            result = uniform(minimum, maximum)
-            if minimum < result < maximum:  # pragma: no cover
-                return result
-        return uniform(minimum, maximum)
+        return uniform(self._min_value, self._max_value)
 
     def get_values_out_of_bounds(self, current_value: float) -> list[float]:
+        invalid_values: list[float] = []
+
+        if self._min_value > self._min_float:
+            invalid_values.append(self._min_value - 0.000000001)
+
+        if self._max_value < self._max_float:
+            invalid_values.append(self._max_value + 0.000000001)
+
+        if invalid_values:
+            return invalid_values
+
         raise ValueError
 
     @property
@@ -339,7 +372,7 @@ class ArraySchema(SchemaBase[list[JSON]], frozen=True):
 class PropertiesMapping(RootModel[dict[str, "SchemaObjectTypes"]]): ...
 
 
-class ObjectSchema(SchemaBase[dict], frozen=True):
+class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
     type: Literal["object"] = "object"
     properties: PropertiesMapping | None = None
     additionalProperties: "bool | SchemaObjectTypes" = True
@@ -388,7 +421,7 @@ ResolvedSchemaObjectTypes: TypeAlias = (
 )
 
 
-class UnionTypeSchema(SchemaBase, frozen=True):
+class UnionTypeSchema(SchemaBase[JSON], frozen=True):
     allOf: list["SchemaObjectTypes"] = []
     anyOf: list["SchemaObjectTypes"] = []
     oneOf: list["SchemaObjectTypes"] = []
@@ -435,7 +468,7 @@ class UnionTypeSchema(SchemaBase, frozen=True):
             properties = dict(ChainMap(*properties_dicts))
 
             if True in additional_properties_list:
-                additional_properties_value = True
+                additional_properties_value: bool | SchemaObjectTypes = True
             else:
                 additional_properties_types = []
                 for additional_properties_item in additional_properties_list:
