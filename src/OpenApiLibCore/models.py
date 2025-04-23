@@ -9,7 +9,6 @@ from typing import (
     Generic,
     Literal,
     Mapping,
-    Sequence,
     TypeAlias,
     TypeVar,
 )
@@ -35,6 +34,9 @@ class SchemaBase(BaseModel, Generic[O], frozen=True):
     @abstractmethod
     def get_values_out_of_bounds(self, current_value: O) -> list[O]: ...
 
+    @abstractmethod
+    def get_invalid_value_from_const_or_enum(self) -> O: ...
+
 
 class NullSchema(SchemaBase[None], frozen=True):
     type: Literal["null"] = "null"
@@ -45,12 +47,11 @@ class NullSchema(SchemaBase[None], frozen=True):
     def get_values_out_of_bounds(self, current_value: None) -> list[None]:
         raise ValueError
 
-    @property
-    def can_be_invalidated(self) -> bool:
-        return False
+    def get_invalid_value_from_const_or_enum(self) -> None:
+        raise ValueError
 
     @property
-    def has_const_or_enum(self) -> bool:
+    def can_be_invalidated(self) -> bool:
         return False
 
 
@@ -67,13 +68,14 @@ class BooleanSchema(SchemaBase[bool], frozen=True):
     def get_values_out_of_bounds(self, current_value: bool) -> list[bool]:
         raise ValueError
 
+    def get_invalid_value_from_const_or_enum(self) -> bool:
+        if self.const is not None:
+            return not self.const
+        raise ValueError
+
     @property
     def can_be_invalidated(self) -> bool:
         return True
-
-    @property
-    def has_const_or_enum(self) -> bool:
-        return self.const is not None
 
 
 class StringSchema(SchemaBase[str], frozen=True):
@@ -126,6 +128,22 @@ class StringSchema(SchemaBase[str], frozen=True):
             return invalid_values
         raise ValueError
 
+    def get_invalid_value_from_const_or_enum(self) -> str:
+        valid_values = []
+        if self.const is not None:
+            valid_values = [self.const]
+        if self.enum is not None:
+            valid_values = self.enum
+
+        if not valid_values:
+            raise ValueError
+
+        invalid_value = ""
+        for value in valid_values:
+            invalid_value += value + value
+
+        return invalid_value
+
     @property
     def can_be_invalidated(self) -> bool:
         if (
@@ -134,12 +152,6 @@ class StringSchema(SchemaBase[str], frozen=True):
             or self.const is not None
             or self.enum is not None
         ):
-            return True
-        return False
-
-    @property
-    def has_const_or_enum(self) -> bool:
-        if self.enum or self.const is not None:
             return True
         return False
 
@@ -221,15 +233,25 @@ class IntegerSchema(SchemaBase[int], frozen=True):
 
         raise ValueError
 
+    def get_invalid_value_from_const_or_enum(self) -> int:
+        valid_values = []
+        if self.const is not None:
+            valid_values = [self.const]
+        if self.enum is not None:
+            valid_values = self.enum
+
+        if not valid_values:
+            raise ValueError
+
+        invalid_value = 0
+        for value in valid_values:
+            invalid_value += abs(value) + abs(value)
+
+        return invalid_value
+
     @property
     def can_be_invalidated(self) -> bool:
         return True
-
-    @property
-    def has_const_or_enum(self) -> bool:
-        if self.enum or self.const is not None:
-            return True
-        return False
 
 
 class NumberSchema(SchemaBase[float], frozen=True):
@@ -304,15 +326,25 @@ class NumberSchema(SchemaBase[float], frozen=True):
 
         raise ValueError
 
+    def get_invalid_value_from_const_or_enum(self) -> float:
+        valid_values = []
+        if self.const is not None:
+            valid_values = [self.const]
+        if self.enum is not None:
+            valid_values = self.enum
+
+        if not valid_values:
+            raise ValueError
+
+        invalid_value = 0
+        for value in valid_values:
+            invalid_value += abs(value) + abs(value)
+
+        return invalid_value
+
     @property
     def can_be_invalidated(self) -> bool:
         return True
-
-    @property
-    def has_const_or_enum(self) -> bool:
-        if self.enum or self.const is not None:
-            return True
-        return False
 
 
 class ArraySchema(SchemaBase[list[JSON]], frozen=True):
@@ -335,18 +367,55 @@ class ArraySchema(SchemaBase[list[JSON]], frozen=True):
         minimum = self.minItems if self.minItems is not None else 0
         maximum = self.maxItems if self.maxItems is not None else 1
         maximum = max(minimum, maximum)
-        items_schema = self.items
 
         value: list[JSON] = []
         for _ in range(maximum):
-            item_value = items_schema.get_valid_value()
+            item_value = self.items.get_valid_value()
             value.append(item_value)
         return value
 
     def get_values_out_of_bounds(
-        self, current_value: Sequence[JSON]
+        self, current_value: list[JSON]
     ) -> list[list[JSON]]:
+        invalid_values: list[list[JSON]] = []
+
+        if self.minItems:
+            invalid_value = current_value[0 : self.minItems - 1]
+            invalid_values.append(invalid_value)
+
+        if self.maxItems is not None:
+            invalid_value = []
+            if not current_value:
+                current_value = self.get_valid_value()
+
+            if not current_value:
+                current_value = [self.items.get_valid_value()]
+
+            while len(invalid_value) <= self.maxItems:
+                invalid_value.append(choice(current_value))
+            invalid_values.append(invalid_value)
+
+        if invalid_values:
+            return invalid_values
+
         raise ValueError
+
+    def get_invalid_value_from_const_or_enum(self) -> list[JSON]:
+        valid_values = []
+        if self.const is not None:
+            valid_values = [self.const]
+        if self.enum is not None:
+            valid_values = self.enum
+
+        if not valid_values:
+            raise ValueError
+
+        invalid_value = []
+        for value in valid_values:
+            invalid_value.extend(value)
+            invalid_value.extend(value)
+
+        return invalid_value
 
     @property
     def can_be_invalidated(self) -> bool:
@@ -359,12 +428,6 @@ class ArraySchema(SchemaBase[list[JSON]], frozen=True):
         ):
             return True
         if isinstance(self.items, (BooleanSchema, IntegerSchema, NumberSchema)):
-            return True
-        return False
-
-    @property
-    def has_const_or_enum(self) -> bool:
-        if self.enum or self.const is not None:
             return True
         return False
 
@@ -391,6 +454,27 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
     ) -> list[dict[str, JSON]]:
         raise ValueError
 
+    def get_invalid_value_from_const_or_enum(self) -> dict[str, JSON]:
+        valid_values = []
+        if self.const is not None:
+            valid_values = [self.const]
+        if self.enum is not None:
+            valid_values = self.enum
+
+        if not valid_values:
+            raise ValueError
+
+        # This invalidation will not work for a const and may not work for
+        # an enum. In that case a different invalidation approach will be used.
+        invalid_value = {**valid_values[0]}
+        for value in valid_values:
+            for key in invalid_value.keys():
+                invalid_value[key] = value.get(key)
+                if invalid_value not in valid_values:
+                    return invalid_value
+
+        raise ValueError
+
     @property
     def can_be_invalidated(self) -> bool:
         if (
@@ -400,12 +484,6 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
             or self.const is not None
             or self.enum is not None
         ):
-            return True
-        return False
-
-    @property
-    def has_const_or_enum(self) -> bool:
-        if self.enum or self.const is not None:
             return True
         return False
 
@@ -504,6 +582,9 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
                     yield schema
                 else:
                     yield from schema._get_resolved_schemas()
+
+    def get_invalid_value_from_const_or_enum(self) -> JSON:
+        raise ValueError
 
 
 SchemaObjectTypes: TypeAlias = ResolvedSchemaObjectTypes | UnionTypeSchema

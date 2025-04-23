@@ -5,8 +5,6 @@ from copy import deepcopy
 from random import choice
 from typing import Any, Iterable, cast, overload
 
-from robot.api import logger
-
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.localized_faker import FAKE
 from OpenApiLibCore.models import ResolvedSchemaObjectTypes
@@ -90,20 +88,19 @@ def get_invalid_value(
         except ValueError:
             pass
 
-    # If an enum is possible, combine the values from the enum to invalidate the value
-    if value_schema.has_const_or_enum:
-        if (
-            invalid_value := get_invalid_value_from_enum(
-                values=value_schema.enum, value_type=value_type
-            )
-        ) is not None:
-            invalid_values.append(invalid_value)
+    # For schemas with a const or enum, add invalidated values from those
+    try:
+        invalid_value = value_schema.get_invalid_value_from_const_or_enum()
+        invalid_values.append(invalid_value)
+    except ValueError:
+        pass
 
     # Violate min / max values or length if possible
     try:
-        invalid_values += value_schema.get_values_out_of_bounds(
+        values_out_of_bounds = value_schema.get_values_out_of_bounds(
             current_value=current_value
         )
+        invalid_values += values_out_of_bounds
     except ValueError:
         pass
 
@@ -134,7 +131,7 @@ def get_invalid_value_from_constraint(
     # if the value is forced True or False, return the opposite to invalidate
     if len(values_from_constraint) == 1 and value_type == "boolean":
         return not values_from_constraint[0]
-    # for unsupported types or empty constraints lists return None
+    # for unsupported types or empty constraints lists raise a ValueError
     if (
         value_type not in ["string", "integer", "number", "array", "object"]
         or not values_from_constraint
@@ -212,38 +209,4 @@ def get_invalid_str_or_bytes(values_from_constraint: list[Any]) -> Any:
     invalid_value = invalid_values.pop()
     for value in invalid_values:
         invalid_value = invalid_value + value
-    return invalid_value
-
-
-def get_invalid_value_from_enum(values: list[JSON], value_type: str) -> JSON:
-    """Return a value not in the enum by combining the enum values."""
-    if value_type == "string":
-        invalid_value: JSON = ""
-    elif value_type in ["integer", "number"]:
-        invalid_value = 0
-    elif value_type == "array":
-        invalid_value = []
-    elif value_type == "object":
-        # force creation of a new object since we will be modifying it
-        invalid_value = {**values[0]}
-    else:
-        logger.warn(f"Cannot invalidate enum value with type {value_type}")
-        return None
-    for value in values:
-        # repeat each addition to ensure single-item enums are invalidated
-        if value_type in ["integer", "number"]:
-            invalid_value += abs(value) + abs(value)
-        if value_type == "string":
-            invalid_value += value + value
-        if value_type == "array":
-            invalid_value.extend(value)
-            invalid_value.extend(value)
-        # objects are a special case, since they must be of the same type / class
-        # invalid_value.update(value) will end up with the last value in the list,
-        # which is a valid value, so another approach is needed
-        if value_type == "object":
-            for key in invalid_value.keys():
-                invalid_value[key] = value.get(key)
-                if invalid_value not in values:
-                    return invalid_value
     return invalid_value
