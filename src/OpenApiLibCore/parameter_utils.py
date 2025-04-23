@@ -20,11 +20,11 @@ def get_oas_name_from_safe_name(safe_name: str) -> str:
 
 
 def get_safe_name_for_oas_name(oas_name: str) -> str:
-    if is_python_safe(oas_name):
+    if _is_python_safe(oas_name):
         PARAMETER_REGISTRY[oas_name] = oas_name
         return oas_name
 
-    safe_name = convert_string_to_python_identifier(oas_name)
+    safe_name = _convert_string_to_python_identifier(oas_name)
 
     if safe_name not in PARAMETER_REGISTRY:
         PARAMETER_REGISTRY[safe_name] = oas_name
@@ -36,17 +36,17 @@ def get_safe_name_for_oas_name(oas_name: str) -> str:
     # We're dealing with multiple oas_names that convert to the same safe_name.
     # To resolve this, a more verbose safe_name is generated. This is less user-friendly
     # but necessary to ensure an one-to-one mapping.
-    verbose_safe_name = convert_string_to_python_identifier(oas_name, verbose=True)
+    verbose_safe_name = _convert_string_to_python_identifier(oas_name, verbose=True)
     if verbose_safe_name not in PARAMETER_REGISTRY:
         PARAMETER_REGISTRY[verbose_safe_name] = oas_name
     return verbose_safe_name
 
 
-def is_python_safe(name: str) -> bool:
+def _is_python_safe(name: str) -> bool:
     return name.isidentifier()
 
 
-def convert_string_to_python_identifier(string: str, verbose: bool = False) -> str:
+def _convert_string_to_python_identifier(string: str, verbose: bool = False) -> str:
     def _convert_string_to_python_identifier() -> Generator[str, None, None]:
         string_iterator = iter(string)
 
@@ -71,11 +71,11 @@ def convert_string_to_python_identifier(string: str, verbose: bool = False) -> s
                 ascii_code = ord(character)
                 yield f"_{ascii_code}_"
 
-    if is_python_safe(string):
+    if _is_python_safe(string):
         return string
 
     converted_string = "".join(_convert_string_to_python_identifier())
-    if not is_python_safe(converted_string):
+    if not _is_python_safe(converted_string):
         raise ValueError(f"Failed to convert '{string}' to Python identifier.")
     return converted_string
 
