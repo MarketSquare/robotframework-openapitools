@@ -174,7 +174,36 @@ class TestGetValuesOutOfBounds(unittest.TestCase):
     def test_array_schema(self) -> None:
         schema = ArraySchema(items=IntegerSchema())
         with self.assertRaises(ValueError):
-            schema.get_values_out_of_bounds(current_value=[None])
+            schema.get_values_out_of_bounds(current_value=[1])
+
+        schema = ArraySchema(items=IntegerSchema(), minItems=0)
+        with self.assertRaises(ValueError):
+            schema.get_values_out_of_bounds(current_value=[])
+
+        schema = ArraySchema(items=IntegerSchema(), maxItems=0)
+        values = schema.get_values_out_of_bounds(current_value=[])
+        self.assertEqual(len(values), 1)
+        self.assertIsInstance(values[0][0], int)
+
+        schema = ArraySchema(items=IntegerSchema(), minItems=2)
+        current_value = [1, 3, 5]
+        values = schema.get_values_out_of_bounds(current_value=current_value)
+        self.assertEqual(len(values), 1)
+        self.assertIn(values[0][0], current_value)
+
+        schema = ArraySchema(items=IntegerSchema(), maxItems=3)
+        current_value = [1, 3, 5]
+        values = schema.get_values_out_of_bounds(current_value=current_value)
+        self.assertEqual(len(values), 1)
+        self.assertEqual(len(values[0]), 4)
+        self.assertIn(values[0][3], current_value)
+
+        schema = ArraySchema(items=IntegerSchema(), minItems=1, maxItems=2)
+        current_value = [7]
+        values = schema.get_values_out_of_bounds(current_value=current_value)
+        self.assertEqual(len(values), 2)
+        self.assertEqual(values[0], [])
+        self.assertIn(current_value[0], values[1])
 
     def test_object_schema(self) -> None:
         schema = ObjectSchema()

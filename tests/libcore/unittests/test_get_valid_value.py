@@ -61,38 +61,29 @@ class TestDefaults(unittest.TestCase):
 
 
 class TestGetValidValueFromConst(unittest.TestCase):
-    def test_null_schema(self) -> None:
-        schema = NullSchema()
-        self.assertEqual(schema.has_const_or_enum, False)
-
     def test_boolean_schema(self) -> None:
         const = False
         schema = BooleanSchema(const=const)
-        self.assertEqual(schema.has_const_or_enum, True)
         self.assertEqual(schema.get_valid_value(), const)
 
     def test_string_schema(self) -> None:
         const = "Hello world!"
         schema = StringSchema(const=const)
-        self.assertEqual(schema.has_const_or_enum, True)
         self.assertEqual(schema.get_valid_value(), const)
 
     def test_integer_schema(self) -> None:
         const = 42
         schema = IntegerSchema(const=const)
-        self.assertEqual(schema.has_const_or_enum, True)
         self.assertEqual(schema.get_valid_value(), const)
 
     def test_number_schema(self) -> None:
         const = 3.14
         schema = NumberSchema(const=const)
-        self.assertEqual(schema.has_const_or_enum, True)
         self.assertEqual(schema.get_valid_value(), const)
 
     def test_array_schema(self) -> None:
         const = ["foo", "bar"]
         schema = ArraySchema(items=StringSchema(), const=const)
-        self.assertEqual(schema.has_const_or_enum, True)
         self.assertEqual(schema.get_valid_value(), const)
 
     def test_object_schema(self) -> None:
@@ -105,36 +96,24 @@ class TestGetValidValueFromConst(unittest.TestCase):
 
 
 class TestGetValidValueFromEnum(unittest.TestCase):
-    def test_null_schema(self) -> None:
-        schema = NullSchema()
-        self.assertEqual(schema.has_const_or_enum, False)
-
-    def test_boolean_schema(self) -> None:
-        schema = BooleanSchema()
-        self.assertEqual(schema.has_const_or_enum, False)
-
     def test_string_schema(self) -> None:
         enum = ["eggs", "bacon", "spam"]
         schema = StringSchema(enum=enum)
-        self.assertEqual(schema.has_const_or_enum, True)
         self.assertIn(schema.get_valid_value(), enum)
 
     def test_integer_schema(self) -> None:
         enum = [1, 3, 5, 7]
         schema = IntegerSchema(enum=enum)
-        self.assertEqual(schema.has_const_or_enum, True)
         self.assertIn(schema.get_valid_value(), enum)
 
     def test_number_schema(self) -> None:
         enum = [0.1, 0.01, 0.001]
         schema = NumberSchema(enum=enum)
-        self.assertEqual(schema.has_const_or_enum, True)
         self.assertIn(schema.get_valid_value(), enum)
 
     def test_array_schema(self) -> None:
         enum = [["foo", "bar"], ["eggs", "bacon", "spam"]]
         schema = ArraySchema(items=StringSchema(), enum=enum)
-        self.assertEqual(schema.has_const_or_enum, True)
         self.assertIn(schema.get_valid_value(), enum)
 
     def test_object_schema(self) -> None:

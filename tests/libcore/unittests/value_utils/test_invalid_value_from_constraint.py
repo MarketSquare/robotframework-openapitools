@@ -16,11 +16,11 @@ class TestInvalidValueFromConstraint(unittest.TestCase):
 
     def test_unsupported(self) -> None:
         values = [{"red": 255, "green": 255, "blue": 255}]
-        value = value_utils.get_invalid_value_from_constraint(
-            values_from_constraint=values,
-            value_type="dummy",
-        )
-        self.assertEqual(value, None)
+        with self.assertRaises(ValueError):
+            _ = value_utils.get_invalid_value_from_constraint(
+                values_from_constraint=values,
+                value_type="dummy",
+            )
 
     def test_bool(self) -> None:
         values = [True]
@@ -40,11 +40,11 @@ class TestInvalidValueFromConstraint(unittest.TestCase):
         self.assertIsInstance(value, bool)
 
         values = [True, False]
-        value = value_utils.get_invalid_value_from_constraint(
-            values_from_constraint=values,
-            value_type="boolean",
-        )
-        self.assertEqual(value, None)
+        with self.assertRaises(ValueError):
+            _ = value_utils.get_invalid_value_from_constraint(
+                values_from_constraint=values,
+                value_type="boolean",
+            )
 
     def test_string(self) -> None:
         values = ["foo"]
@@ -64,11 +64,11 @@ class TestInvalidValueFromConstraint(unittest.TestCase):
         self.assertIsInstance(value, str)
 
         values = [""]
-        value = value_utils.get_invalid_value_from_constraint(
-            values_from_constraint=values,
-            value_type="string",
-        )
-        self.assertEqual(value, None)
+        with self.assertRaises(ValueError):
+            _ = value_utils.get_invalid_value_from_constraint(
+                values_from_constraint=values,
+                value_type="string",
+            )
 
     def test_integer(self) -> None:
         values = [0]
@@ -120,11 +120,11 @@ class TestInvalidValueFromConstraint(unittest.TestCase):
         self.assertNotIn(value, values)
 
         values = []
-        value = value_utils.get_invalid_value_from_constraint(
-            values_from_constraint=values,
-            value_type="array",
-        )
-        self.assertEqual(value, None)
+        with self.assertRaises(ValueError):
+            _ = value_utils.get_invalid_value_from_constraint(
+                values_from_constraint=values,
+                value_type="array",
+            )
 
         values = [[], []]
         value = value_utils.get_invalid_value_from_constraint(
