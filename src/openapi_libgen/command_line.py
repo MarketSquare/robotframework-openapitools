@@ -1,9 +1,7 @@
 import argparse
 from pathlib import Path
 
-from prance import ResolvingParser
-
-import openapi_libgen
+from openapi_libgen import generator
 from openapi_libgen.parsing_utils import remove_unsafe_characters_from_string
 
 parser = argparse.ArgumentParser(
@@ -27,24 +25,14 @@ def get_class_and_module_name_from_string(string: str) -> tuple[str, str]:
 
 
 def main() -> None:
-    def recursion_limit_handler(
-        limit: int, refstring: str, recursions: object
-    ) -> object:  # pylint: disable=unused-argument
-        return args.recursion_default
-
     if not (source := args.source):
         source = input("Please provide a source for the generation: ")
 
-    parser = ResolvingParser(
-        source,
-        backend="openapi-spec-validator",
+    spec = generator.load_openapi_spec(
+        source=source,
         recursion_limit=args.recursion_limit,
-        recursion_limit_handler=recursion_limit_handler,
+        recursion_default=args.recursion_default,
     )
-    assert parser.specification is not None, (
-        "Source was loaded, but no specification was present after parsing."
-    )
-    spec = parser.specification
 
     if not (destination := args.destination):
         destination = input(
@@ -79,7 +67,7 @@ def main() -> None:
                 default_module_name,
             )
 
-    openapi_libgen.generate(
+    generator.generate(
         openapi_spec=spec,
         output_folder=path,
         library_name=safe_library_name,

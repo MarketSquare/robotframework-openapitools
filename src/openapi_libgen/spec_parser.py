@@ -64,6 +64,8 @@ class BodyDetails:
 def get_path_items(paths: dict[str, Any]) -> Generator[OperationDetails, None, None]:
     for path, operation_items in paths.items():
         for method, method_item in operation_items.items():
+            if method not in ["post", "put", "patch", "get", "delete"]:
+                continue
             operation_details = OperationDetails(
                 path=path,
                 method=method,
