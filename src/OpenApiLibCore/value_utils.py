@@ -197,11 +197,15 @@ def get_invalid_int_or_number(values_from_constraint: list[int | float]) -> int 
 
 
 @overload
-def get_invalid_str_or_bytes(values_from_constraint: list[str]) -> str: ...
+def get_invalid_str_or_bytes(
+    values_from_constraint: list[str],
+) -> str: ...  # pragma: no cover
 
 
 @overload
-def get_invalid_str_or_bytes(values_from_constraint: list[bytes]) -> bytes: ...
+def get_invalid_str_or_bytes(
+    values_from_constraint: list[bytes],
+) -> bytes: ...  # pragma: no cover
 
 
 def get_invalid_str_or_bytes(values_from_constraint: list[Any]) -> Any:

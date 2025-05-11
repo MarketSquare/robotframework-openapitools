@@ -42,15 +42,15 @@ def get_json_data_for_dto_class(
             operation_id=operation_id,
         )
 
-    match schema.type:
-        case "object":
+    match schema:
+        case ObjectSchema():
             return get_dict_data_for_dto_class(
                 schema=schema,
                 dto_class=dto_class,
                 get_id_property_name=get_id_property_name,
                 operation_id=operation_id,
             )
-        case "array":
+        case ArraySchema():
             return get_list_data_for_dto_class(
                 schema=schema,
                 dto_class=dto_class,
