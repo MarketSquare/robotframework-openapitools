@@ -15,6 +15,7 @@ from typing import (
 
 import rstr
 from pydantic import BaseModel, Field, RootModel
+from robot.api import logger
 
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.localized_faker import FAKE, fake_string
@@ -54,6 +55,10 @@ class NullSchema(SchemaBase[None], frozen=True):
     def can_be_invalidated(self) -> bool:
         return False
 
+    @property
+    def annotation_string(self) -> str:
+        return "None"
+
 
 class BooleanSchema(SchemaBase[bool], frozen=True):
     type: Literal["boolean"] = "boolean"
@@ -76,6 +81,10 @@ class BooleanSchema(SchemaBase[bool], frozen=True):
     @property
     def can_be_invalidated(self) -> bool:
         return True
+
+    @property
+    def annotation_string(self) -> str:
+        return "bool"
 
 
 class StringSchema(SchemaBase[str], frozen=True):
@@ -155,6 +164,10 @@ class StringSchema(SchemaBase[str], frozen=True):
             return True
         return False
 
+    @property
+    def annotation_string(self) -> str:
+        return "str"
+
 
 class IntegerSchema(SchemaBase[int], frozen=True):
     type: Literal["integer"] = "integer"
@@ -184,14 +197,15 @@ class IntegerSchema(SchemaBase[int], frozen=True):
     def _max_value(self) -> int:
         # OAS 3.0: exclusiveMinimum/Maximum is a bool in combination with minimum/maximum
         # OAS 3.1: exclusiveMinimum/Maximum is an integer
-        if type(self.exclusiveMaximum) == int:
+        if isinstance(self.exclusiveMaximum, int) and not isinstance(
+            self.exclusiveMaximum, bool
+        ):
             return self.exclusiveMaximum - 1
 
         if isinstance(self.maximum, int):
             if self.exclusiveMaximum is True:
                 return self.maximum - 1
-            else:
-                return self.maximum
+            return self.maximum
 
         return self._max_int
 
@@ -199,14 +213,15 @@ class IntegerSchema(SchemaBase[int], frozen=True):
     def _min_value(self) -> int:
         # OAS 3.0: exclusiveMinimum/Maximum is a bool in combination with minimum/maximum
         # OAS 3.1: exclusiveMinimum/Maximum is an integer
-        if type(self.exclusiveMinimum) == int:
+        if isinstance(self.exclusiveMinimum, int) and not isinstance(
+            self.exclusiveMinimum, bool
+        ):
             return self.exclusiveMinimum + 1
 
         if isinstance(self.minimum, int):
             if self.exclusiveMinimum is True:
                 return self.minimum + 1
-            else:
-                return self.minimum
+            return self.minimum
 
         return self._min_int
 
@@ -253,6 +268,10 @@ class IntegerSchema(SchemaBase[int], frozen=True):
     def can_be_invalidated(self) -> bool:
         return True
 
+    @property
+    def annotation_string(self) -> str:
+        return "int"
+
 
 class NumberSchema(SchemaBase[float], frozen=True):
     type: Literal["number"] = "number"
@@ -277,14 +296,15 @@ class NumberSchema(SchemaBase[float], frozen=True):
     def _max_value(self) -> float:
         # OAS 3.0: exclusiveMinimum/Maximum is a bool in combination with minimum/maximum
         # OAS 3.1: exclusiveMinimum/Maximum is an integer or a float
-        if type(self.exclusiveMaximum) in [int, float]:
+        if isinstance(self.exclusiveMaximum, (int, float)) and not isinstance(
+            self.exclusiveMaximum, bool
+        ):
             return self.exclusiveMaximum - 0.0000000001
 
         if isinstance(self.maximum, (int, float)):
             if self.exclusiveMaximum is True:
                 return self.maximum - 0.0000000001
-            else:
-                return self.maximum
+            return self.maximum
 
         return self._max_float
 
@@ -292,14 +312,15 @@ class NumberSchema(SchemaBase[float], frozen=True):
     def _min_value(self) -> float:
         # OAS 3.0: exclusiveMinimum/Maximum is a bool in combination with minimum/maximum
         # OAS 3.1: exclusiveMinimum/Maximum is an integer or a float
-        if type(self.exclusiveMinimum) in [int, float]:
+        if isinstance(self.exclusiveMinimum, (int, float)) and not isinstance(
+            self.exclusiveMinimum, bool
+        ):
             return self.exclusiveMinimum + 0.0000000001
 
         if isinstance(self.minimum, (int, float)):
             if self.exclusiveMinimum is True:
                 return self.minimum + 0.0000000001
-            else:
-                return self.minimum
+            return self.minimum
 
         return self._min_float
 
@@ -336,7 +357,7 @@ class NumberSchema(SchemaBase[float], frozen=True):
         if not valid_values:
             raise ValueError
 
-        invalid_value = 0
+        invalid_value = 0.0
         for value in valid_values:
             invalid_value += abs(value) + abs(value)
 
@@ -345,6 +366,10 @@ class NumberSchema(SchemaBase[float], frozen=True):
     @property
     def can_be_invalidated(self) -> bool:
         return True
+
+    @property
+    def annotation_string(self) -> str:
+        return "float"
 
 
 class ArraySchema(SchemaBase[list[JSON]], frozen=True):
@@ -374,9 +399,7 @@ class ArraySchema(SchemaBase[list[JSON]], frozen=True):
             value.append(item_value)
         return value
 
-    def get_values_out_of_bounds(
-        self, current_value: list[JSON]
-    ) -> list[list[JSON]]:
+    def get_values_out_of_bounds(self, current_value: list[JSON]) -> list[list[JSON]]:
         invalid_values: list[list[JSON]] = []
 
         if self.minItems:
@@ -431,8 +454,12 @@ class ArraySchema(SchemaBase[list[JSON]], frozen=True):
             return True
         return False
 
+    @property
+    def annotation_string(self) -> str:
+        return f"list[{self.items.annotation_string}]"
 
-class PropertiesMapping(RootModel[dict[str, "SchemaObjectTypes"]]): ...
+
+class PropertiesMapping(RootModel[dict[str, "SchemaObjectTypes"]], frozen=True): ...
 
 
 class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
@@ -486,6 +513,10 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
         ):
             return True
         return False
+
+    @property
+    def annotation_string(self) -> str:
+        return "dict[str, Any]"
 
 
 ResolvedSchemaObjectTypes: TypeAlias = (
@@ -581,10 +612,15 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
                 if isinstance(schema, ResolvedSchemaObjectTypes):
                     yield schema
                 else:
-                    yield from schema._get_resolved_schemas()
+                    yield from schema.resolved_schemas
 
     def get_invalid_value_from_const_or_enum(self) -> JSON:
         raise ValueError
+
+    @property
+    def annotation_string(self) -> str:
+        unique_annotations = {s.annotation_string for s in self.resolved_schemas}
+        return " | ".join(unique_annotations)
 
 
 SchemaObjectTypes: TypeAlias = ResolvedSchemaObjectTypes | UnionTypeSchema
@@ -606,6 +642,22 @@ class RequestBodyObject(BaseModel):
     content: dict[str, MediaTypeObject]
     required: bool = False
     description: str = ""
+
+    @property
+    def schema_(self) -> SchemaObjectTypes | None:
+        schemas = [
+            media_type.schema_
+            for mime_type, media_type in self.content.items()
+            if "json" in mime_type
+        ]
+        if None in schemas:
+            schemas.remove(None)
+        if not schemas:
+            return None
+
+        if len(schemas) > 1:
+            logger.warn(f"Multiple schemas defined for request body: {self.content}")
+        return schemas.pop()
 
 
 class HeaderObject(BaseModel): ...
@@ -651,6 +703,13 @@ class PathItemObject(BaseModel):
         }
 
 
+class InfoObject(BaseModel):
+    title: str
+    version: str
+    summary: str = ""
+    description: str = ""
+
+
 class OpenApiObject(BaseModel):
+    info: InfoObject
     paths: dict[str, PathItemObject]
-    # components: ComponentsObject | None = None

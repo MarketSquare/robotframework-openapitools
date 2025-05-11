@@ -45,7 +45,7 @@ def main() -> None:
             args.name
         )
     else:
-        default_name = spec["info"]["title"]
+        default_name = spec.info.title
 
         default_library_name, default_module_name = (
             get_class_and_module_name_from_string(default_name)
@@ -68,7 +68,7 @@ def main() -> None:
             )
 
     generator.generate(
-        openapi_spec=spec,
+        openapi_object=spec,
         output_folder=path,
         library_name=safe_library_name,
         module_name=safe_module_name,

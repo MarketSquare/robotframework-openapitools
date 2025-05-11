@@ -1,11 +1,11 @@
 import sys
 from pathlib import Path
-from typing import Any
 
 from jinja2 import Environment, FileSystemLoader
 from prance import ResolvingParser
 
 from openapi_libgen.spec_parser import get_keyword_data
+from OpenApiLibCore.models import OpenApiObject
 
 HERE = Path(__file__).parent.resolve()
 INIT_TEMPLATE_PATH = HERE / "templates/__init__.jinja"
@@ -14,7 +14,7 @@ LIBRARY_TEMPLATE_PATH = HERE / "templates/library.jinja"
 
 def load_openapi_spec(
     source: str, recursion_limit: int, recursion_default: object
-) -> dict[str, Any]:
+) -> OpenApiObject:
     def recursion_limit_handler(
         limit: int, refstring: str, recursions: object
     ) -> object:  # pylint: disable=unused-argument
@@ -29,16 +29,17 @@ def load_openapi_spec(
     assert parser.specification is not None, (
         "Source was loaded, but no specification was present after parsing."
     )
-    return parser.specification
+    openapi_object = OpenApiObject.model_validate(parser.specification)
+    return openapi_object
 
 
 def generate(
-    openapi_spec: dict[str, Any],
+    openapi_object: OpenApiObject,
     output_folder: Path,
     library_name: str,
     module_name: str,
 ) -> str:
-    keyword_data = get_keyword_data(openapi_spec=openapi_spec)
+    keyword_data = get_keyword_data(openapi_object=openapi_object)
 
     library_folder = output_folder / library_name
     library_folder.mkdir(parents=True, exist_ok=True)
@@ -65,7 +66,7 @@ def generate(
         library_file.write(library_content)
         print(f"{module_path} created")
 
-    return f"Generating {library_name} at {output_folder.resolve().as_posix()}/{module_name}"
+    return f"Generated {library_name} at {output_folder.resolve().as_posix()}/{module_name}"
 
 
 if __name__ == "__main__":
@@ -76,7 +77,7 @@ if __name__ == "__main__":
     spec = load_openapi_spec(source=source, recursion_limit=1, recursion_default={})
 
     result_string = generate(
-        openapi_spec=spec,
+        openapi_object=spec,
         output_folder=destination,
         library_name=library_name,
         module_name=module_name,
