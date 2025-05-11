@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiLibCore" type="LIBRARY" format="HTML" scope="SUITE" generated="2025-04-10T08:09:02+00:00" specversion="6" source="/workspaces/robotframework-openapitools/src/OpenApiLibCore/openapi_libcore.py" lineno="170">
-<version>1.0.0b2</version>
+<keywordspec name="OpenApiLibCore" type="LIBRARY" format="HTML" scope="SUITE" generated="2025-05-11T17:22:53+00:00" specversion="6" source="/workspaces/robotframework-openapitools/src/OpenApiLibCore/openapi_libcore.py" lineno="174">
+<version>1.0.0b3</version>
 <doc>&lt;p&gt;Main class providing the keywords and core logic to interact with an OpenAPI server.&lt;/p&gt;
 &lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapi-libcore"&gt;library page&lt;/a&gt; for an introduction.&lt;/p&gt;</doc>
 <tags>
 </tags>
 <inits>
-<init name="__init__" lineno="178">
-<arguments repr="source: str, origin: str = , base_path: str = , response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, mappings_path: str | Path = , invalid_property_default_response: int = 422, default_id_property_name: str = id, faker_locale: str | list[str] = , require_body_for_invalid_url: bool = False, recursion_limit: int = 1, recursion_default: dict[str, JSON] | list[JSON] | str | bytes | int | float | bool | None = {}, username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, cert: str | tuple[str, str] = , verify_tls: bool | str = True, extra_headers: Mapping[str, str] = {}, cookies: MutableMapping[str, str] | RequestsCookieJar | None = None, proxies: MutableMapping[str, str] | None = None">
+<init name="__init__" lineno="182">
+<arguments repr="source: str, origin: str = , base_path: str = , response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, mappings_path: str | Path = , invalid_property_default_response: int = 422, default_id_property_name: str = id, faker_locale: str | list[str] = , require_body_for_invalid_url: bool = False, recursion_limit: int = 1, recursion_default: JSON = {}, username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, cert: str | tuple[str, str] = , verify_tls: bool | str = True, extra_headers: Mapping[str, str] = {}, cookies: MutableMapping[str, str] | RequestsCookieJar | None = None, proxies: MutableMapping[str, str] | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="source: str">
 <name>source</name>
 <type name="str" typedoc="string"/>
@@ -70,23 +70,9 @@
 <type name="int" typedoc="integer"/>
 <default>1</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="recursion_default: dict[str, JSON] | list[JSON] | str | bytes | int | float | bool | None = {}">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="recursion_default: JSON = {}">
 <name>recursion_default</name>
-<type name="Union" union="true">
-<type name="dict" typedoc="dictionary">
-<type name="str" typedoc="string"/>
 <type name="JSON"/>
-</type>
-<type name="list" typedoc="list">
-<type name="JSON"/>
-</type>
-<type name="str" typedoc="string"/>
-<type name="bytes" typedoc="bytes"/>
-<type name="int" typedoc="integer"/>
-<type name="float" typedoc="float"/>
-<type name="bool" typedoc="boolean"/>
-<type name="None" typedoc="None"/>
-</type>
 <default>{}</default>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="username: str = ">
@@ -222,39 +208,25 @@
 </init>
 </inits>
 <keywords>
-<kw name="Assert Href To Resource Is Valid" lineno="735">
-<arguments repr="href: str, referenced_resource: dict[str, dict[str, JSON] | list[JSON] | str | bytes | int | float | bool | None]">
+<kw name="Assert Href To Resource Is Valid" lineno="722">
+<arguments repr="href: str, referenced_resource: dict[str, JSON]">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="href: str">
 <name>href</name>
 <type name="str" typedoc="string"/>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="true" repr="referenced_resource: dict[str, dict[str, JSON] | list[JSON] | str | bytes | int | float | bool | None]">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="referenced_resource: dict[str, JSON]">
 <name>referenced_resource</name>
 <type name="dict" typedoc="dictionary">
 <type name="str" typedoc="string"/>
-<type name="Union" union="true">
-<type name="dict" typedoc="dictionary">
-<type name="str" typedoc="string"/>
 <type name="JSON"/>
-</type>
-<type name="list" typedoc="list">
-<type name="JSON"/>
-</type>
-<type name="str" typedoc="string"/>
-<type name="bytes" typedoc="bytes"/>
-<type name="int" typedoc="integer"/>
-<type name="float" typedoc="float"/>
-<type name="bool" typedoc="boolean"/>
-<type name="None" typedoc="None"/>
-</type>
 </type>
 </arg>
 </arguments>
 <doc>&lt;p&gt;Attempt to GET the resource referenced by the &lt;span class="name"&gt;href&lt;/span&gt; and validate it's equal to the provided &lt;span class="name"&gt;referenced_resource&lt;/span&gt; object / dictionary.&lt;/p&gt;</doc>
 <shortdoc>Attempt to GET the resource referenced by the `href` and validate it's equal to the provided `referenced_resource` object / dictionary.</shortdoc>
 </kw>
-<kw name="Authorized Request" lineno="655">
-<arguments repr="url: str, method: str, params: dict[str, Any] | None = None, headers: dict[str, str] | None = None, json_data: dict[str, JSON] | list[JSON] | str | bytes | int | float | bool | None = None, data: Any | None = None, files: Any | None = None">
+<kw name="Authorized Request" lineno="642">
+<arguments repr="url: str, method: str, params: dict[str, Any] | None = None, headers: dict[str, str] | None = None, json_data: JSON | None = None, data: Any | None = None, files: Any | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
 <type name="str" typedoc="string"/>
@@ -285,21 +257,10 @@
 </type>
 <default>None</default>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="json_data: dict[str, JSON] | list[JSON] | str | bytes | int | float | bool | None = None">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="json_data: JSON | None = None">
 <name>json_data</name>
 <type name="Union" union="true">
-<type name="dict" typedoc="dictionary">
-<type name="str" typedoc="string"/>
 <type name="JSON"/>
-</type>
-<type name="list" typedoc="list">
-<type name="JSON"/>
-</type>
-<type name="str" typedoc="string"/>
-<type name="bytes" typedoc="bytes"/>
-<type name="int" typedoc="integer"/>
-<type name="float" typedoc="float"/>
-<type name="bool" typedoc="boolean"/>
 <type name="None" typedoc="None"/>
 </type>
 <default>None</default>
@@ -327,7 +288,7 @@
 &lt;p&gt;&amp;gt; Note: provided username / password or auth objects take precedence over token based security&lt;/p&gt;</doc>
 <shortdoc>Perform a request using the security token or authentication set in the library.</shortdoc>
 </kw>
-<kw name="Ensure In Use" lineno="640">
+<kw name="Ensure In Use" lineno="627">
 <arguments repr="url: str, resource_relation: IdReference">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -341,7 +302,7 @@
 <doc>&lt;p&gt;Ensure that the (right-most) &lt;span class="name"&gt;id&lt;/span&gt; of the resource referenced by the &lt;span class="name"&gt;url&lt;/span&gt; is used by the resource defined by the &lt;span class="name"&gt;resource_relation&lt;/span&gt;.&lt;/p&gt;</doc>
 <shortdoc>Ensure that the (right-most) `id` of the resource referenced by the `url` is used by the resource defined by the `resource_relation`.</shortdoc>
 </kw>
-<kw name="Get Ids From Url" lineno="605">
+<kw name="Get Ids From Url" lineno="592">
 <arguments repr="url: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -354,7 +315,7 @@
 <doc>&lt;p&gt;Perform a GET request on the &lt;span class="name"&gt;url&lt;/span&gt; and return the list of resource &lt;span class="name"&gt;ids&lt;/span&gt; from the response.&lt;/p&gt;</doc>
 <shortdoc>Perform a GET request on the `url` and return the list of resource `ids` from the response.</shortdoc>
 </kw>
-<kw name="Get Invalid Json Data" lineno="502">
+<kw name="Get Invalid Body Data" lineno="489">
 <arguments repr="url: str, method: str, status_code: int, request_data: RequestData">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -375,27 +336,13 @@
 </arguments>
 <returntype name="dict" typedoc="dictionary">
 <type name="str" typedoc="string"/>
-<type name="Union" union="true">
-<type name="dict" typedoc="dictionary">
-<type name="str" typedoc="string"/>
 <type name="JSON"/>
-</type>
-<type name="list" typedoc="list">
-<type name="JSON"/>
-</type>
-<type name="str" typedoc="string"/>
-<type name="bytes" typedoc="bytes"/>
-<type name="int" typedoc="integer"/>
-<type name="float" typedoc="float"/>
-<type name="bool" typedoc="boolean"/>
-<type name="None" typedoc="None"/>
-</type>
 </returntype>
 <doc>&lt;p&gt;Return &lt;span class="name"&gt;json_data&lt;/span&gt; based on the &lt;span class="name"&gt;dto&lt;/span&gt; on the &lt;span class="name"&gt;request_data&lt;/span&gt; that will cause the provided &lt;span class="name"&gt;status_code&lt;/span&gt; for the &lt;span class="name"&gt;method&lt;/span&gt; operation on the &lt;span class="name"&gt;url&lt;/span&gt;.&lt;/p&gt;
 &lt;p&gt;&amp;gt; Note: applicable UniquePropertyValueConstraint and IdReference Relations are considered before changes to &lt;span class="name"&gt;json_data&lt;/span&gt; are made.&lt;/p&gt;</doc>
 <shortdoc>Return `json_data` based on the `dto` on the `request_data` that will cause the provided `status_code` for the `method` operation on the `url`.</shortdoc>
 </kw>
-<kw name="Get Invalidated Parameters" lineno="525">
+<kw name="Get Invalidated Parameters" lineno="512">
 <arguments repr="status_code: int, request_data: RequestData">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="status_code: int">
 <name>status_code</name>
@@ -409,31 +356,17 @@
 <returntype name="tuple" typedoc="tuple">
 <type name="dict" typedoc="dictionary">
 <type name="str" typedoc="string"/>
-<type name="Union" union="true">
+<type name="JSON"/>
+</type>
 <type name="dict" typedoc="dictionary">
 <type name="str" typedoc="string"/>
 <type name="JSON"/>
-</type>
-<type name="list" typedoc="list">
-<type name="JSON"/>
-</type>
-<type name="str" typedoc="string"/>
-<type name="bytes" typedoc="bytes"/>
-<type name="int" typedoc="integer"/>
-<type name="float" typedoc="float"/>
-<type name="bool" typedoc="boolean"/>
-<type name="None" typedoc="None"/>
-</type>
-</type>
-<type name="dict" typedoc="dictionary">
-<type name="str" typedoc="string"/>
-<type name="str" typedoc="string"/>
 </type>
 </returntype>
 <doc>&lt;p&gt;Returns a version of &lt;span class="name"&gt;params, headers&lt;/span&gt; as present on &lt;span class="name"&gt;request_data&lt;/span&gt; that has been modified to cause the provided &lt;span class="name"&gt;status_code&lt;/span&gt;.&lt;/p&gt;</doc>
 <shortdoc>Returns a version of `params, headers` as present on `request_data` that has been modified to cause the provided `status_code`.</shortdoc>
 </kw>
-<kw name="Get Invalidated Url" lineno="615">
+<kw name="Get Invalidated Url" lineno="602">
 <arguments repr="valid_url: str, path: str = , expected_status_code: int = 404">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="valid_url: str">
 <name>valid_url</name>
@@ -455,60 +388,7 @@
 &lt;p&gt;Raises ValueError if the valid_url cannot be invalidated.&lt;/p&gt;</doc>
 <shortdoc>Return an url with all the path parameters in the `valid_url` replaced by a random UUID if no PathPropertiesConstraint is mapped for the `"get"` operation on the mapped `path` and `expected_status_code`. If a PathPropertiesConstraint is mapped, the `invalid_value` is returned.</shortdoc>
 </kw>
-<kw name="Get Json Data For Dto Class" lineno="485">
-<arguments repr="schema: dict[str, dict[str, JSON] | list[JSON] | str | bytes | int | float | bool | None], dto_class: type[Dto], operation_id: str = ">
-<arg kind="POSITIONAL_OR_NAMED" required="true" repr="schema: dict[str, dict[str, JSON] | list[JSON] | str | bytes | int | float | bool | None]">
-<name>schema</name>
-<type name="dict" typedoc="dictionary">
-<type name="str" typedoc="string"/>
-<type name="Union" union="true">
-<type name="dict" typedoc="dictionary">
-<type name="str" typedoc="string"/>
-<type name="JSON"/>
-</type>
-<type name="list" typedoc="list">
-<type name="JSON"/>
-</type>
-<type name="str" typedoc="string"/>
-<type name="bytes" typedoc="bytes"/>
-<type name="int" typedoc="integer"/>
-<type name="float" typedoc="float"/>
-<type name="bool" typedoc="boolean"/>
-<type name="None" typedoc="None"/>
-</type>
-</type>
-</arg>
-<arg kind="POSITIONAL_OR_NAMED" required="true" repr="dto_class: type[Dto]">
-<name>dto_class</name>
-<type name="type">
-<type name="Dto"/>
-</type>
-</arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="operation_id: str = ">
-<name>operation_id</name>
-<type name="str" typedoc="string"/>
-<default/>
-</arg>
-</arguments>
-<returntype name="Union" union="true">
-<type name="dict" typedoc="dictionary">
-<type name="str" typedoc="string"/>
-<type name="JSON"/>
-</type>
-<type name="list" typedoc="list">
-<type name="JSON"/>
-</type>
-<type name="str" typedoc="string"/>
-<type name="bytes" typedoc="bytes"/>
-<type name="int" typedoc="integer"/>
-<type name="float" typedoc="float"/>
-<type name="bool" typedoc="boolean"/>
-<type name="None" typedoc="None"/>
-</returntype>
-<doc>&lt;p&gt;Generate valid (json-compatible) data for the &lt;span class="name"&gt;dto_class&lt;/span&gt;.&lt;/p&gt;</doc>
-<shortdoc>Generate valid (json-compatible) data for the `dto_class`.</shortdoc>
-</kw>
-<kw name="Get Json Data With Conflict" lineno="541">
+<kw name="Get Json Data With Conflict" lineno="528">
 <arguments repr="url: str, method: str, dto: Dto, conflict_status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -529,26 +409,12 @@
 </arguments>
 <returntype name="dict" typedoc="dictionary">
 <type name="str" typedoc="string"/>
-<type name="Union" union="true">
-<type name="dict" typedoc="dictionary">
-<type name="str" typedoc="string"/>
 <type name="JSON"/>
-</type>
-<type name="list" typedoc="list">
-<type name="JSON"/>
-</type>
-<type name="str" typedoc="string"/>
-<type name="bytes" typedoc="bytes"/>
-<type name="int" typedoc="integer"/>
-<type name="float" typedoc="float"/>
-<type name="bool" typedoc="boolean"/>
-<type name="None" typedoc="None"/>
-</type>
 </returntype>
 <doc>&lt;p&gt;Return &lt;span class="name"&gt;json_data&lt;/span&gt; based on the &lt;span class="name"&gt;UniquePropertyValueConstraint&lt;/span&gt; that must be returned by the &lt;span class="name"&gt;get_relations&lt;/span&gt; implementation on the &lt;span class="name"&gt;dto&lt;/span&gt; for the given &lt;span class="name"&gt;conflict_status_code&lt;/span&gt;.&lt;/p&gt;</doc>
 <shortdoc>Return `json_data` based on the `UniquePropertyValueConstraint` that must be returned by the `get_relations` implementation on the `dto` for the given `conflict_status_code`.</shortdoc>
 </kw>
-<kw name="Get Parameterized Path From Url" lineno="591">
+<kw name="Get Parameterized Path From Url" lineno="578">
 <arguments repr="url: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -559,7 +425,7 @@
 <doc>&lt;p&gt;Return the path as found in the &lt;span class="name"&gt;paths&lt;/span&gt; section based on the given &lt;span class="name"&gt;url&lt;/span&gt;.&lt;/p&gt;</doc>
 <shortdoc>Return the path as found in the `paths` section based on the given `url`.</shortdoc>
 </kw>
-<kw name="Get Request Data" lineno="474">
+<kw name="Get Request Data" lineno="478">
 <arguments repr="path: str, method: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
@@ -574,8 +440,8 @@
 <doc>&lt;p&gt;Return an object with valid request data for body, headers and query params.&lt;/p&gt;</doc>
 <shortdoc>Return an object with valid request data for body, headers and query params.</shortdoc>
 </kw>
-<kw name="Get Request Values" lineno="433">
-<arguments repr="path: str, method: str, overrides: Mapping[str, object] = {}">
+<kw name="Get Request Values" lineno="437">
+<arguments repr="path: str, method: str, overrides: Mapping[str, JSON] = {}">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
 <type name="str" typedoc="string"/>
@@ -584,11 +450,11 @@
 <name>method</name>
 <type name="str" typedoc="string"/>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="overrides: Mapping[str, object] = {}">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="overrides: Mapping[str, JSON] = {}">
 <name>overrides</name>
 <type name="Mapping" typedoc="dictionary">
 <type name="str" typedoc="string"/>
-<type name="object"/>
+<type name="JSON"/>
 </type>
 <default>{}</default>
 </arg>
@@ -597,7 +463,7 @@
 <doc>&lt;p&gt;Return an object with all (valid) request values needed to make a request.&lt;/p&gt;</doc>
 <shortdoc>Return an object with all (valid) request values needed to make a request.</shortdoc>
 </kw>
-<kw name="Get Valid Id For Path" lineno="579">
+<kw name="Get Valid Id For Path" lineno="566">
 <arguments repr="path: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
@@ -613,7 +479,7 @@
 &lt;p&gt;To prevent resource conflicts with other test cases, a new resource is created (by a POST operation) if possible.&lt;/p&gt;</doc>
 <shortdoc>Support keyword that returns the `id` for an existing resource at `path`.</shortdoc>
 </kw>
-<kw name="Get Valid Url" lineno="560">
+<kw name="Get Valid Url" lineno="547">
 <arguments repr="path: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
@@ -626,8 +492,8 @@
 &lt;p&gt;&amp;gt; Note: if valid ids cannot be retrieved within the scope of the API, the &lt;span class="name"&gt;PathPropertiesConstraint&lt;/span&gt; Relation can be used. More information can be found &lt;a href="https://marketsquare.github.io/robotframework-openapitools/advanced_use.html"&gt;here&lt;/a&gt;.&lt;/p&gt;</doc>
 <shortdoc>This keyword returns a valid url for the given `path`.</shortdoc>
 </kw>
-<kw name="Perform Validated Request" lineno="704">
-<arguments repr="path: str, status_code: int, request_values: RequestValues, original_data: Mapping[str, object] = {}">
+<kw name="Perform Validated Request" lineno="691">
+<arguments repr="path: str, status_code: int, request_values: RequestValues, original_data: Mapping[str, JSON] = {}">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
 <type name="str" typedoc="string"/>
@@ -640,11 +506,11 @@
 <name>request_values</name>
 <type name="RequestValues"/>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="original_data: Mapping[str, object] = {}">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="original_data: Mapping[str, JSON] = {}">
 <name>original_data</name>
 <type name="Mapping" typedoc="dictionary">
 <type name="str" typedoc="string"/>
-<type name="object"/>
+<type name="JSON"/>
 </type>
 <default>{}</default>
 </arg>
@@ -652,7 +518,7 @@
 <doc>&lt;p&gt;This keyword first calls the Authorized Request keyword, then the Validate Response keyword and finally validates, for &lt;span class="name"&gt;DELETE&lt;/span&gt; operations, whether the target resource was indeed deleted (OK response) or not (error responses).&lt;/p&gt;</doc>
 <shortdoc>This keyword first calls the Authorized Request keyword, then the Validate Response keyword and finally validates, for `DELETE` operations, whether the target resource was indeed deleted (OK response) or not (error responses).</shortdoc>
 </kw>
-<kw name="Set Auth" lineno="411">
+<kw name="Set Auth" lineno="415">
 <arguments repr="auth: AuthBase">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="auth: AuthBase">
 <name>auth</name>
@@ -663,7 +529,7 @@
 &lt;p&gt;After calling this keyword, subsequent requests will use the provided &lt;span class="name"&gt;auth&lt;/span&gt; instance.&lt;/p&gt;</doc>
 <shortdoc>Set the `auth` used for authentication after the library is imported.</shortdoc>
 </kw>
-<kw name="Set Basic Auth" lineno="399">
+<kw name="Set Basic Auth" lineno="403">
 <arguments repr="username: str, password: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="username: str">
 <name>username</name>
@@ -678,7 +544,7 @@
 &lt;p&gt;After calling this keyword, subsequent requests will use the provided credentials.&lt;/p&gt;</doc>
 <shortdoc>Set the `username` and `password` used for basic authentication after the library is imported.</shortdoc>
 </kw>
-<kw name="Set Extra Headers" lineno="421">
+<kw name="Set Extra Headers" lineno="425">
 <arguments repr="extra_headers: dict[str, str]">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="extra_headers: dict[str, str]">
 <name>extra_headers</name>
@@ -692,7 +558,7 @@
 &lt;p&gt;After calling this keyword, subsequent requests will use the provided &lt;span class="name"&gt;extra_headers&lt;/span&gt;.&lt;/p&gt;</doc>
 <shortdoc>Set the `extra_headers` used in requests after the library is imported.</shortdoc>
 </kw>
-<kw name="Set Origin" lineno="376">
+<kw name="Set Origin" lineno="380">
 <arguments repr="origin: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="origin: str">
 <name>origin</name>
@@ -704,7 +570,7 @@
 &lt;p&gt;In combination with OpenApiLibCore, the &lt;span class="name"&gt;origin&lt;/span&gt; can be used at any point to target another server that hosts an API that complies to the same OAS.&lt;/p&gt;</doc>
 <shortdoc>Set the `origin` after the library is imported.</shortdoc>
 </kw>
-<kw name="Set Security Token" lineno="390">
+<kw name="Set Security Token" lineno="394">
 <arguments repr="security_token: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="security_token: str">
 <name>security_token</name>
@@ -715,56 +581,8 @@
 &lt;p&gt;After calling this keyword, subsequent requests will use the provided token.&lt;/p&gt;</doc>
 <shortdoc>Set the `security_token` after the library is imported.</shortdoc>
 </kw>
-<kw name="Validate Resource Properties" lineno="779">
-<arguments repr="resource: dict[str, dict[str, JSON] | list[JSON] | str | bytes | int | float | bool | None], schema: dict[str, dict[str, JSON] | list[JSON] | str | bytes | int | float | bool | None]">
-<arg kind="POSITIONAL_OR_NAMED" required="true" repr="resource: dict[str, dict[str, JSON] | list[JSON] | str | bytes | int | float | bool | None]">
-<name>resource</name>
-<type name="dict" typedoc="dictionary">
-<type name="str" typedoc="string"/>
-<type name="Union" union="true">
-<type name="dict" typedoc="dictionary">
-<type name="str" typedoc="string"/>
-<type name="JSON"/>
-</type>
-<type name="list" typedoc="list">
-<type name="JSON"/>
-</type>
-<type name="str" typedoc="string"/>
-<type name="bytes" typedoc="bytes"/>
-<type name="int" typedoc="integer"/>
-<type name="float" typedoc="float"/>
-<type name="bool" typedoc="boolean"/>
-<type name="None" typedoc="None"/>
-</type>
-</type>
-</arg>
-<arg kind="POSITIONAL_OR_NAMED" required="true" repr="schema: dict[str, dict[str, JSON] | list[JSON] | str | bytes | int | float | bool | None]">
-<name>schema</name>
-<type name="dict" typedoc="dictionary">
-<type name="str" typedoc="string"/>
-<type name="Union" union="true">
-<type name="dict" typedoc="dictionary">
-<type name="str" typedoc="string"/>
-<type name="JSON"/>
-</type>
-<type name="list" typedoc="list">
-<type name="JSON"/>
-</type>
-<type name="str" typedoc="string"/>
-<type name="bytes" typedoc="bytes"/>
-<type name="int" typedoc="integer"/>
-<type name="float" typedoc="float"/>
-<type name="bool" typedoc="boolean"/>
-<type name="None" typedoc="None"/>
-</type>
-</type>
-</arg>
-</arguments>
-<doc>&lt;p&gt;Validate that the &lt;span class="name"&gt;resource&lt;/span&gt; does not contain any properties that are not defined in the &lt;span class="name"&gt;schema_properties&lt;/span&gt;.&lt;/p&gt;</doc>
-<shortdoc>Validate that the `resource` does not contain any properties that are not defined in the `schema_properties`.</shortdoc>
-</kw>
-<kw name="Validate Response" lineno="750">
-<arguments repr="path: str, response: Response, original_data: Mapping[str, object] = {}">
+<kw name="Validate Response" lineno="737">
+<arguments repr="path: str, response: Response, original_data: Mapping[str, JSON] = {}">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
 <type name="str" typedoc="string"/>
@@ -773,11 +591,11 @@
 <name>response</name>
 <type name="Response"/>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="original_data: Mapping[str, object] = {}">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="original_data: Mapping[str, JSON] = {}">
 <name>original_data</name>
 <type name="Mapping" typedoc="dictionary">
 <type name="str" typedoc="string"/>
-<type name="object"/>
+<type name="JSON"/>
 </type>
 <default>{}</default>
 </arg>
@@ -793,7 +611,7 @@
 &lt;/ul&gt;</doc>
 <shortdoc>Validate the `response` by performing the following validations: - validate the `response` against the openapi schema for the `path` - validate that the response does not contain extra properties - validate that a href, if present, refers to the correct resource - validate that the value for a property that is in the response is equal to     the property value that was send - validate that no `original_data` is preserved when performing a PUT operation - validate that a PATCH operation only updates the provided properties</shortdoc>
 </kw>
-<kw name="Validate Response Using Validator" lineno="724">
+<kw name="Validate Response Using Validator" lineno="711">
 <arguments repr="response: Response">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="response: Response">
 <name>response</name>
@@ -803,17 +621,17 @@
 <doc>&lt;p&gt;Validate the &lt;span class="name"&gt;response&lt;/span&gt; against the OpenAPI Spec that is loaded during library initialization.&lt;/p&gt;</doc>
 <shortdoc>Validate the `response` against the OpenAPI Spec that is loaded during library initialization.</shortdoc>
 </kw>
-<kw name="Validate Send Response" lineno="793">
-<arguments repr="response: Response, original_data: Mapping[str, object] = {}">
+<kw name="Validate Send Response" lineno="767">
+<arguments repr="response: Response, original_data: Mapping[str, JSON] = {}">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="response: Response">
 <name>response</name>
 <type name="Response"/>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="original_data: Mapping[str, object] = {}">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="original_data: Mapping[str, JSON] = {}">
 <name>original_data</name>
 <type name="Mapping" typedoc="dictionary">
 <type name="str" typedoc="string"/>
-<type name="object"/>
+<type name="JSON"/>
 </type>
 <default>{}</default>
 </arg>
@@ -843,31 +661,6 @@
 </accepts>
 <usages>
 <usage>__init__</usage>
-<usage>Assert Href To Resource Is Valid</usage>
-<usage>Authorized Request</usage>
-<usage>Get Invalid Json Data</usage>
-<usage>Get Invalidated Parameters</usage>
-<usage>Get Json Data For Dto Class</usage>
-<usage>Get Json Data With Conflict</usage>
-<usage>Validate Resource Properties</usage>
-</usages>
-</type>
-<type name="bytes" type="Standard">
-<doc>&lt;p&gt;Strings are converted to bytes so that each Unicode code point below 256 is directly mapped to a matching byte. Higher code points are not allowed. Robot Framework's &lt;code&gt;\xHH&lt;/code&gt; escape syntax is convenient with bytes having non-printable values.&lt;/p&gt;
-&lt;p&gt;Examples: &lt;code&gt;good&lt;/code&gt;, &lt;code&gt;hyvä&lt;/code&gt; (same as &lt;code&gt;hyv\xE4&lt;/code&gt;), &lt;code&gt;\x00&lt;/code&gt; (the null byte)&lt;/p&gt;</doc>
-<accepts>
-<type>string</type>
-<type>bytearray</type>
-</accepts>
-<usages>
-<usage>__init__</usage>
-<usage>Assert Href To Resource Is Valid</usage>
-<usage>Authorized Request</usage>
-<usage>Get Invalid Json Data</usage>
-<usage>Get Invalidated Parameters</usage>
-<usage>Get Json Data For Dto Class</usage>
-<usage>Get Json Data With Conflict</usage>
-<usage>Validate Resource Properties</usage>
 </usages>
 </type>
 <type name="dictionary" type="Standard">
@@ -882,14 +675,12 @@
 <usage>__init__</usage>
 <usage>Assert Href To Resource Is Valid</usage>
 <usage>Authorized Request</usage>
-<usage>Get Invalid Json Data</usage>
+<usage>Get Invalid Body Data</usage>
 <usage>Get Invalidated Parameters</usage>
-<usage>Get Json Data For Dto Class</usage>
 <usage>Get Json Data With Conflict</usage>
 <usage>Get Request Values</usage>
 <usage>Perform Validated Request</usage>
 <usage>Set Extra Headers</usage>
-<usage>Validate Resource Properties</usage>
 <usage>Validate Response</usage>
 <usage>Validate Send Response</usage>
 </usages>
@@ -903,15 +694,7 @@
 <type>Real</type>
 </accepts>
 <usages>
-<usage>__init__</usage>
-<usage>Assert Href To Resource Is Valid</usage>
-<usage>Authorized Request</usage>
-<usage>Get Invalid Json Data</usage>
-<usage>Get Invalidated Parameters</usage>
-<usage>Get Json Data For Dto Class</usage>
-<usage>Get Json Data With Conflict</usage>
 <usage>Get Valid Id For Path</usage>
-<usage>Validate Resource Properties</usage>
 </usages>
 </type>
 <type name="integer" type="Standard">
@@ -925,16 +708,12 @@
 </accepts>
 <usages>
 <usage>__init__</usage>
-<usage>Assert Href To Resource Is Valid</usage>
-<usage>Authorized Request</usage>
-<usage>Get Invalid Json Data</usage>
+<usage>Get Invalid Body Data</usage>
 <usage>Get Invalidated Parameters</usage>
 <usage>Get Invalidated Url</usage>
-<usage>Get Json Data For Dto Class</usage>
 <usage>Get Json Data With Conflict</usage>
 <usage>Get Valid Id For Path</usage>
 <usage>Perform Validated Request</usage>
-<usage>Validate Resource Properties</usage>
 </usages>
 </type>
 <type name="list" type="Standard">
@@ -947,14 +726,7 @@
 </accepts>
 <usages>
 <usage>__init__</usage>
-<usage>Assert Href To Resource Is Valid</usage>
-<usage>Authorized Request</usage>
 <usage>Get Ids From Url</usage>
-<usage>Get Invalid Json Data</usage>
-<usage>Get Invalidated Parameters</usage>
-<usage>Get Json Data For Dto Class</usage>
-<usage>Get Json Data With Conflict</usage>
-<usage>Validate Resource Properties</usage>
 </usages>
 </type>
 <type name="None" type="Standard">
@@ -964,13 +736,7 @@
 </accepts>
 <usages>
 <usage>__init__</usage>
-<usage>Assert Href To Resource Is Valid</usage>
 <usage>Authorized Request</usage>
-<usage>Get Invalid Json Data</usage>
-<usage>Get Invalidated Parameters</usage>
-<usage>Get Json Data For Dto Class</usage>
-<usage>Get Json Data With Conflict</usage>
-<usage>Validate Resource Properties</usage>
 </usages>
 </type>
 <type name="Path" type="Standard">
@@ -995,10 +761,9 @@
 <usage>Authorized Request</usage>
 <usage>Ensure In Use</usage>
 <usage>Get Ids From Url</usage>
-<usage>Get Invalid Json Data</usage>
+<usage>Get Invalid Body Data</usage>
 <usage>Get Invalidated Parameters</usage>
 <usage>Get Invalidated Url</usage>
-<usage>Get Json Data For Dto Class</usage>
 <usage>Get Json Data With Conflict</usage>
 <usage>Get Parameterized Path From Url</usage>
 <usage>Get Request Data</usage>
@@ -1010,7 +775,6 @@
 <usage>Set Extra Headers</usage>
 <usage>Set Origin</usage>
 <usage>Set Security Token</usage>
-<usage>Validate Resource Properties</usage>
 <usage>Validate Response</usage>
 <usage>Validate Send Response</usage>
 </usages>

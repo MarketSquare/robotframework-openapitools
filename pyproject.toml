@@ -1,11 +1,9 @@
 [project]
 name="robotframework-openapitools"
-version = "1.0.0b3"
+version = "1.0.0b4"
 description = "A set of Robot Framework libraries to test APIs for which the OAS is available."
 authors = [
     {name = "Robin Mackaij", email = "r.a.mackaij@gmail.com"},
-    {name = "Bartlomiej Hirsz", email = "bartek.hirsz@gmail.com"},
-    {name = "Mateusz Nojek", email = "matnojek@gmail.com"},
 ]
 maintainers = [
     {name = "Robin Mackaij", email = "r.a.mackaij@gmail.com"},
