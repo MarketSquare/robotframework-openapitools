@@ -82,6 +82,16 @@ def utests(context: Context) -> None:
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
 
+    cmd = [
+        "coverage",
+        "run",
+        "-m",
+        "unittest",
+        "discover ",
+        f"{ROOT}/tests/libgen/unittests",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False)
+
 
 @task(libgen, libgen_with_envs)
 def atests(context: Context) -> None:
