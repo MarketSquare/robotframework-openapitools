@@ -24,7 +24,7 @@ def get_safe_name_for_oas_name(oas_name: str) -> str:
         PARAMETER_REGISTRY[oas_name] = oas_name
         return oas_name
 
-    safe_name = _convert_string_to_python_identifier(oas_name)
+    safe_name = convert_string_to_python_identifier(oas_name)
 
     if safe_name not in PARAMETER_REGISTRY:
         PARAMETER_REGISTRY[safe_name] = oas_name
@@ -36,7 +36,7 @@ def get_safe_name_for_oas_name(oas_name: str) -> str:
     # We're dealing with multiple oas_names that convert to the same safe_name.
     # To resolve this, a more verbose safe_name is generated. This is less user-friendly
     # but necessary to ensure an one-to-one mapping.
-    verbose_safe_name = _convert_string_to_python_identifier(oas_name, verbose=True)
+    verbose_safe_name = convert_string_to_python_identifier(oas_name, verbose=True)
     if verbose_safe_name not in PARAMETER_REGISTRY:
         PARAMETER_REGISTRY[verbose_safe_name] = oas_name
     return verbose_safe_name
@@ -46,7 +46,7 @@ def _is_python_safe(name: str) -> bool:
     return name.isidentifier()
 
 
-def _convert_string_to_python_identifier(string: str, verbose: bool = False) -> str:
+def convert_string_to_python_identifier(string: str, verbose: bool = False) -> str:
     def _convert_string_to_python_identifier() -> Generator[str, None, None]:
         string_iterator = iter(string)
 
