@@ -8,7 +8,7 @@ from typing import Any
 
 from robot.api import logger
 
-import OpenApiLibCore.path_functions as pf
+import OpenApiLibCore.path_functions as _path_functions
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.dto_base import (
     Dto,
@@ -72,7 +72,7 @@ def get_dict_data_for_dto_class(
     property_names = get_property_names_to_process(schema=schema, dto_class=dto_class)
 
     for property_name in property_names:
-        property_schema = schema.properties.root[property_name]
+        property_schema = schema.properties.root[property_name]  # type: ignore[union-attr]
         if property_schema.readOnly:
             continue
 
@@ -178,7 +178,7 @@ def get_property_names_to_process(
 ) -> list[str]:
     property_names = []
 
-    for property_name in schema.properties.root:
+    for property_name in schema.properties.root:  # type: ignore[union-attr]
         # register the oas_name
         _ = get_safe_name_for_oas_name(property_name)
         if constrained_values := get_constrained_values(
@@ -243,7 +243,7 @@ def get_dependent_id(
         except ValueError:
             return None
 
-    valid_id = pf.get_valid_id_for_path(
+    valid_id = _path_functions.get_valid_id_for_path(
         path=id_get_path, get_id_property_name=get_id_property_name
     )
     logger.debug(f"get_dependent_id for {id_get_path} returned {valid_id}")

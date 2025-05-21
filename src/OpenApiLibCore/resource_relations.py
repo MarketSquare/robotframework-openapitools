@@ -4,7 +4,7 @@ from requests import Response
 from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
-import OpenApiLibCore.path_functions as pf
+import OpenApiLibCore.path_functions as _path_functions
 from OpenApiLibCore.dto_base import IdReference
 from OpenApiLibCore.models import OpenApiObject
 from OpenApiLibCore.request_data import RequestData
@@ -22,7 +22,9 @@ def ensure_in_use(
 
     path = url.replace(base_url, "")
     path_parts = path.split("/")
-    parameterized_path = pf.get_parametrized_path(path=path, openapi_spec=openapi_spec)
+    parameterized_path = _path_functions.get_parametrized_path(
+        path=path, openapi_spec=openapi_spec
+    )
     parameterized_path_parts = parameterized_path.split("/")
     for part, param_part in zip(
         reversed(path_parts), reversed(parameterized_path_parts)

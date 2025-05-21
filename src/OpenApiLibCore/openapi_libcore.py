@@ -140,11 +140,11 @@ from robot.api.exceptions import FatalError
 from robot.libraries.BuiltIn import BuiltIn
 
 import OpenApiLibCore.data_generation as _data_generation
-import OpenApiLibCore.data_invalidation as di
-import OpenApiLibCore.path_functions as pf
-import OpenApiLibCore.path_invalidation as pi
-import OpenApiLibCore.resource_relations as rr
-import OpenApiLibCore.validation as val
+import OpenApiLibCore.data_invalidation as _data_invalidation
+import OpenApiLibCore.path_functions as _path_functions
+import OpenApiLibCore.path_invalidation as _path_invalidation
+import OpenApiLibCore.resource_relations as _resource_relations
+import OpenApiLibCore.validation as _validation
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.dto_base import Dto, IdReference
 from OpenApiLibCore.dto_utils import (
@@ -184,7 +184,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         source: str,
         origin: str = "",
         base_path: str = "",
-        response_validation: val.ValidationLevel = val.ValidationLevel.WARN,
+        response_validation: _validation.ValidationLevel = _validation.ValidationLevel.WARN,
         disable_server_validation: bool = True,
         mappings_path: str | Path = "",
         invalid_property_default_response: int = 422,
@@ -500,7 +500,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         > Note: applicable UniquePropertyValueConstraint and IdReference Relations are
             considered before changes to `json_data` are made.
         """
-        return di.get_invalid_body_data(
+        return _data_invalidation.get_invalid_body_data(
             url=url,
             method=method,
             status_code=status_code,
@@ -518,7 +518,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         Returns a version of `params, headers` as present on `request_data` that has
         been modified to cause the provided `status_code`.
         """
-        return di.get_invalidated_parameters(
+        return _data_invalidation.get_invalidated_parameters(
             status_code=status_code,
             request_data=request_data,
             invalid_property_default_response=self.invalid_property_default_response,
@@ -533,7 +533,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         returned by the `get_relations` implementation on the `dto` for the given
         `conflict_status_code`.
         """
-        return di.get_json_data_with_conflict(
+        return _data_invalidation.get_json_data_with_conflict(
             url=url,
             base_url=self.base_url,
             method=method,
@@ -555,7 +555,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         `PathPropertiesConstraint` Relation can be used. More information can be found
         [https://marketsquare.github.io/robotframework-openapitools/advanced_use.html | here].
         """
-        return pf.get_valid_url(
+        return _path_functions.get_valid_url(
             path=path,
             base_url=self.base_url,
             get_dto_class=self.get_dto_class,
@@ -570,7 +570,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         To prevent resource conflicts with other test cases, a new resource is created
         (by a POST operation) if possible.
         """
-        return pf.get_valid_id_for_path(
+        return _path_functions.get_valid_id_for_path(
             path=path, get_id_property_name=self.get_id_property_name
         )
 
@@ -583,7 +583,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         path_parts = path.split("/")
         # first part will be '' since a path starts with /
         path_parts.pop(0)
-        parameterized_path = pf.get_parametrized_path(
+        parameterized_path = _path_functions.get_parametrized_path(
             path=path, openapi_spec=self.openapi_spec
         )
         return parameterized_path
@@ -594,7 +594,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         Perform a GET request on the `url` and return the list of resource
         `ids` from the response.
         """
-        return pf.get_ids_from_url(
+        return _path_functions.get_ids_from_url(
             url=url, get_id_property_name=self.get_id_property_name
         )
 
@@ -613,7 +613,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
 
         Raises ValueError if the valid_url cannot be invalidated.
         """
-        return pi.get_invalidated_url(
+        return _path_invalidation.get_invalidated_url(
             valid_url=valid_url,
             path=path,
             base_url=self.base_url,
@@ -629,7 +629,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         Ensure that the (right-most) `id` of the resource referenced by the `url`
         is used by the resource defined by the `resource_relation`.
         """
-        rr.ensure_in_use(
+        _resource_relations.ensure_in_use(
             url=url,
             base_url=self.base_url,
             openapi_spec=self.openapi_spec,
@@ -700,7 +700,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         Response keyword and finally validates, for `DELETE` operations, whether
         the target resource was indeed deleted (OK response) or not (error responses).
         """
-        val.perform_validated_request(
+        _validation.perform_validated_request(
             path=path,
             status_code=status_code,
             request_values=request_values,
@@ -713,7 +713,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         Validate the `response` against the OpenAPI Spec that is
         loaded during library initialization.
         """
-        val.validate_response_using_validator(
+        _validation.validate_response_using_validator(
             response=response,
             response_validator=self.response_validator,
         )
@@ -726,7 +726,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         Attempt to GET the resource referenced by the `href` and validate it's equal
         to the provided `referenced_resource` object / dictionary.
         """
-        val.assert_href_to_resource_is_valid(
+        _validation.assert_href_to_resource_is_valid(
             href=href,
             origin=self.origin,
             base_url=self.base_url,
@@ -750,7 +750,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         - validate that no `original_data` is preserved when performing a PUT operation
         - validate that a PATCH operation only updates the provided properties
         """
-        val.validate_response(
+        _validation.validate_response(
             path=path,
             response=response,
             response_validator=self.response_validator,
@@ -774,7 +774,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         In case a PATCH request, validate that only the properties that were patched
         have changed and that other properties are still at their pre-patch values.
         """
-        val.validate_send_response(response=response, original_data=original_data)
+        _validation.validate_send_response(
+            response=response, original_data=original_data
+        )
 
     # endregion
 
@@ -844,7 +846,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             refstring: str,  # pylint: disable=unused-argument
             recursions: JSON,  # pylint: disable=unused-argument
         ) -> JSON:
-            return self._recursion_default
+            return self._recursion_default  # pragma: no cover
 
         try:
             # Since parsing of the OAS and creating the Spec can take a long time,
@@ -892,11 +894,11 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
 
             return parser, validation_spec, response_validator
 
-        except ResolutionError as exception:
+        except ResolutionError as exception:  # pragma: no cover
             raise FatalError(
                 f"ResolutionError while trying to load openapi spec: {exception}"
             ) from exception
-        except ValidationError as exception:
+        except ValidationError as exception:  # pragma: no cover
             raise FatalError(
                 f"ValidationError while trying to load openapi spec: {exception}"
             ) from exception
