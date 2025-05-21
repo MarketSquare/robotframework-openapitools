@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiLibCore" type="LIBRARY" format="HTML" scope="SUITE" generated="2025-05-11T17:22:53+00:00" specversion="6" source="/workspaces/robotframework-openapitools/src/OpenApiLibCore/openapi_libcore.py" lineno="174">
-<version>1.0.0b3</version>
+<keywordspec name="OpenApiLibCore" type="LIBRARY" format="HTML" scope="SUITE" generated="2025-05-21T10:07:29+00:00" specversion="6" source="/workspaces/robotframework-openapitools/src/OpenApiLibCore/openapi_libcore.py" lineno="174">
+<version>1.0.0b4</version>
 <doc>&lt;p&gt;Main class providing the keywords and core logic to interact with an OpenAPI server.&lt;/p&gt;
 &lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapi-libcore"&gt;library page&lt;/a&gt; for an introduction.&lt;/p&gt;</doc>
 <tags>
