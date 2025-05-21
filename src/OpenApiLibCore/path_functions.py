@@ -75,6 +75,7 @@ def get_valid_url(
         raise ValueError(
             f"{path} not found in paths section of the OpenAPI document."
         ) from None
+    # FIXME: method should be irrelevant for this mapping and apply to the path alone
     dto_class = get_dto_class(path=path, method="get")
     relations = dto_class.get_relations()
     paths = [p.path for p in relations if isinstance(p, PathPropertiesConstraint)]
