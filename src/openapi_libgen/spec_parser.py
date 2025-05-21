@@ -79,7 +79,7 @@ def get_keyword_signature(operation_details: OperationDetails) -> str:
     else:
         keyword_name = remove_unsafe_characters_from_string(
             f"{operation_details.method}_{operation_details.path}"
-        )
+        ).lower()
 
     parameters = operation_details.parameters or []
     path_parameters = [p for p in parameters if p.in_ == "path" and p.schema_]
@@ -93,7 +93,7 @@ def get_keyword_signature(operation_details: OperationDetails) -> str:
     keyword_argument_names: set[str] = set()
 
     for parameter in path_parameters:
-        annotation = f"{parameter.schema_.annotation_string} = UNSET"
+        annotation = f"{parameter.schema_.annotation_string} = UNSET"  # type: ignore[union-attr]
         safe_name = get_safe_name_for_oas_name(parameter.name)
         keyword_argument_names.add(safe_name)
         argument = f", {safe_name}: {annotation}"
@@ -120,7 +120,7 @@ def get_keyword_signature(operation_details: OperationDetails) -> str:
             arguments += argument
 
     for parameter in query_parameters:
-        annotation = f"{parameter.schema_.annotation_string} = UNSET"
+        annotation = f"{parameter.schema_.annotation_string} = UNSET"  # type: ignore[union-attr]
         safe_name = get_safe_name_for_oas_name(parameter.name)
         if safe_name in keyword_argument_names:
             safe_name = "query_" + safe_name
@@ -129,7 +129,7 @@ def get_keyword_signature(operation_details: OperationDetails) -> str:
         arguments += argument
 
     for parameter in header_parameters:
-        annotation = f"{parameter.schema_.annotation_string} = UNSET"
+        annotation = f"{parameter.schema_.annotation_string} = UNSET"  # type: ignore[union-attr]
         safe_name = get_safe_name_for_oas_name(parameter.name)
         if safe_name in keyword_argument_names:
             safe_name = "header_" + safe_name
