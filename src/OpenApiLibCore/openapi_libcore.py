@@ -128,10 +128,6 @@ from types import MappingProxyType
 from typing import Any, Generator
 
 from openapi_core import Config, OpenAPI, Spec
-from openapi_core.contrib.requests import (
-    RequestsOpenAPIRequest,
-    RequestsOpenAPIResponse,
-)
 from openapi_core.validation.exceptions import ValidationError
 from prance import ResolvingParser
 from prance.util.url import ResolutionError
@@ -157,6 +153,10 @@ from OpenApiLibCore.dto_utils import (
     get_id_property_name,
 )
 from OpenApiLibCore.oas_cache import PARSER_CACHE, CachedParser
+from OpenApiLibCore.parameter_utils import (
+    get_oas_name_from_safe_name,
+    register_path_parameters,
+)
 from OpenApiLibCore.protocols import ResponseValidatorType
 from OpenApiLibCore.request_data import RequestData, RequestValues
 from OpenApiLibCore.value_utils import FAKE
@@ -430,6 +430,47 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
     # endregion
     # region: data generation keywords
     @keyword
+    def get_request_values(
+        self,
+        path: str,
+        method: str,
+        overrides: Mapping[str, object] = default_any_mapping,
+    ) -> RequestValues:
+        """Return an object with all (valid) request values needed to make a request."""
+        json_data: dict[str, JSON] = {}
+
+        url: str = run_keyword("get_valid_url", path)
+        request_data: RequestData = run_keyword("get_request_data", path, method)
+        params = request_data.params
+        headers = request_data.headers
+        if request_data.has_body:
+            json_data = request_data.dto.as_dict()
+
+        request_values = RequestValues(
+            url=url,
+            method=method,
+            params=params,
+            headers=headers,
+            json_data=json_data,
+        )
+
+        for name, value in overrides.items():
+            if name.startswith(("body_", "header_", "query_")):
+                location, _, name_ = name.partition("_")
+                oas_name = get_oas_name_from_safe_name(name_)
+                if location == "body":
+                    request_values.override_body_value(name=oas_name, value=value)
+                if location == "header":
+                    request_values.override_header_value(name=oas_name, value=value)
+                if location == "query":
+                    request_values.override_param_value(name=oas_name, value=str(value))
+            else:
+                oas_name = get_oas_name_from_safe_name(name)
+                request_values.override_request_value(name=oas_name, value=value)
+
+        return request_values
+
+    @keyword
     def get_request_data(self, path: str, method: str) -> RequestData:
         """Return an object with valid request data for body, headers and query params."""
         return _data_generation.get_request_data(
@@ -680,15 +721,12 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         )
 
     @keyword
-    def validate_response_using_validator(
-        self, request: RequestsOpenAPIRequest, response: RequestsOpenAPIResponse
-    ) -> None:
+    def validate_response_using_validator(self, response: Response) -> None:
         """
-        Validate the `response` for a given `request` against the OpenAPI Spec that is
+        Validate the `response` against the OpenAPI Spec that is
         loaded during library initialization.
         """
         val.validate_response_using_validator(
-            request=request,
             response=response,
             response_validator=self.response_validator,
         )
@@ -788,7 +826,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
     @cached_property
     def _openapi_spec(self) -> dict[str, JSON]:
         parser, _, _ = self._load_specs_and_validator()
-        return parser.specification  # type: ignore[no-any-return]
+        spec_dict: dict[str, JSON] = parser.specification
+        register_path_parameters(spec_dict["paths"])
+        return spec_dict
 
     @cached_property
     def response_validator(
@@ -826,8 +866,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         ResponseValidatorType,
     ]:
         def recursion_limit_handler(
-            limit: int,
-            refstring: str,
+            limit: int,  # pylint: disable=unused-argument
+            refstring: str,  # pylint: disable=unused-argument
             recursions: JSON,  # pylint: disable=unused-argument
         ) -> JSON:
             return self._recursion_default

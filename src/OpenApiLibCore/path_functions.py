@@ -207,3 +207,9 @@ def get_ids_from_url(
         return [valid_id]
     valid_ids = [item[id_property] for item in response_data["items"]]
     return valid_ids
+
+
+def substitute_path_parameters(path: str, substitution_dict: dict[str, str]) -> str:
+    for path_parameter, substitution_value in substitution_dict.items():
+        path = path.replace("{" + path_parameter + "}", str(substitution_value))
+    return path

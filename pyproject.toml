@@ -1,6 +1,6 @@
 [project]
 name="robotframework-openapitools"
-version = "1.0.0"
+version = "1.0.0b3"
 description = "A set of Robot Framework libraries to test APIs for which the OAS is available."
 authors = [
     {name = "Robin Mackaij", email = "r.a.mackaij@gmail.com"},
@@ -61,14 +61,17 @@ lint-and-format = [
 [project.urls]
 homepage = "https://github.com/MarketSquare/robotframework-openapitools"
 
+[project.scripts]
+generate-library = 'openapi_libgen.command_line:main'
+
 [tool.poetry]
 requires-poetry = ">=2.0"
 packages = [
     {include = "OpenApiDriver", from = "src"},
     {include = "OpenApiLibCore", from = "src"},
-    {include = "roboswag", from = "src"},
+    {include = "openapi_libgen", from = "src"},
 ]
-include = ["*.libspec"]
+include = ["*.libspec", "*.jinja"]
 
 [tool.poetry.group.dev.dependencies]
 invoke = ">=2.2.0"
@@ -115,9 +118,7 @@ check_untyped_defs = true
 disallow_untyped_defs = true
 strict = true
 show_error_codes = true
-exclude = [
-  "src/roboswag",
-]
+exclude = []
 
 [[tool.mypy.overrides]]
 module = [
@@ -130,7 +131,7 @@ ignore_missing_imports = true
 
 [tool.pyright]
 include = ["src"]
-exclude = ["src/roboswag"]
+exclude = []
 
 [tool.ruff]
 line-length = 88

@@ -1,0 +1,30 @@
+# pyright: reportArgumentType=false
+from typing import Any, Iterable
+
+from requests import Response
+from robot.api.deco import keyword, library
+from robot.libraries.BuiltIn import BuiltIn
+
+from OpenApiLibCore import UNSET, OpenApiLibCore, RequestValues
+from OpenApiLibCore.path_functions import substitute_path_parameters
+
+run_keyword = BuiltIn().run_keyword
+
+
+@library(scope="SUITE", doc_format="ROBOT")
+class {{ library_name }}(OpenApiLibCore):
+    """Generated library with keywords for all the path operations."""
+{% for keyword in keywords %}
+    {{ keyword }}
+{% endfor %}
+    @staticmethod
+    def _perform_request(request_values: RequestValues) -> Response:
+        response: Response = run_keyword(
+            "authorized_request",
+            request_values.url,
+            request_values.method,
+            request_values.params,
+            request_values.headers,
+            request_values.json_data,
+        )
+        return response

@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, unused-argument
+import os
 import pathlib
 import subprocess
 from importlib.metadata import version
@@ -27,6 +28,23 @@ def start_api(context: Context) -> None:
 
 
 @task
+def libgen(context: Context) -> None:
+    env = os.environ.copy()
+    env["USE_SUMMARY_AS_KEYWORD_NAME"] = "true"
+    env["EXPAND_BODY_ARGUMENTS"] = "false"
+    cmd = [
+        "generate-library",
+        "-n",
+        "'My Generated Library'",
+        "-s",
+        "http://127.0.0.1:8000/openapi.json",
+        "-d",
+        f"{ROOT}/tests/generated/",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False, env=env)
+
+
+@task
 def utests(context: Context) -> None:
     cmd = [
         "coverage",
@@ -49,18 +67,18 @@ def utests(context: Context) -> None:
     subprocess.run(" ".join(cmd), shell=True, check=False)
 
 
-@task
+@task(libgen)
 def atests(context: Context) -> None:
     cmd = [
         "coverage",
         "run",
         "-m",
         "robot",
+        f"--pythonpath={ROOT}/tests/generated",
         f"--argumentfile={ROOT}/tests/rf_cli.args",
         f"--variable=root:{ROOT}",
         f"--outputdir={ROOT}/tests/logs",
         "--loglevel=TRACE:DEBUG",
-        "--exclude=roboswag",
         f"{ROOT}/tests",
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
@@ -78,7 +96,7 @@ def type_check(context: Context) -> None:
     subprocess.run(f"mypy {ROOT}/src", shell=True, check=False)
     subprocess.run(f"pyright {ROOT}/src", shell=True, check=False)
     subprocess.run(
-        f"robotcode analyze code {ROOT}/tests/driver {ROOT}/tests/libcore",
+        f"robotcode analyze code {ROOT}/tests",
         shell=True,
         check=False,
     )
@@ -90,7 +108,6 @@ def lint(context: Context) -> None:
     subprocess.run(f"ruff check {ROOT}/src/OpenApiLibCore", shell=True, check=False)
     subprocess.run(f"pylint {ROOT}/src/OpenApiDriver", shell=True, check=False)
     subprocess.run(f"pylint {ROOT}/src/OpenApiLibCore", shell=True, check=False)
-    # subprocess.run(f"pylint {ROOT}/src/roboswag", shell=True, check=False)
     subprocess.run(f"robocop {ROOT}/tests", shell=True, check=False)
 
 

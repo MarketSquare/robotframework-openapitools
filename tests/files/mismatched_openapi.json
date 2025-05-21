@@ -8,7 +8,6 @@
         "/": {
             "get": {
                 "summary": "Get Root",
-                "operationId": "get_root__get",
                 "parameters": [
                     {
                         "required": false,
@@ -58,7 +57,6 @@
         "/secret_message": {
             "get": {
                 "summary": "Get Message",
-                "operationId": "get_message_secret_message_get",
                 "parameters": [
                     {
                         "required": true,
@@ -127,7 +125,6 @@
         "/events/": {
             "get": {
                 "summary": "Get Events",
-                "operationId": "get_events_events__get",
                 "parameters": [
                     {
                         "required": false,
@@ -171,7 +168,6 @@
             },
             "post": {
                 "summary": "Post Event",
-                "operationId": "post_event_events__post",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -209,7 +205,6 @@
         "/reactions/": {
             "get": {
                 "summary": "Get Reactions",
-                "operationId": "get_reactions_reactions__get",
                 "responses": {
                     "200": {
                         "description": "Successful Response",
@@ -227,7 +222,6 @@
         "/energy_label/{zipcode}/{home_number}": {
             "get": {
                 "summary": "Get Energy Label",
-                "operationId": "get_energy_label_energy_label__zipcode___home_number__get",
                 "parameters": [
                     {
                         "required": true,
@@ -289,7 +283,6 @@
         "/wagegroups": {
             "post": {
                 "summary": "Post Wagegroup",
-                "operationId": "post_wagegroup_wagegroups_post",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -337,7 +330,6 @@
         "/wagegroups/{wagegroup_id}": {
             "get": {
                 "summary": "Get Wagegroup",
-                "operationId": "get_wagegroup_wagegroups__wagegroup_id__get",
                 "parameters": [
                     {
                         "required": true,
@@ -384,7 +376,6 @@
             },
             "put": {
                 "summary": "Put Wagegroup",
-                "operationId": "put_wagegroup_wagegroups__wagegroup_id__put",
                 "parameters": [
                     {
                         "required": true,
@@ -451,7 +442,6 @@
             },
             "delete": {
                 "summary": "Delete Wagegroup",
-                "operationId": "delete_wagegroup_wagegroups__wagegroup_id__delete",
                 "parameters": [
                     {
                         "required": true,
@@ -503,7 +493,6 @@
         "/wagegroups/{wagegroup_id}/employees": {
             "get": {
                 "summary": "Get Employees In Wagegroup",
-                "operationId": "get_employees_in_wagegroup_wagegroups__wagegroup_id__employees_get",
                 "parameters": [
                     {
                         "required": true,
@@ -556,7 +545,6 @@
         "/employees": {
             "get": {
                 "summary": "Get Employees",
-                "operationId": "get_employees_employees_get",
                 "responses": {
                     "200": {
                         "description": "Successful Response",
@@ -576,7 +564,6 @@
             },
             "post": {
                 "summary": "Post Employee",
-                "operationId": "post_employee_employees_post",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -634,7 +621,6 @@
         "/employees/{employee_id}": {
             "get": {
                 "summary": "Get Employee",
-                "operationId": "get_employee_employees__employee_id__get",
                 "parameters": [
                     {
                         "required": true,
@@ -681,7 +667,6 @@
             },
             "patch": {
                 "summary": "Patch Employee",
-                "operationId": "patch_employee_employees__employee_id__patch",
                 "parameters": [
                     {
                         "required": true,
@@ -740,7 +725,6 @@
         "/available_employees": {
             "get": {
                 "summary": "Get Available Employees",
-                "operationId": "get_available_employees_available_employees_get",
                 "parameters": [
                     {
                         "required": true,

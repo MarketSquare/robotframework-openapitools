@@ -29,7 +29,7 @@ from OpenApiLibCore.openapi_libcore import (
 )
 from OpenApiLibCore.request_data import RequestData, RequestValues
 from OpenApiLibCore.validation import ValidationLevel
-from OpenApiLibCore.value_utils import IGNORE
+from OpenApiLibCore.value_utils import IGNORE, UNSET
 
 try:
     __version__ = version("robotframework-openapi-libcore")
@@ -39,6 +39,7 @@ except Exception:  # pragma: no cover pylint: disable=broad-exception-caught
 
 __all__ = [
     "IGNORE",
+    "UNSET",
     "DefaultDto",
     "Dto",
     "IdDependency",

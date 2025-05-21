@@ -19,6 +19,7 @@ from OpenApiLibCore.dto_base import (
     resolve_schema,
 )
 from OpenApiLibCore.dto_utils import DefaultDto
+from OpenApiLibCore.parameter_utils import get_safe_name_for_oas_name
 from OpenApiLibCore.protocols import GetDtoClassType, GetIdPropertyNameType
 from OpenApiLibCore.request_data import RequestData
 from OpenApiLibCore.value_utils import IGNORE, get_valid_value
@@ -220,6 +221,8 @@ def get_parameter_data(
     value: Any = None
     for parameter in parameters:
         parameter_name = parameter["name"]
+        # register the oas_name
+        _ = get_safe_name_for_oas_name(parameter_name)
         parameter_schema = resolve_schema(parameter["schema"])
         relations = [
             r for r in parameter_relations if r.property_name == parameter_name
