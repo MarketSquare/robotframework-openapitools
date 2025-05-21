@@ -279,11 +279,6 @@ def validate_send_response(
         )
         return None
 
-    # FIXME: this applies to removed code
-    # POST on /resource_type/{id}/array_item/ will return the updated {id} resource
-    # instead of a newly created resource. In this case, the send_json must be
-    # in the array of the 'array_item' property on {id}
-
     send_path: str = response.request.path_url
     response_path = response_data.get("href", None)
     if response_path and send_path not in response_path:
