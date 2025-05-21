@@ -98,7 +98,7 @@ def get_invalid_value(
     # Violate min / max values or length if possible
     try:
         values_out_of_bounds = value_schema.get_values_out_of_bounds(
-            current_value=current_value
+            current_value=current_value  # type: ignore[arg-type]
         )
         invalid_values += values_out_of_bounds
     except ValueError:

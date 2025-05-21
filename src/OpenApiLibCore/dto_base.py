@@ -149,7 +149,7 @@ class Dto(ABC):
         property_names = [r.property_name for r in relations]
         if status_code == invalid_property_default_code:
             # add all properties defined in the schema, including optional properties
-            property_names.extend((schema.properties.root.keys()))
+            property_names.extend((schema.properties.root.keys()))  # type: ignore[union-attr]
         if not property_names:
             raise ValueError(
                 f"No property can be invalidated to cause status_code {status_code}"
@@ -191,7 +191,7 @@ class Dto(ABC):
                 )
                 return properties
 
-            value_schema = schema.properties.root[property_name]
+            value_schema = schema.properties.root[property_name]  # type: ignore[union-attr]
             if isinstance(value_schema, UnionTypeSchema):
                 # Filter "type": "null" from the possible types since this indicates an
                 # optional / nullable property that can only be invalidated by sending

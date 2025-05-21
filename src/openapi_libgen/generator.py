@@ -18,7 +18,7 @@ def load_openapi_spec(
     def recursion_limit_handler(
         limit: int, refstring: str, recursions: object
     ) -> object:  # pylint: disable=unused-argument
-        return recursion_default
+        return recursion_default  # pragma: no cover
 
     parser = ResolvingParser(
         source,
@@ -69,7 +69,7 @@ def generate(
     return f"Generated {library_name} at {output_folder.resolve().as_posix()}/{module_name}"
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     source = sys.argv[1]
     destination = Path(sys.argv[2])
     library_name = sys.argv[3]

@@ -234,7 +234,7 @@ class IntegerSchema(SchemaBase[int], frozen=True):
 
         return randint(self._min_value, self._max_value)
 
-    def get_values_out_of_bounds(self, current_value: int) -> list[int]:
+    def get_values_out_of_bounds(self, current_value: int) -> list[int]:  # pylint: disable=unused-argument
         invalid_values: list[int] = []
 
         if self._min_value > self._min_int:
@@ -333,7 +333,7 @@ class NumberSchema(SchemaBase[float], frozen=True):
 
         return uniform(self._min_value, self._max_value)
 
-    def get_values_out_of_bounds(self, current_value: float) -> list[float]:
+    def get_values_out_of_bounds(self, current_value: float) -> list[float]:  # pylint: disable=unused-argument
         invalid_values: list[float] = []
 
         if self._min_value > self._min_float:
