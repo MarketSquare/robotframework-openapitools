@@ -34,7 +34,7 @@
                     "200": {
                         "description": "Successful Response",
                         "content": {
-                            "application/json": {
+                            "application/xml": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Message"
                                 }
@@ -82,7 +82,22 @@
                     "200": {
                         "description": "Successful Response",
                         "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Message"
+                                }
+                            },
                             "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Message"
+                                }
+                            },
+                            "application/jsonc": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Message"
+                                }
+                            },
+                            "application/*+json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Message"
                                 }
@@ -389,7 +404,7 @@
                 ],
                 "requestBody": {
                     "content": {
-                        "application/json": {
+                        "application/xml": {
                             "schema": {
                                 "$ref": "#/components/schemas/WageGroup"
                             }
@@ -567,6 +582,16 @@
                 "requestBody": {
                     "content": {
                         "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Employee"
+                            }
+                        },
+                        "application/jsonc": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Employee"
+                            }
+                        },
+                        "application/*+json": {
                             "schema": {
                                 "$ref": "#/components/schemas/Employee"
                             }
@@ -856,6 +881,8 @@
             "EmployeeUpdate": {
                 "title": "EmployeeUpdate",
                 "type": "object",
+                "minProperties": 1,
+                "maxProperties": 3,
                 "properties": {
                     "name": {
                         "title": "Name",

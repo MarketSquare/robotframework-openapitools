@@ -110,8 +110,14 @@ ENERGY_LABELS: dict[str, dict[int, dict[str, EnergyLabel]]] = {
     }
 }
 EVENTS: list[Event] = [
-    Event(message=Message(message="Hello?"), details=[Detail(detail="First post")]),
-    Event(message=Message(message="First!"), details=[Detail(detail="Second post")]),
+    Event(
+        message=Message(message="Hello?"),
+        details=[Detail(detail="First post")],
+    ),
+    Event(
+        message=Message(message="First!"),
+        details=[Detail(detail="Second post")],
+    ),
 ]
 
 
@@ -154,8 +160,10 @@ def get_events(
 
 # deliberate trailing /
 @app.post("/events/", status_code=201, response_model=Event)
-def post_event(event: Event) -> Event:
-    event.details.append(Detail(detail=str(datetime.datetime.now())))
+def post_event(event: Event, draft: bool = Header(False)) -> Event:
+    event.details.append(Detail(detail=f"Published {datetime.datetime.now()}"))
+    if draft:
+        event.details.append(Detail(detail="Event details subject to change."))
     EVENTS.append(event)
     return event
 

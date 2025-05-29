@@ -643,21 +643,33 @@ class RequestBodyObject(BaseModel):
     required: bool = False
     description: str = ""
 
-    @property
+    @cached_property
     def schema_(self) -> SchemaObjectTypes | None:
-        schemas = [
-            media_type.schema_
-            for mime_type, media_type in self.content.items()
-            if "json" in mime_type
-        ]
-        if None in schemas:
-            schemas.remove(None)
-        if not schemas:
+        if not self.mime_type:
             return None
 
-        if len(schemas) > 1:
-            logger.warn(f"Multiple schemas defined for request body: {self.content}")
-        return schemas.pop()
+        if len(self._json_schemas) > 1:
+            logger.info(
+                f"Multiple JSON media types defined for requestBody, "
+                f"using the first candidate from {self.content}"
+            )
+        return self._json_schemas[self.mime_type]
+
+    @cached_property
+    def mime_type(self) -> str | None:
+        if not self._json_schemas:
+            return None
+
+        return next(iter(self._json_schemas))
+
+    @cached_property
+    def _json_schemas(self) -> dict[str, SchemaObjectTypes]:
+        json_schemas = {
+            mime_type: media_type.schema_
+            for mime_type, media_type in self.content.items()
+            if "json" in mime_type and media_type.schema_ is not None
+        }
+        return json_schemas
 
 
 class HeaderObject(BaseModel): ...
@@ -671,10 +683,6 @@ class ResponseObject(BaseModel):
     content: dict[str, MediaTypeObject] = {}
     headers: dict[str, HeaderObject] = {}
     links: dict[str, LinkObject] = {}
-
-
-# class ComponentsObject(BaseModel):
-#     schemas: dict[str, SchemaObjectTypes]
 
 
 class OperationObject(BaseModel):

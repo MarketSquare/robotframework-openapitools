@@ -44,16 +44,6 @@ class TestDefaults(unittest.TestCase):
         schema = ObjectSchema()
         with self.assertRaises(NotImplementedError):
             schema.get_valid_value()
-        # value = schema.get_valid_value()
-        # self.assertIsInstance(value, dict)
-        # self.assertDictEqual(value, {})
-
-        # schema = ObjectSchema(properties={"foo": StringSchema(), "bar": NumberSchema()})
-        # self.assertRaises(NotImplementedError, schema.get_valid_value)
-        # value = schema.get_valid_value()
-        # self.assertIsInstance(value, dict)
-        # self.assertIsInstance(value["foo"], str)
-        # self.assertIsInstance(value["bar"], float)
 
     def test_union_schema(self) -> None:
         schema = UnionTypeSchema(oneOf=[BooleanSchema(), IntegerSchema()])
@@ -91,8 +81,6 @@ class TestGetValidValueFromConst(unittest.TestCase):
         schema = ObjectSchema(const=const)
         with self.assertRaises(NotImplementedError):
             schema.get_valid_value()
-        # self.assertEqual(schema.has_const_or_enum, True)
-        # self.assertEqual(schema.get_valid_value(), const)
 
 
 class TestGetValidValueFromEnum(unittest.TestCase):
@@ -121,8 +109,6 @@ class TestGetValidValueFromEnum(unittest.TestCase):
         schema = ObjectSchema(enum=enum)
         with self.assertRaises(NotImplementedError):
             schema.get_valid_value()
-        # self.assertEqual(schema.has_const_or_enum, True)
-        # self.assertIn(schema.get_valid_value(), enum)
 
 
 class TestStringSchemaVariations(unittest.TestCase):

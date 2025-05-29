@@ -3,7 +3,6 @@ Module holding the main functions related to data generation
 for the requests made as part of keyword exection.
 """
 
-import re
 from dataclasses import Field, field, make_dataclass
 from random import choice
 from typing import Any, cast
@@ -23,7 +22,6 @@ from OpenApiLibCore.models import (
     OpenApiObject,
     OperationObject,
     ParameterObject,
-    RequestBodyObject,
     UnionTypeSchema,
 )
 from OpenApiLibCore.parameter_utils import get_safe_name_for_oas_name
@@ -53,7 +51,7 @@ def get_request_data(
     dto_class = get_dto_class(path=spec_path, method=method)
     try:
         path_item = openapi_spec.paths[spec_path]
-        operation_spec = getattr(path_item, method)
+        operation_spec: OperationObject | None = getattr(path_item, method)
         if operation_spec is None:
             raise AttributeError
     except AttributeError:
@@ -79,38 +77,30 @@ def get_request_data(
             has_body=False,
         )
 
-    headers.update({"content-type": get_content_type(operation_spec.requestBody)})
+    body_schema = operation_spec.requestBody.schema_
 
-    body_schema = operation_spec.requestBody
-    media_type_dict = body_schema.content
-    supported_types = [v for k, v in media_type_dict.items() if "json" in k]
-    supported_schemas = [t.schema_ for t in supported_types if t.schema_ is not None]
-
-    if not supported_schemas:
-        raise ValueError(f"No supported content schema found: {media_type_dict}")
-
-    if len(supported_schemas) > 1:
-        logger.warn(
-            f"Multiple JSON media types defined for requestBody, using the first candidate {media_type_dict}"
+    if not body_schema:
+        raise ValueError(
+            f"No supported content schema found: {operation_spec.requestBody.content}"
         )
 
-    schema = supported_schemas[0]
+    headers.update({"content-type": operation_spec.requestBody.mime_type})
 
-    if isinstance(schema, UnionTypeSchema):
-        resolved_schemas = schema.resolved_schemas
-        schema = choice(resolved_schemas)
+    if isinstance(body_schema, UnionTypeSchema):
+        resolved_schemas = body_schema.resolved_schemas
+        body_schema = choice(resolved_schemas)
 
-    if not isinstance(schema, ObjectSchema):
-        raise ValueError(f"Selected schema is not an object schema: {schema}")
+    if not isinstance(body_schema, ObjectSchema):
+        raise ValueError(f"Selected schema is not an object schema: {body_schema}")
 
     dto_data = _get_json_data_for_dto_class(
-        schema=schema,
+        schema=body_schema,
         dto_class=dto_class,
         get_id_property_name=get_id_property_name,
         operation_id=operation_spec.operationId,
     )
     dto_instance = _get_dto_instance_from_dto_data(
-        object_schema=schema,
+        object_schema=body_schema,
         dto_class=dto_class,
         dto_data=dto_data,
         method_spec=operation_spec,
@@ -118,7 +108,7 @@ def get_request_data(
     )
     return RequestData(
         dto=dto_instance,
-        body_schema=schema,
+        body_schema=body_schema,
         parameters=parameters,
         params=params,
         headers=headers,
@@ -198,25 +188,6 @@ def get_dto_cls_name(path: str, method: str) -> str:
     path_parts = [p.capitalize() for p in path_parts]
     result = "".join([method, *path_parts])
     return result
-
-
-def get_content_type(body_spec: RequestBodyObject) -> str:
-    """Get and validate the first supported content type from the requested body spec
-
-    Should be application/json like content type,
-    e.g "application/json;charset=utf-8" or "application/merge-patch+json"
-    """
-    content_types: list[str] = list(body_spec.content.keys())
-    json_regex = r"application/([a-z\-]+\+)?json(;\s?charset=(.+))?"
-    for content_type in content_types:
-        if re.search(json_regex, content_type):
-            return content_type
-
-    # At present no supported for other types.
-    raise NotImplementedError(
-        f"Only content types like 'application/json' are supported. "
-        f"Content types definded in the spec are '{content_types}'."
-    )
 
 
 def get_request_parameters(

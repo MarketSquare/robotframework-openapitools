@@ -133,11 +133,15 @@ class OpenApiExecutors(OpenApiLibCore):
         """
         valid_url: str = run_keyword("get_valid_url", path)
 
-        if not (
-            url := run_keyword(
+        try:
+            url = run_keyword(
                 "get_invalidated_url", valid_url, path, expected_status_code
             )
-        ):
+        except Exception as exception:
+            message = getattr(exception, "message", "")
+            if not message.startswith("ValueError"):
+                raise exception  # pragma: no cover
+
             raise SkipExecution(
                 f"Path {path} does not contain resource references that "
                 f"can be invalidated."

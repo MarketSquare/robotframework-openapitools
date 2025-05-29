@@ -61,6 +61,21 @@ def libgen_with_envs(context: Context) -> None:
 
 
 @task
+def libgen_edge_cases(context: Context) -> None:
+    cmd = [
+        "coverage",
+        "run",
+        "-m",
+        "openapi_libgen.generator",
+        f"{ROOT}/tests/files/schema_with_parameter_name_duplication.yaml",
+        f"{ROOT}/tests/generated",
+        "MyGeneratedEdgeCaseLibrary",
+        "my_generated_edge_case_library",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False)
+
+
+@task
 def utests(context: Context) -> None:
     cmd = [
         "coverage",
@@ -93,7 +108,7 @@ def utests(context: Context) -> None:
     subprocess.run(" ".join(cmd), shell=True, check=False)
 
 
-@task(libgen, libgen_with_envs)
+@task(libgen, libgen_with_envs, libgen_edge_cases)
 def atests(context: Context) -> None:
     cmd = [
         "coverage",
