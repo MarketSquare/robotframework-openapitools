@@ -611,7 +611,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         on the mapped `path` and `expected_status_code`.
         If a PathPropertiesConstraint is mapped, the `invalid_value` is returned.
 
-        Raises ValueError if the valid_url cannot be invalidated.
+        Raises: ValueError if the valid_url cannot be invalidated.
         """
         return _path_invalidation.get_invalidated_url(
             valid_url=valid_url,

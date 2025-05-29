@@ -75,7 +75,7 @@ def perform_validated_request(
             f"\nGot: {_json.dumps(response_json, indent=4, sort_keys=True)}"
         )
         raise AssertionError(
-            f"Response status_code {response.status_code} was not {status_code}"
+            f"Response status_code {response.status_code} was not {status_code}."
         )
 
     run_keyword("validate_response", path, response, original_data)
@@ -90,7 +90,7 @@ def perform_validated_request(
         if response.ok:
             if get_response.ok:
                 raise AssertionError(
-                    f"Resource still exists after deletion. Url was {request_values.url}"
+                    f"Resource still exists after deletion. Url was {request_values.url}."
                 )
             # if the path supports GET, 404 is expected, if not 405 is expected
             if get_response.status_code not in [404, 405]:
@@ -102,7 +102,7 @@ def perform_validated_request(
         elif not get_response.ok:
             raise AssertionError(
                 f"Resource could not be retrieved after failed deletion. "
-                f"Url was {request_values.url}, status_code was {get_response.status_code}"
+                f"Url was {request_values.url}, status_code was {get_response.status_code}."
             )
 
 
@@ -375,6 +375,6 @@ def _get_response_object(
     path_operations = path_item.get_operations()
     operation_data = path_operations.get(method)
     if operation_data is None:
-        raise ValueError(f"method '{method}' not supported for {path}")
+        raise ValueError(f"method '{method}' not supported for {path}.")
 
     return operation_data.responses[status]
