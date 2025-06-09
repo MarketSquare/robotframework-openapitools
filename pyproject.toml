@@ -1,11 +1,9 @@
 [project]
 name="robotframework-openapitools"
-version = "1.0.0b3"
+version = "1.0.0b4"
 description = "A set of Robot Framework libraries to test APIs for which the OAS is available."
 authors = [
     {name = "Robin Mackaij", email = "r.a.mackaij@gmail.com"},
-    {name = "Bartlomiej Hirsz", email = "bartek.hirsz@gmail.com"},
-    {name = "Mateusz Nojek", email = "matnojek@gmail.com"},
 ]
 maintainers = [
     {name = "Robin Mackaij", email = "r.a.mackaij@gmail.com"},
@@ -33,6 +31,7 @@ dependencies = [
     "rich_click >= 1.7.0",
     "black >= 24.1.0",
     "Jinja2 >= 3.1.2",
+    "pydantic >= 2.11.0",
 ]
 
 [dependency-groups]
@@ -101,7 +100,8 @@ build-backend = "poetry.core.masonry.api"
 [tool.coverage.run]
 branch = true
 parallel = true
-source = ["src/OpenApiDriver", "src/OpenApiLibCore"]
+source = ["src/OpenApiDriver", "src/OpenApiLibCore", "src/openapi_libgen"]
+omit = ["src/openapi_libgen/command_line.py"]
 
 [tool.coverage.report]
 exclude_lines = [

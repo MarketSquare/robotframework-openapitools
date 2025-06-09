@@ -83,6 +83,13 @@ class EmployeeDetails(BaseModel):
     parttime_schedule: ParttimeSchedule | None = None
 
 
+class EmployeeDigest(BaseModel):
+    identification: str
+    name: str
+    employee_number: int
+    parttime_schedule: ParttimeSchedule | None = None
+
+
 class Employee(BaseModel):
     name: str
     wagegroup_id: str
@@ -110,8 +117,14 @@ ENERGY_LABELS: dict[str, dict[int, dict[str, EnergyLabel]]] = {
     }
 }
 EVENTS: list[Event] = [
-    Event(message=Message(message="Hello?"), details=[Detail(detail="First post")]),
-    Event(message=Message(message="First!"), details=[Detail(detail="Second post")]),
+    Event(
+        message=Message(message="Hello?"),
+        details=[Detail(detail="First post")],
+    ),
+    Event(
+        message=Message(message="First!"),
+        details=[Detail(detail="Second post")],
+    ),
 ]
 
 
@@ -154,8 +167,10 @@ def get_events(
 
 # deliberate trailing /
 @app.post("/events/", status_code=201, response_model=Event)
-def post_event(event: Event) -> Event:
-    event.details.append(Detail(detail=str(datetime.datetime.now())))
+def post_event(event: Event, draft: bool = Header(False)) -> Event:
+    event.details.append(Detail(detail=f"Published {datetime.datetime.now()}"))
+    if draft:
+        event.details.append(Detail(detail="Event details subject to change."))
     EVENTS.append(event)
     return event
 
@@ -307,9 +322,9 @@ def post_employee(employee: Employee) -> EmployeeDetails:
 @app.get(
     "/employees",
     status_code=200,
-    response_model=list[EmployeeDetails],
+    response_model=list[EmployeeDigest],
 )
-def get_employees() -> list[EmployeeDetails]:
+def get_employees() -> list[EmployeeDigest]:
     return list(EMPLOYEES.values())
 
 
@@ -375,9 +390,9 @@ def patch_employee(employee_id: str, employee: EmployeeUpdate) -> JSONResponse:
     return JSONResponse(content=True)
 
 
-@app.get("/available_employees", status_code=200, response_model=list[EmployeeDetails])
-def get_available_employees(weekday: WeekDay = Query(...)) -> list[EmployeeDetails]:
-    available_employees: list[EmployeeDetails] = []
+@app.get("/available_employees", status_code=200, response_model=list[EmployeeDigest])
+def get_available_employees(weekday: WeekDay = Query(...)) -> list[EmployeeDigest]:
+    available_employees: list[EmployeeDigest] = []
     for employee in EMPLOYEES.values():
         if not employee.parttime_schedule:
             continue

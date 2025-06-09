@@ -9,6 +9,7 @@ from requests import Response
 from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore.dto_base import PathPropertiesConstraint
+from OpenApiLibCore.models import OpenApiObject
 from OpenApiLibCore.protocols import GetDtoClassType, GetIdPropertyNameType
 from OpenApiLibCore.request_data import RequestData
 
@@ -24,14 +25,14 @@ def match_parts(parts: list[str], spec_parts: list[str]) -> bool:
     return True
 
 
-def get_parametrized_path(path: str, openapi_spec: dict[str, Any]) -> str:
+def get_parametrized_path(path: str, openapi_spec: OpenApiObject) -> str:
     path_parts = path.split("/")
     # if the last part is empty, the path has a trailing `/` that
     # should be ignored during matching
     if path_parts[-1] == "":
         _ = path_parts.pop(-1)
 
-    spec_paths: list[str] = {**openapi_spec}["paths"].keys()
+    spec_paths: list[str] = list(openapi_spec.paths.keys())
 
     candidates: list[str] = []
 
@@ -64,16 +65,17 @@ def get_valid_url(
     path: str,
     base_url: str,
     get_dto_class: GetDtoClassType,
-    openapi_spec: dict[str, Any],
+    openapi_spec: OpenApiObject,
 ) -> str:
     try:
         # path can be partially resolved or provided by a PathPropertiesConstraint
         parametrized_path = get_parametrized_path(path=path, openapi_spec=openapi_spec)
-        _ = openapi_spec["paths"][parametrized_path]
+        _ = openapi_spec.paths[parametrized_path]
     except KeyError:
         raise ValueError(
             f"{path} not found in paths section of the OpenAPI document."
         ) from None
+    # FIXME: method should be irrelevant for this mapping and apply to the path alone
     dto_class = get_dto_class(path=path, method="get")
     relations = dto_class.get_relations()
     paths = [p.path for p in relations if isinstance(p, PathPropertiesConstraint)]

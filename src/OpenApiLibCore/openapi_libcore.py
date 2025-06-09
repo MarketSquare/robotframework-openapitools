@@ -140,17 +140,22 @@ from robot.api.exceptions import FatalError
 from robot.libraries.BuiltIn import BuiltIn
 
 import OpenApiLibCore.data_generation as _data_generation
-import OpenApiLibCore.data_invalidation as di
-import OpenApiLibCore.path_functions as pf
-import OpenApiLibCore.path_invalidation as pi
-import OpenApiLibCore.resource_relations as rr
-import OpenApiLibCore.validation as val
+import OpenApiLibCore.data_invalidation as _data_invalidation
+import OpenApiLibCore.path_functions as _path_functions
+import OpenApiLibCore.path_invalidation as _path_invalidation
+import OpenApiLibCore.resource_relations as _resource_relations
+import OpenApiLibCore.validation as _validation
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.dto_base import Dto, IdReference
 from OpenApiLibCore.dto_utils import (
     DEFAULT_ID_PROPERTY_NAME,
     get_dto_class,
     get_id_property_name,
+)
+from OpenApiLibCore.localized_faker import FAKE
+from OpenApiLibCore.models import (
+    OpenApiObject,
+    PathItemObject,
 )
 from OpenApiLibCore.oas_cache import PARSER_CACHE, CachedParser
 from OpenApiLibCore.parameter_utils import (
@@ -159,11 +164,10 @@ from OpenApiLibCore.parameter_utils import (
 )
 from OpenApiLibCore.protocols import ResponseValidatorType
 from OpenApiLibCore.request_data import RequestData, RequestValues
-from OpenApiLibCore.value_utils import FAKE
 
 run_keyword = BuiltIn().run_keyword
 default_str_mapping: Mapping[str, str] = MappingProxyType({})
-default_any_mapping: Mapping[str, object] = MappingProxyType({})
+default_json_mapping: Mapping[str, JSON] = MappingProxyType({})
 
 
 @library(scope="SUITE", doc_format="ROBOT")
@@ -180,7 +184,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         source: str,
         origin: str = "",
         base_path: str = "",
-        response_validation: val.ValidationLevel = val.ValidationLevel.WARN,
+        response_validation: _validation.ValidationLevel = _validation.ValidationLevel.WARN,
         disable_server_validation: bool = True,
         mappings_path: str | Path = "",
         invalid_property_default_response: int = 422,
@@ -434,7 +438,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         self,
         path: str,
         method: str,
-        overrides: Mapping[str, object] = default_any_mapping,
+        overrides: Mapping[str, JSON] = default_json_mapping,
     ) -> RequestValues:
         """Return an object with all (valid) request values needed to make a request."""
         json_data: dict[str, JSON] = {}
@@ -482,24 +486,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         )
 
     @keyword
-    def get_json_data_for_dto_class(
-        self,
-        schema: dict[str, JSON],
-        dto_class: type[Dto],
-        operation_id: str = "",
-    ) -> JSON:
-        """
-        Generate valid (json-compatible) data for the `dto_class`.
-        """
-        return _data_generation.get_json_data_for_dto_class(
-            schema=schema,
-            dto_class=dto_class,
-            get_id_property_name=self.get_id_property_name,
-            operation_id=operation_id,
-        )
-
-    @keyword
-    def get_invalid_json_data(
+    def get_invalid_body_data(
         self,
         url: str,
         method: str,
@@ -513,7 +500,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         > Note: applicable UniquePropertyValueConstraint and IdReference Relations are
             considered before changes to `json_data` are made.
         """
-        return di.get_invalid_json_data(
+        return _data_invalidation.get_invalid_body_data(
             url=url,
             method=method,
             status_code=status_code,
@@ -526,12 +513,12 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         self,
         status_code: int,
         request_data: RequestData,
-    ) -> tuple[dict[str, JSON], dict[str, str]]:
+    ) -> tuple[dict[str, JSON], dict[str, JSON]]:
         """
         Returns a version of `params, headers` as present on `request_data` that has
         been modified to cause the provided `status_code`.
         """
-        return di.get_invalidated_parameters(
+        return _data_invalidation.get_invalidated_parameters(
             status_code=status_code,
             request_data=request_data,
             invalid_property_default_response=self.invalid_property_default_response,
@@ -546,7 +533,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         returned by the `get_relations` implementation on the `dto` for the given
         `conflict_status_code`.
         """
-        return di.get_json_data_with_conflict(
+        return _data_invalidation.get_json_data_with_conflict(
             url=url,
             base_url=self.base_url,
             method=method,
@@ -568,7 +555,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         `PathPropertiesConstraint` Relation can be used. More information can be found
         [https://marketsquare.github.io/robotframework-openapitools/advanced_use.html | here].
         """
-        return pf.get_valid_url(
+        return _path_functions.get_valid_url(
             path=path,
             base_url=self.base_url,
             get_dto_class=self.get_dto_class,
@@ -583,7 +570,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         To prevent resource conflicts with other test cases, a new resource is created
         (by a POST operation) if possible.
         """
-        return pf.get_valid_id_for_path(
+        return _path_functions.get_valid_id_for_path(
             path=path, get_id_property_name=self.get_id_property_name
         )
 
@@ -596,7 +583,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         path_parts = path.split("/")
         # first part will be '' since a path starts with /
         path_parts.pop(0)
-        parameterized_path = pf.get_parametrized_path(
+        parameterized_path = _path_functions.get_parametrized_path(
             path=path, openapi_spec=self.openapi_spec
         )
         return parameterized_path
@@ -607,7 +594,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         Perform a GET request on the `url` and return the list of resource
         `ids` from the response.
         """
-        return pf.get_ids_from_url(
+        return _path_functions.get_ids_from_url(
             url=url, get_id_property_name=self.get_id_property_name
         )
 
@@ -624,9 +611,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         on the mapped `path` and `expected_status_code`.
         If a PathPropertiesConstraint is mapped, the `invalid_value` is returned.
 
-        Raises ValueError if the valid_url cannot be invalidated.
+        Raises: ValueError if the valid_url cannot be invalidated.
         """
-        return pi.get_invalidated_url(
+        return _path_invalidation.get_invalidated_url(
             valid_url=valid_url,
             path=path,
             base_url=self.base_url,
@@ -642,7 +629,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         Ensure that the (right-most) `id` of the resource referenced by the `url`
         is used by the resource defined by the `resource_relation`.
         """
-        rr.ensure_in_use(
+        _resource_relations.ensure_in_use(
             url=url,
             base_url=self.base_url,
             openapi_spec=self.openapi_spec,
@@ -706,14 +693,14 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         path: str,
         status_code: int,
         request_values: RequestValues,
-        original_data: Mapping[str, object] = default_any_mapping,
+        original_data: Mapping[str, JSON] = default_json_mapping,
     ) -> None:
         """
         This keyword first calls the Authorized Request keyword, then the Validate
         Response keyword and finally validates, for `DELETE` operations, whether
         the target resource was indeed deleted (OK response) or not (error responses).
         """
-        val.perform_validated_request(
+        _validation.perform_validated_request(
             path=path,
             status_code=status_code,
             request_values=request_values,
@@ -726,7 +713,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         Validate the `response` against the OpenAPI Spec that is
         loaded during library initialization.
         """
-        val.validate_response_using_validator(
+        _validation.validate_response_using_validator(
             response=response,
             response_validator=self.response_validator,
         )
@@ -739,7 +726,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         Attempt to GET the resource referenced by the `href` and validate it's equal
         to the provided `referenced_resource` object / dictionary.
         """
-        val.assert_href_to_resource_is_valid(
+        _validation.assert_href_to_resource_is_valid(
             href=href,
             origin=self.origin,
             base_url=self.base_url,
@@ -751,7 +738,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         self,
         path: str,
         response: Response,
-        original_data: Mapping[str, object] = default_any_mapping,
+        original_data: Mapping[str, JSON] = default_json_mapping,
     ) -> None:
         """
         Validate the `response` by performing the following validations:
@@ -763,7 +750,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         - validate that no `original_data` is preserved when performing a PUT operation
         - validate that a PATCH operation only updates the provided properties
         """
-        val.validate_response(
+        _validation.validate_response(
             path=path,
             response=response,
             response_validator=self.response_validator,
@@ -775,24 +762,11 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             original_data=original_data,
         )
 
-    @keyword
-    def validate_resource_properties(
-        self, resource: dict[str, JSON], schema: dict[str, JSON]
-    ) -> None:
-        """
-        Validate that the `resource` does not contain any properties that are not
-        defined in the `schema_properties`.
-        """
-        val.validate_resource_properties(
-            resource=resource,
-            schema=schema,
-        )
-
     @staticmethod
     @keyword
     def validate_send_response(
         response: Response,
-        original_data: Mapping[str, object] = default_any_mapping,
+        original_data: Mapping[str, JSON] = default_json_mapping,
     ) -> None:
         """
         Validate that each property that was send that is in the response has the value
@@ -800,7 +774,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         In case a PATCH request, validate that only the properties that were patched
         have changed and that other properties are still at their pre-patch values.
         """
-        val.validate_send_response(response=response, original_data=original_data)
+        _validation.validate_send_response(
+            response=response, original_data=original_data
+        )
 
     # endregion
 
@@ -818,17 +794,17 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         return validation_spec
 
     @property
-    def openapi_spec(self) -> dict[str, JSON]:
+    def openapi_spec(self) -> OpenApiObject:
         """Return a deepcopy of the parsed openapi document."""
         # protect the parsed openapi spec from being mutated by reference
         return deepcopy(self._openapi_spec)
 
     @cached_property
-    def _openapi_spec(self) -> dict[str, JSON]:
+    def _openapi_spec(self) -> OpenApiObject:
         parser, _, _ = self._load_specs_and_validator()
-        spec_dict: dict[str, JSON] = parser.specification
-        register_path_parameters(spec_dict["paths"])
-        return spec_dict
+        spec_model = OpenApiObject.model_validate(parser.specification)
+        register_path_parameters(spec_model.paths)
+        return spec_model
 
     @cached_property
     def response_validator(
@@ -870,7 +846,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             refstring: str,  # pylint: disable=unused-argument
             recursions: JSON,  # pylint: disable=unused-argument
         ) -> JSON:
-            return self._recursion_default
+            return self._recursion_default  # pragma: no cover
 
         try:
             # Since parsing of the OAS and creating the Spec can take a long time,
@@ -918,14 +894,14 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
 
             return parser, validation_spec, response_validator
 
-        except ResolutionError as exception:
+        except ResolutionError as exception:  # pragma: no cover
             raise FatalError(
                 f"ResolutionError while trying to load openapi spec: {exception}"
             ) from exception
-        except ValidationError as exception:
+        except ValidationError as exception:  # pragma: no cover
             raise FatalError(
                 f"ValidationError while trying to load openapi spec: {exception}"
             ) from exception
 
-    def read_paths(self) -> dict[str, JSON]:
-        return self.openapi_spec["paths"]  # type: ignore[return-value]
+    def read_paths(self) -> dict[str, PathItemObject]:
+        return self.openapi_spec.paths

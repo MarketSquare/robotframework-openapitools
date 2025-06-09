@@ -1,5 +1,5 @@
 {
-    "openapi": "3.0.2",
+    "openapi": "3.1.0",
     "info": {
         "title": "FastAPI",
         "version": "0.1.0"
@@ -8,33 +8,34 @@
         "/": {
             "get": {
                 "summary": "Get Root",
+                "operationId": "get_root__get",
                 "parameters": [
                     {
+                        "name": "name-from-header",
+                        "in": "header",
                         "required": false,
                         "schema": {
-                            "title": "Name-From-Header",
                             "type": "string",
-                            "default": ""
-                        },
-                        "name": "name-from-header",
-                        "in": "header"
+                            "default": "",
+                            "title": "Name-From-Header"
+                        }
                     },
                     {
+                        "name": "title",
+                        "in": "header",
                         "required": false,
                         "schema": {
-                            "title": "Title",
                             "type": "string",
-                            "default": ""
-                        },
-                        "name": "title",
-                        "in": "header"
+                            "default": "",
+                            "title": "Title"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "Successful Response",
                         "content": {
-                            "application/json": {
+                            "application/xml": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Message"
                                 }
@@ -57,32 +58,48 @@
         "/secret_message": {
             "get": {
                 "summary": "Get Message",
+                "operationId": "get_message_secret_message_get",
                 "parameters": [
                     {
+                        "name": "secret-code",
+                        "in": "header",
                         "required": true,
                         "schema": {
-                            "title": "Secret-Code",
-                            "type": "integer"
-                        },
-                        "name": "secret-code",
-                        "in": "header"
+                            "type": "integer",
+                            "title": "Secret-Code"
+                        }
                     },
                     {
+                        "name": "seal",
+                        "in": "header",
                         "required": false,
                         "schema": {
-                            "title": "Seal",
                             "type": "string",
-                            "default": "840f086623714059b893fe7ea1cf8cb4"
-                        },
-                        "name": "seal",
-                        "in": "header"
+                            "default": "05a87bd27c2f47a38055bd47a49cdbae",
+                            "title": "Seal"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "Successful Response",
                         "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Message"
+                                }
+                            },
                             "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Message"
+                                }
+                            },
+                            "application/jsonc": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Message"
+                                }
+                            },
+                            "application/*+json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Message"
                                 }
@@ -90,24 +107,24 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Detail"
                                 }
                             }
-                        }
+                        },
+                        "description": "Unauthorized"
                     },
                     "403": {
-                        "description": "Forbidden",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Detail"
                                 }
                             }
-                        }
+                        },
+                        "description": "Forbidden"
                     },
                     "422": {
                         "description": "Validation Error",
@@ -125,18 +142,20 @@
         "/events/": {
             "get": {
                 "summary": "Get Events",
+                "operationId": "get_events_events__get",
                 "parameters": [
                     {
+                        "name": "search_strings",
+                        "in": "query",
                         "required": false,
                         "schema": {
-                            "title": "Search Strings",
                             "type": "array",
                             "items": {
                                 "type": "string"
-                            }
-                        },
-                        "name": "search_strings",
-                        "in": "query"
+                            },
+                            "default": [],
+                            "title": "Search Strings"
+                        }
                     }
                 ],
                 "responses": {
@@ -145,11 +164,11 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "title": "Response Get Events Events  Get",
                                     "type": "array",
                                     "items": {
                                         "$ref": "#/components/schemas/Event"
-                                    }
+                                    },
+                                    "title": "Response Get Events Events  Get"
                                 }
                             }
                         }
@@ -168,15 +187,28 @@
             },
             "post": {
                 "summary": "Post Event",
+                "operationId": "post_event_events__post",
+                "parameters": [
+                    {
+                        "name": "draft",
+                        "in": "header",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "Draft"
+                        }
+                    }
+                ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "$ref": "#/components/schemas/Event"
                             }
                         }
-                    },
-                    "required": true
+                    }
                 },
                 "responses": {
                     "201": {
@@ -222,38 +254,40 @@
         "/energy_label/{zipcode}/{home_number}": {
             "get": {
                 "summary": "Get Energy Label",
+                "operationId": "get_energy_label_energy_label__zipcode___home_number__get",
                 "parameters": [
                     {
-                        "required": true,
-                        "schema": {
-                            "title": "Zipcode",
-                            "maxLength": 6,
-                            "minLength": 6,
-                            "type": "string"
-                        },
                         "name": "zipcode",
-                        "in": "path"
-                    },
-                    {
+                        "in": "path",
                         "required": true,
                         "schema": {
-                            "title": "Home Number",
-                            "minimum": 1.0,
-                            "type": "integer"
-                        },
-                        "name": "home_number",
-                        "in": "path"
+                            "type": "string",
+                            "minLength": 6,
+                            "maxLength": 6,
+                            "title": "Zipcode"
+                        }
                     },
                     {
+                        "name": "home_number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "title": "Home Number"
+                        }
+                    },
+                    {
+                        "name": "extension",
+                        "in": "query",
                         "required": false,
                         "schema": {
-                            "title": "Extension",
-                            "maxLength": 9,
+                            "type": "string",
                             "minLength": 1,
-                            "type": "string"
-                        },
-                        "name": "extension",
-                        "in": "query"
+                            "maxLength": 9,
+                            "default": " ",
+                            "title": "Extension"
+                        }
                     }
                 ],
                 "responses": {
@@ -268,14 +302,14 @@
                         }
                     },
                     "422": {
-                        "description": "Validation Error",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                    "$ref": "#/components/schemas/Detail"
                                 }
                             }
-                        }
+                        },
+                        "description": "Unprocessable Entity"
                     }
                 }
             }
@@ -283,6 +317,7 @@
         "/wagegroups": {
             "post": {
                 "summary": "Post Wagegroup",
+                "operationId": "post_wagegroup_wagegroups_post",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -330,15 +365,16 @@
         "/wagegroups/{wagegroup_id}": {
             "get": {
                 "summary": "Get Wagegroup",
+                "operationId": "get_wagegroup_wagegroups__wagegroup_id__get",
                 "parameters": [
                     {
+                        "name": "wagegroup_id",
+                        "in": "path",
                         "required": true,
                         "schema": {
-                            "title": "Wagegroup Id",
-                            "type": "string"
-                        },
-                        "name": "wagegroup_id",
-                        "in": "path"
+                            "type": "string",
+                            "title": "Wagegroup Id"
+                        }
                     }
                 ],
                 "responses": {
@@ -353,14 +389,14 @@
                         }
                     },
                     "404": {
-                        "description": "Not Found",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Detail"
                                 }
                             }
-                        }
+                        },
+                        "description": "Not Found"
                     },
                     "422": {
                         "description": "Validation Error",
@@ -376,26 +412,27 @@
             },
             "put": {
                 "summary": "Put Wagegroup",
+                "operationId": "put_wagegroup_wagegroups__wagegroup_id__put",
                 "parameters": [
                     {
+                        "name": "wagegroup_id",
+                        "in": "path",
                         "required": true,
                         "schema": {
-                            "title": "Wagegroup Id",
-                            "type": "string"
-                        },
-                        "name": "wagegroup_id",
-                        "in": "path"
+                            "type": "string",
+                            "title": "Wagegroup Id"
+                        }
                     }
                 ],
                 "requestBody": {
+                    "required": true,
                     "content": {
-                        "application/json": {
+                        "application/xml": {
                             "schema": {
                                 "$ref": "#/components/schemas/WageGroup"
                             }
                         }
-                    },
-                    "required": true
+                    }
                 },
                 "responses": {
                     "200": {
@@ -409,48 +446,49 @@
                         }
                     },
                     "404": {
-                        "description": "Not Found",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Detail"
                                 }
                             }
-                        }
+                        },
+                        "description": "Not Found"
                     },
                     "418": {
-                        "description": "I'm a Teapot",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Detail"
                                 }
                             }
-                        }
+                        },
+                        "description": "I'm a Teapot"
                     },
                     "422": {
-                        "description": "Unprocessable Entity",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Detail"
                                 }
                             }
-                        }
+                        },
+                        "description": "Unprocessable Entity"
                     }
                 }
             },
             "delete": {
                 "summary": "Delete Wagegroup",
+                "operationId": "delete_wagegroup_wagegroups__wagegroup_id__delete",
                 "parameters": [
                     {
+                        "name": "wagegroup_id",
+                        "in": "path",
                         "required": true,
                         "schema": {
-                            "title": "Wagegroup Id",
-                            "type": "string"
-                        },
-                        "name": "wagegroup_id",
-                        "in": "path"
+                            "type": "string",
+                            "title": "Wagegroup Id"
+                        }
                     }
                 ],
                 "responses": {
@@ -458,24 +496,24 @@
                         "description": "Successful Response"
                     },
                     "404": {
-                        "description": "Not Found",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Detail"
                                 }
                             }
-                        }
+                        },
+                        "description": "Not Found"
                     },
                     "406": {
-                        "description": "Not Acceptable",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Detail"
                                 }
                             }
-                        }
+                        },
+                        "description": "Not Acceptable"
                     },
                     "422": {
                         "description": "Validation Error",
@@ -493,15 +531,16 @@
         "/wagegroups/{wagegroup_id}/employees": {
             "get": {
                 "summary": "Get Employees In Wagegroup",
+                "operationId": "get_employees_in_wagegroup_wagegroups__wagegroup_id__employees_get",
                 "parameters": [
                     {
+                        "name": "wagegroup_id",
+                        "in": "path",
                         "required": true,
                         "schema": {
-                            "title": "Wagegroup Id",
-                            "type": "string"
-                        },
-                        "name": "wagegroup_id",
-                        "in": "path"
+                            "type": "string",
+                            "title": "Wagegroup Id"
+                        }
                     }
                 ],
                 "responses": {
@@ -510,24 +549,24 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "title": "Response Get Employees In Wagegroup Wagegroups  Wagegroup Id  Employees Get",
                                     "type": "array",
                                     "items": {
                                         "$ref": "#/components/schemas/EmployeeDetails"
-                                    }
+                                    },
+                                    "title": "Response Get Employees In Wagegroup Wagegroups  Wagegroup Id  Employees Get"
                                 }
                             }
                         }
                     },
                     "404": {
-                        "description": "Not Found",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Detail"
                                 }
                             }
-                        }
+                        },
+                        "description": "Not Found"
                     },
                     "422": {
                         "description": "Validation Error",
@@ -545,17 +584,18 @@
         "/employees": {
             "get": {
                 "summary": "Get Employees",
+                "operationId": "get_employees_employees_get",
                 "responses": {
                     "200": {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "title": "Response Get Employees Employees Get",
-                                    "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/EmployeeDetails"
-                                    }
+                                        "$ref": "#/components/schemas/EmployeeDigest"
+                                    },
+                                    "type": "array",
+                                    "title": "Response Get Employees Employees Get"
                                 }
                             }
                         }
@@ -564,9 +604,20 @@
             },
             "post": {
                 "summary": "Post Employee",
+                "operationId": "post_employee_employees_post",
                 "requestBody": {
                     "content": {
                         "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Employee"
+                            }
+                        },
+                        "application/jsonc": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Employee"
+                            }
+                        },
+                        "application/*+json": {
                             "schema": {
                                 "$ref": "#/components/schemas/Employee"
                             }
@@ -621,15 +672,16 @@
         "/employees/{employee_id}": {
             "get": {
                 "summary": "Get Employee",
+                "operationId": "get_employee_employees__employee_id__get",
                 "parameters": [
                     {
+                        "name": "employee_id",
+                        "in": "path",
                         "required": true,
                         "schema": {
-                            "title": "Employee Id",
-                            "type": "string"
-                        },
-                        "name": "employee_id",
-                        "in": "path"
+                            "type": "string",
+                            "title": "Employee Id"
+                        }
                     }
                 ],
                 "responses": {
@@ -644,14 +696,14 @@
                         }
                     },
                     "404": {
-                        "description": "Not Found",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Detail"
                                 }
                             }
-                        }
+                        },
+                        "description": "Not Found"
                     },
                     "422": {
                         "description": "Validation Error",
@@ -667,47 +719,68 @@
             },
             "patch": {
                 "summary": "Patch Employee",
+                "operationId": "patch_employee_employees__employee_id__patch",
                 "parameters": [
                     {
+                        "name": "employee_id",
+                        "in": "path",
                         "required": true,
                         "schema": {
-                            "title": "Employee Id",
-                            "type": "string"
-                        },
-                        "name": "employee_id",
-                        "in": "path"
+                            "type": "string",
+                            "title": "Employee Id"
+                        }
                     }
                 ],
                 "requestBody": {
+                    "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "$ref": "#/components/schemas/EmployeeUpdate"
                             }
                         }
-                    },
-                    "required": true
+                    }
                 },
                 "responses": {
                     "200": {
-                        "description": "Successful Response",
+                        "description": "A JSON boolean response",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/EmployeeDetails"
+                                    "type": "boolean"
                                 }
                             }
                         }
                     },
-                    "404": {
-                        "description": "Not Found",
+                    "403": {
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Detail"
                                 }
                             }
-                        }
+                        },
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        },
+                        "description": "Not Found"
+                    },
+                    "451": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Detail"
+                                }
+                            }
+                        },
+                        "description": "Unavailable For Legal Reasons"
                     },
                     "422": {
                         "description": "Validation Error",
@@ -725,14 +798,15 @@
         "/available_employees": {
             "get": {
                 "summary": "Get Available Employees",
+                "operationId": "get_available_employees_available_employees_get",
                 "parameters": [
                     {
+                        "name": "weekday",
+                        "in": "query",
                         "required": true,
                         "schema": {
                             "$ref": "#/components/schemas/WeekDay"
-                        },
-                        "name": "weekday",
-                        "in": "query"
+                        }
                     }
                 ],
                 "responses": {
@@ -741,11 +815,11 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "title": "Response Get Available Employees Available Employees Get",
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/EmployeeDetails"
-                                    }
+                                        "$ref": "#/components/schemas/EmployeeDigest"
+                                    },
+                                    "title": "Response Get Available Employees Available Employees Get"
                                 }
                             }
                         }
@@ -767,175 +841,251 @@
     "components": {
         "schemas": {
             "Detail": {
-                "title": "Detail",
+                "properties": {
+                    "detail": {
+                        "type": "string",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
                 "required": [
                     "detail"
                 ],
-                "type": "object",
-                "properties": {
-                    "detail": {
-                        "title": "Detail",
-                        "type": "string"
-                    }
-                }
+                "title": "Detail"
             },
             "Employee": {
-                "title": "Employee",
-                "required": [
-                    "name",
-                    "wagegroup_id",
-                    "date_of_birth",
-                    "team"
-                ],
-                "type": "object",
                 "properties": {
-                    "name": {
-                        "title": "Name",
+                    "team": {
+                        "title": "Team",
                         "type": "string"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
                     },
                     "wagegroup_id": {
-                        "title": "Wagegroup Id",
-                        "type": "string"
+                        "type": "string",
+                        "title": "Wagegroup Id"
                     },
                     "date_of_birth": {
-                        "title": "Date Of Birth",
                         "type": "string",
-                        "format": "date"
+                        "format": "date",
+                        "title": "Date Of Birth"
+                    },
+                    "parttime_schedule": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ParttimeSchedule-Input"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "team",
+                    "name",
+                    "wagegroup_id",
+                    "date_of_birth"
+                ],
+                "title": "Employee"
+            },
+            "EmployeeDetails": {
+                "properties": {
+                    "identification": {
+                        "type": "string",
+                        "title": "Identification"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "employee_number": {
+                        "type": "integer",
+                        "title": "Employee Number"
+                    },
+                    "wagegroup_id": {
+                        "type": "string",
+                        "title": "Wagegroup Id"
+                    },
+                    "date_of_birth": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Date Of Birth"
                     },
                     "team": {
                         "title": "Team",
                         "type": "string"
                     },
-                    "parttime_day": {
-                        "$ref": "#/components/schemas/WeekDay"
+                    "parttime_schedule": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ParttimeSchedule-Output"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     }
-                }
-            },
-            "EmployeeDetails": {
-                "title": "EmployeeDetails",
+                },
+                "type": "object",
                 "required": [
+                    "team",
                     "identification",
                     "name",
                     "employee_number",
                     "wagegroup_id",
-                    "team",
                     "date_of_birth"
                 ],
-                "type": "object",
+                "title": "EmployeeDetails"
+            },
+            "EmployeeDigest": {
                 "properties": {
                     "identification": {
-                        "title": "Identification",
-                        "type": "string"
+                        "type": "string",
+                        "title": "Identification"
                     },
                     "name": {
-                        "title": "Name",
-                        "type": "string"
+                        "type": "string",
+                        "title": "Name"
                     },
                     "employee_number": {
-                        "title": "Employee Number",
-                        "type": "integer"
+                        "type": "integer",
+                        "title": "Employee Number"
                     },
-                    "wagegroup_id": {
-                        "title": "Wagegroup Id",
-                        "type": "string"
-                    },
-                    "date_of_birth": {
-                        "title": "Date Of Birth",
-                        "type": "string",
-                        "format": "date"
-                    },
-                    "team": {
-                        "title": "Team",
-                        "type": "string"
-                    },
-                    "parttime_day": {
-                        "$ref": "#/components/schemas/WeekDay"
+                    "parttime_schedule": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ParttimeSchedule-Output"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     }
-                }
+                },
+                "type": "object",
+                "required": [
+                    "identification",
+                    "name",
+                    "employee_number"
+                ],
+                "title": "EmployeeDigest"
             },
             "EmployeeUpdate": {
-                "title": "EmployeeUpdate",
-                "type": "object",
+                "minProperties": 1,
+                "maxProperties": 3,
                 "properties": {
                     "name": {
-                        "title": "Name",
-                        "type": "string"
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
                     },
                     "employee_number": {
-                        "title": "Employee Number",
-                        "type": "integer"
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Employee Number"
                     },
                     "wagegroup_id": {
-                        "title": "Wagegroup Id",
-                        "type": "string"
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Wagegroup Id"
                     },
                     "date_of_birth": {
-                        "title": "Date Of Birth",
-                        "type": "string",
-                        "format": "date"
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Date Of Birth"
                     },
-                    "parttime_day": {
-                        "$ref": "#/components/schemas/WeekDay"
+                    "parttime_schedule": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ParttimeSchedule-Input"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     }
-                }
+                },
+                "type": "object",
+                "title": "EmployeeUpdate"
             },
             "Event": {
-                "title": "Event",
-                "required": [
-                    "message",
-                    "details"
-                ],
-                "type": "object",
                 "properties": {
                     "message": {
                         "$ref": "#/components/schemas/Message"
                     },
                     "details": {
-                        "title": "Details",
-                        "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/Detail"
-                        }
+                        },
+                        "type": "array",
+                        "title": "Details"
                     },
                     "event_number": {
                         "type": "integer"
                     }
-                }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "message",
+                    "details"
+                ],
+                "title": "Event"
             },
             "HTTPValidationError": {
-                "title": "HTTPValidationError",
-                "type": "object",
                 "properties": {
                     "detail": {
-                        "title": "Detail",
-                        "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/ValidationError"
-                        }
+                        },
+                        "type": "array",
+                        "title": "Detail"
                     }
-                }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
             },
             "Message": {
-                "title": "Message",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "title": "Message"
+                    }
+                },
+                "type": "object",
                 "required": [
                     "message"
                 ],
-                "type": "object",
-                "properties": {
-                    "message": {
-                        "title": "Message",
-                        "type": "string"
-                    },
-                    "reactions": {
-                        "title": "Reactions",
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/Reactions"
-                            }
-                        ],
-                        "nullable": false
-                    }
-                }
+                "title": "Message"
             },
             "Reactions": {
                 "title": "Reactions",
@@ -944,18 +1094,64 @@
                     "type": "integer"
                 }
             },
-            "ValidationError": {
-                "title": "ValidationError",
-                "required": [
-                    "loc",
-                    "msg",
-                    "type"
-                ],
+            "ParttimeDay": {
+                "properties": {
+                    "weekday": {
+                        "$ref": "#/components/schemas/WeekDay"
+                    },
+                    "available_hours": {
+                        "type": "integer",
+                        "exclusiveMaximum": 8,
+                        "minimum": 0,
+                        "title": "Available Hours",
+                        "default": 4
+                    }
+                },
                 "type": "object",
+                "required": [
+                    "weekday"
+                ],
+                "title": "ParttimeDay"
+            },
+            "ParttimeSchedule-Input": {
+                "properties": {
+                    "parttime_days": {
+                        "items": {
+                            "$ref": "#/components/schemas/ParttimeDay"
+                        },
+                        "type": "array",
+                        "maxItems": 5,
+                        "minItems": 1,
+                        "title": "Parttime Days"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "parttime_days"
+                ],
+                "title": "ParttimeSchedule"
+            },
+            "ParttimeSchedule-Output": {
+                "properties": {
+                    "parttime_days": {
+                        "items": {
+                            "$ref": "#/components/schemas/ParttimeDay"
+                        },
+                        "type": "array",
+                        "maxItems": 5,
+                        "minItems": 1,
+                        "title": "Parttime Days"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "parttime_days"
+                ],
+                "title": "ParttimeSchedule"
+            },
+            "ValidationError": {
                 "properties": {
                     "loc": {
-                        "title": "Location",
-                        "type": "array",
                         "items": {
                             "anyOf": [
                                 {
@@ -965,43 +1161,66 @@
                                     "type": "integer"
                                 }
                             ]
-                        }
+                        },
+                        "type": "array",
+                        "title": "Location"
                     },
                     "msg": {
-                        "title": "Message",
-                        "type": "string"
+                        "type": "string",
+                        "title": "Message"
                     },
                     "type": {
-                        "title": "Error Type",
-                        "type": "string"
+                        "type": "string",
+                        "title": "Error Type"
                     }
-                }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
             },
             "WageGroup": {
-                "title": "WageGroup",
+                "properties": {
+                    "wagegroup_id": {
+                        "type": "string",
+                        "title": "Wagegroup Id"
+                    },
+                    "hourly-rate": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "integer"
+                            }
+                        ],
+                        "title": "Hourly-Rate"
+                    },
+                    "overtime_percentage": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Overtime Percentage",
+                        "default": 3.147618035788867e+38
+                    }
+                },
+                "type": "object",
                 "required": [
                     "wagegroup_id",
                     "hourly-rate"
                 ],
-                "type": "object",
-                "properties": {
-                    "wagegroup_id": {
-                        "title": "Wagegroup id",
-                        "type": "string"
-                    },
-                    "hourly-rate": {
-                        "title": "Hourly Rate",
-                        "type": "number"
-                    },
-                    "overtime_percentage": {
-                        "title": "Overtime Percentage",
-                        "type": "integer",
-                        "default": 25613301836844122005170211214791920802
-                    }
-                }
+                "title": "WageGroup"
             },
             "WeekDay": {
-                "title": "WeekDay",
+                "type": "string",
                 "enum": [
                     "Monday",
                     "Tuesday",
@@ -1009,9 +1228,7 @@
                     "Thursday",
                     "Friday"
                 ],
-                "type": "string",
-                "nullable": true,
-                "description": "An enumeration."
+                "title": "WeekDay"
             }
         }
     }

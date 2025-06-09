@@ -5,17 +5,28 @@ info:
   version: 1.0.0
   termsOfService: none
 paths:
-  /hypermedia/{title}:
+  /hypermedia/{name}:
     get:
       summary: Get hypermedia information about a specific title
       description: get information about a media, including metadata, reviews, images, editor's cut and trailers, etc.
         Demonstrates in-line composite schema definition of the response body.
-      operationId: getHypermedia
       parameters:
-        - name: title
+        - name: name
           in: path
           required: true
           description: the unique title of the media.
+          schema:
+            type: string
+        - name: name
+          in: query
+          required: false
+          description: the name of the actor to filter the data.
+          schema:
+            type: string
+        - name: name
+          in: header
+          required: false
+          description: the name of the organization performing the request.
           schema:
             type: string
       responses:

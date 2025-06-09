@@ -5,7 +5,7 @@ names and the original names in the parsed OpenApi Specification document.
 
 from typing import Generator
 
-from OpenApiLibCore.annotations import JSON
+from OpenApiLibCore.models import ParameterObject, PathItemObject
 
 PARAMETER_REGISTRY: dict[str, str] = {
     "body": "body",
@@ -20,7 +20,7 @@ def get_oas_name_from_safe_name(safe_name: str) -> str:
 
 
 def get_safe_name_for_oas_name(oas_name: str) -> str:
-    if is_python_safe(oas_name):
+    if _is_python_safe(oas_name):
         PARAMETER_REGISTRY[oas_name] = oas_name
         return oas_name
 
@@ -42,7 +42,7 @@ def get_safe_name_for_oas_name(oas_name: str) -> str:
     return verbose_safe_name
 
 
-def is_python_safe(name: str) -> bool:
+def _is_python_safe(name: str) -> bool:
     return name.isidentifier()
 
 
@@ -71,21 +71,27 @@ def convert_string_to_python_identifier(string: str, verbose: bool = False) -> s
                 ascii_code = ord(character)
                 yield f"_{ascii_code}_"
 
-    if is_python_safe(string):
+    if _is_python_safe(string):
         return string
 
     converted_string = "".join(_convert_string_to_python_identifier())
-    if not is_python_safe(converted_string):
+    if not _is_python_safe(converted_string):
         raise ValueError(f"Failed to convert '{string}' to Python identifier.")
     return converted_string
 
 
-def register_path_parameters(paths_data: dict[str, dict[str, JSON]]) -> None:
-    for operations_data in paths_data.values():
-        for method_data in operations_data.values():
-            parameters_data: list[dict[str, str]] = method_data.get("parameters", [])
-            path_parameter_names = [
-                p["name"] for p in parameters_data if p["in"] == "path"
-            ]
-            for name in path_parameter_names:
-                _ = get_safe_name_for_oas_name(name)
+def register_path_parameters(paths_data: dict[str, PathItemObject]) -> None:
+    def _register_path_parameter(parameter_object: ParameterObject) -> None:
+        if parameter_object.in_ == "path":
+            _ = get_safe_name_for_oas_name(parameter_object.name)
+
+    for path_item in paths_data.values():
+        if parameters := path_item.parameters:
+            for parameter in path_item.parameters:
+                _register_path_parameter(parameter_object=parameter)
+
+        operations = path_item.get_operations()
+        for operation in operations.values():
+            if parameters := operation.parameters:
+                for parameter in parameters:
+                    _register_path_parameter(parameter_object=parameter)

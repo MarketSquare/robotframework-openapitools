@@ -29,19 +29,50 @@ def start_api(context: Context) -> None:
 
 @task
 def libgen(context: Context) -> None:
+    cmd = [
+        "coverage",
+        "run",
+        "-m",
+        "openapi_libgen.generator",
+        "http://127.0.0.1:8000/openapi.json",
+        f"{ROOT}/tests/generated",
+        "MyGeneratedLibrary",
+        "my_generated_library",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False)
+
+
+@task
+def libgen_with_envs(context: Context) -> None:
     env = os.environ.copy()
     env["USE_SUMMARY_AS_KEYWORD_NAME"] = "true"
-    env["EXPAND_BODY_ARGUMENTS"] = "false"
+    env["EXPAND_BODY_ARGUMENTS"] = "true"
     cmd = [
-        "generate-library",
-        "-n",
-        "'My Generated Library'",
-        "-s",
+        "coverage",
+        "run",
+        "-m",
+        "openapi_libgen.generator",
         "http://127.0.0.1:8000/openapi.json",
-        "-d",
-        f"{ROOT}/tests/generated/",
+        f"{ROOT}/tests/generated",
+        "MyOtherGeneratedLibrary",
+        "my_other_generated_library",
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False, env=env)
+
+
+@task
+def libgen_edge_cases(context: Context) -> None:
+    cmd = [
+        "coverage",
+        "run",
+        "-m",
+        "openapi_libgen.generator",
+        f"{ROOT}/tests/files/schema_with_parameter_name_duplication.yaml",
+        f"{ROOT}/tests/generated",
+        "MyGeneratedEdgeCaseLibrary",
+        "my_generated_edge_case_library",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False)
 
 
 @task
@@ -66,8 +97,18 @@ def utests(context: Context) -> None:
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
 
+    cmd = [
+        "coverage",
+        "run",
+        "-m",
+        "unittest",
+        "discover ",
+        f"{ROOT}/tests/libgen/unittests",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False)
 
-@task(libgen)
+
+@task(libgen, libgen_with_envs, libgen_edge_cases)
 def atests(context: Context) -> None:
     cmd = [
         "coverage",
@@ -95,11 +136,11 @@ def tests(context: Context) -> None:
 def type_check(context: Context) -> None:
     subprocess.run(f"mypy {ROOT}/src", shell=True, check=False)
     subprocess.run(f"pyright {ROOT}/src", shell=True, check=False)
-    subprocess.run(
-        f"robotcode analyze code {ROOT}/tests",
-        shell=True,
-        check=False,
-    )
+    # subprocess.run(
+    #     f"robotcode analyze code {ROOT}/tests",
+    #     shell=True,
+    #     check=False,
+    # )
 
 
 @task

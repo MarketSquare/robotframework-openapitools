@@ -1,5 +1,5 @@
 *** Settings ***
-Library         MyGeneratedLibrary
+Library         MyOtherGeneratedLibrary
 ...                 source=${ORIGIN}/openapi.json
 ...                 origin=${ORIGIN}
 ...                 base_path=${EMPTY}
@@ -17,9 +17,7 @@ Test Generated Keywords: Get Employees
     Should Be Equal As Integers    ${response.status_code}    200
 
 Test Generated Keywords: Post Employee
-    VAR    &{body}    name=Robin the Robot
-    ${response}=    Post Employee    body=${body}
-    # ${response}=    Post Employee    name=Robin the Robot
+    ${response}=    Post Employee    name=Robin the Robot
     Should Be Equal As Integers    ${response.status_code}    201
     Should Be Equal    ${response.json()}[name]    Robin the Robot
 
@@ -29,15 +27,11 @@ Test Generated Keywords: Get Employee
 
 Test Generated Keywords: Patch Employee
     ${employee_id}=    Get Valid Id For Path    path=/employees/{employee_id}
-    VAR    &{body}    date_of_birth=2021-12-31
-    ${response}=    Patch Employee    employee_id=${employee_id}    body=${body}
-    # ${response}=    Patch Employee    employee_id=${employee_id}    date_of_birth=2021-12-31
+    ${response}=    Patch Employee    employee_id=${employee_id}    date_of_birth=2021-12-31
     Should Be Equal As Integers    ${response.status_code}    403
 
 Test Generated Keywords: Post WageGroup
-    VAR    &{body}    hourly_rate=99.99
-    ${response}=    Post Wagegroup    body=${body}
-    # ${response}=    Post Wagegroup    hourly_rate=99.99
+    ${response}=    Post Wagegroup    hourly_rate=99.99
     Should Be Equal As Integers    ${response.status_code}    201
     Should Be Equal As Numbers    ${response.json()}[hourly-rate]    99.99
 

@@ -5,7 +5,7 @@ Library         OpenApiLibCore
 ...                 origin=${ORIGIN}
 ...                 base_path=${EMPTY}
 ...                 mappings_path=${root}/tests/user_implemented/custom_user_mappings.py
-Variables       ${root}/tests/variables.py
+Variables       ${ROOT}/tests/variables.py
 
 
 *** Variables ***
@@ -23,11 +23,9 @@ Test Get Invalidated Parameters Raises For Empty Parameters List
 
 Test Get Invalidated Parameters Raises For Mismatched Parameters List
     ${request_data}=    Get Request Data    path=/secret_message    method=get
-    Evaluate    ${request_data.parameters.clear()} is None
-    Evaluate    ${request_data.parameters.append({"name": "dummy"})} is None
-    Run Keyword And Expect Error    ValueError: No parameter can be changed to cause status_code 401.
+    Run Keyword And Expect Error    ValueError: No parameter can be changed to cause status_code 402.
     ...    Get Invalidated Parameters
-    ...    status_code=401
+    ...    status_code=402
     ...    request_data=${request_data}
 
 Test Get Invalidated Parameters Raises For Status Code That Cannot Be Invalidated

@@ -18,7 +18,11 @@ from robot.api import logger
 from robot.api.exceptions import Failure
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore.dto_base import resolve_schema
+from OpenApiLibCore.models import (
+    OpenApiObject,
+    ResponseObject,
+    UnionTypeSchema,
+)
 from OpenApiLibCore.protocols import ResponseValidatorType
 from OpenApiLibCore.request_data import RequestData, RequestValues
 
@@ -71,7 +75,7 @@ def perform_validated_request(
             f"\nGot: {_json.dumps(response_json, indent=4, sort_keys=True)}"
         )
         raise AssertionError(
-            f"Response status_code {response.status_code} was not {status_code}"
+            f"Response status_code {response.status_code} was not {status_code}."
         )
 
     run_keyword("validate_response", path, response, original_data)
@@ -86,7 +90,7 @@ def perform_validated_request(
         if response.ok:
             if get_response.ok:
                 raise AssertionError(
-                    f"Resource still exists after deletion. Url was {request_values.url}"
+                    f"Resource still exists after deletion. Url was {request_values.url}."
                 )
             # if the path supports GET, 404 is expected, if not 405 is expected
             if get_response.status_code not in [404, 405]:
@@ -98,22 +102,8 @@ def perform_validated_request(
         elif not get_response.ok:
             raise AssertionError(
                 f"Resource could not be retrieved after failed deletion. "
-                f"Url was {request_values.url}, status_code was {get_response.status_code}"
+                f"Url was {request_values.url}, status_code was {get_response.status_code}."
             )
-
-
-def assert_href_to_resource_is_valid(
-    href: str, origin: str, base_url: str, referenced_resource: dict[str, Any]
-) -> None:
-    url = f"{origin}{href}"
-    path = url.replace(base_url, "")
-    request_data: RequestData = run_keyword("get_request_data", path, "GET")
-    params = request_data.params
-    headers = request_data.headers
-    get_response = run_keyword("authorized_request", url, "GET", params, headers)
-    assert get_response.json() == referenced_resource, (
-        f"{get_response.json()} not equal to original {referenced_resource}"
-    )
 
 
 def validate_response(
@@ -124,7 +114,7 @@ def validate_response(
     disable_server_validation: bool,
     invalid_property_default_response: int,
     response_validation: str,
-    openapi_spec: dict[str, Any],
+    openapi_spec: OpenApiObject,
     original_data: Mapping[str, Any],
 ) -> None:
     if response.status_code == int(HTTPStatus.NO_CONTENT):
@@ -153,7 +143,7 @@ def validate_response(
         )
         return None
 
-    response_spec = _get_response_spec(
+    response_object = _get_response_object(
         path=path,
         method=request_method,
         status_code=response.status_code,
@@ -163,14 +153,14 @@ def validate_response(
     content_type_from_response = response.headers.get("Content-Type", "unknown")
     mime_type_from_response, _, _ = content_type_from_response.partition(";")
 
-    if not response_spec.get("content"):
+    if not response_object.content:
         logger.warn(
             "The response cannot be validated: 'content' not specified in the OAS."
         )
         return None
 
     # multiple content types can be specified in the OAS
-    content_types = list(response_spec["content"].keys())
+    content_types = list(response_object.content.keys())
     supported_types = [
         ct for ct in content_types if ct.partition(";")[0].endswith("json")
     ]
@@ -189,39 +179,17 @@ def validate_response(
         )
 
     json_response = response.json()
-    response_schema = resolve_schema(response_spec["content"][content_type]["schema"])
-
-    response_types = response_schema.get("types")
-    if response_types:
-        # In case of oneOf / anyOf there can be multiple possible response types
-        # which makes generic validation too complex
-        return None
-    response_type = response_schema.get("type", "undefined")
-    if response_type not in ["object", "array"]:
-        _validate_value_type(value=json_response, expected_type=response_type)
+    response_schema = response_object.content[content_type].schema_
+    # No additional validations if schema is missing or when multiple responses
+    # are possible.
+    if not response_schema or isinstance(response_schema, UnionTypeSchema):
         return None
 
-    if list_item_schema := response_schema.get("items"):
-        if not isinstance(json_response, list):
-            raise AssertionError(
-                f"Response schema violation: the schema specifies an array as "
-                f"response type but the response was of type {type(json_response)}."
-            )
-        type_of_list_items = list_item_schema.get("type")
-        if type_of_list_items == "object":
-            for resource in json_response:
-                run_keyword("validate_resource_properties", resource, list_item_schema)
-        else:
-            for item in json_response:
-                _validate_value_type(value=item, expected_type=type_of_list_items)
-        # no further validation; value validation of individual resources should
-        # be performed on the path for the specific resources
-        return None
+    # ensure the href is valid if the response is an object that contains a href
+    if isinstance(json_response, dict):
+        if href := json_response.get("href"):
+            run_keyword("assert_href_to_resource_is_valid", href, json_response)
 
-    run_keyword("validate_resource_properties", json_response, response_schema)
-    # ensure the href is valid if present in the response
-    if href := json_response.get("href"):
-        run_keyword("assert_href_to_resource_is_valid", href, json_response)
     # every property that was sucessfully send and that is in the response
     # schema must have the value that was send
     if response.ok and response.request.method in ["POST", "PUT", "PATCH"]:
@@ -229,65 +197,18 @@ def validate_response(
     return None
 
 
-def validate_resource_properties(
-    resource: dict[str, Any], schema: dict[str, Any]
+def assert_href_to_resource_is_valid(
+    href: str, origin: str, base_url: str, referenced_resource: dict[str, Any]
 ) -> None:
-    schema_properties = schema.get("properties", {})
-    property_names_from_schema = set(schema_properties.keys())
-    property_names_in_resource = set(resource.keys())
-
-    if property_names_from_schema != property_names_in_resource:
-        # The additionalProperties property determines whether properties with
-        # unspecified names are allowed. This property can be boolean or an object
-        # (dict) that specifies the type of any additional properties.
-        additional_properties = schema.get("additionalProperties", True)
-        if isinstance(additional_properties, bool):
-            allow_additional_properties = additional_properties
-            allowed_additional_properties_type = None
-        else:
-            allow_additional_properties = True
-            allowed_additional_properties_type = additional_properties["type"]
-
-        extra_property_names = property_names_in_resource.difference(
-            property_names_from_schema
-        )
-        if allow_additional_properties:
-            # If a type is defined for extra properties, validate them
-            if allowed_additional_properties_type:
-                extra_properties = {
-                    key: value
-                    for key, value in resource.items()
-                    if key in extra_property_names
-                }
-                _validate_type_of_extra_properties(
-                    extra_properties=extra_properties,
-                    expected_type=allowed_additional_properties_type,
-                )
-            # If allowed, validation should not fail on extra properties
-            extra_property_names = set()
-
-        required_properties = set(schema.get("required", []))
-        missing_properties = required_properties.difference(property_names_in_resource)
-
-        if extra_property_names or missing_properties:
-            extra = (
-                f"\n\tExtra properties in response: {extra_property_names}"
-                if extra_property_names
-                else ""
-            )
-            missing = (
-                f"\n\tRequired properties missing in response: {missing_properties}"
-                if missing_properties
-                else ""
-            )
-            raise AssertionError(
-                f"Response schema violation: the response contains properties that are "
-                f"not specified in the schema or does not contain properties that are "
-                f"required according to the schema."
-                f"\n\tReceived in the response: {property_names_in_resource}"
-                f"\n\tDefined in the schema:    {property_names_from_schema}"
-                f"{extra}{missing}"
-            )
+    url = f"{origin}{href}"
+    path = url.replace(base_url, "")
+    request_data: RequestData = run_keyword("get_request_data", path, "GET")
+    params = request_data.params
+    headers = request_data.headers
+    get_response = run_keyword("authorized_request", url, "GET", params, headers)
+    assert get_response.json() == referenced_resource, (
+        f"{get_response.json()} not equal to original {referenced_resource}"
+    )
 
 
 def validate_send_response(
@@ -344,15 +265,20 @@ def validate_send_response(
             "on the provided response was None."
         )
         return None
+
     if isinstance(response.request.body, bytes):
         send_json = _json.loads(response.request.body.decode("UTF-8"))
     else:
         send_json = _json.loads(response.request.body)
 
     response_data = response.json()
-    # POST on /resource_type/{id}/array_item/ will return the updated {id} resource
-    # instead of a newly created resource. In this case, the send_json must be
-    # in the array of the 'array_item' property on {id}
+    if not isinstance(response_data, dict):
+        logger.info(
+            "Could not validate send data against the response; "
+            "the received response was not a representation of a resource."
+        )
+        return None
+
     send_path: str = response.request.path_url
     response_path = response_data.get("href", None)
     if response_path and send_path not in response_path:
@@ -366,7 +292,7 @@ def validate_send_response(
                 item for item in item_list if item["id"] == send_json["id"]
             ]
 
-    # incoming arguments are dictionaries, so they can be validated as such
+    # TODO: add support for non-dict bodies
     validate_dict_response(send_dict=send_json, received_dict=response_data)
 
     # In case of PATCH requests, ensure that only send properties have changed
@@ -440,58 +366,15 @@ def _validate_response(
             logger.info(error_message)
 
 
-def _validate_value_type(value: Any, expected_type: str) -> None:
-    type_mapping = {
-        "string": str,
-        "number": float,
-        "integer": int,
-        "boolean": bool,
-        "array": list,
-        "object": dict,
-    }
-    python_type = type_mapping.get(expected_type, None)
-    if python_type is None:
-        raise AssertionError(f"Validation of type '{expected_type}' is not supported.")
-    if not isinstance(value, python_type):
-        raise AssertionError(f"{value} is not of type {expected_type}")
-
-
-def _validate_type_of_extra_properties(
-    extra_properties: dict[str, Any], expected_type: str
-) -> None:
-    type_mapping = {
-        "string": str,
-        "number": float,
-        "integer": int,
-        "boolean": bool,
-        "array": list,
-        "object": dict,
-    }
-
-    python_type = type_mapping.get(expected_type, None)
-    if python_type is None:
-        logger.warn(
-            f"Additonal properties were not validated: "
-            f"type '{expected_type}' is not supported."
-        )
-        return
-
-    invalid_extra_properties = {
-        key: value
-        for key, value in extra_properties.items()
-        if not isinstance(value, python_type)
-    }
-    if invalid_extra_properties:
-        raise AssertionError(
-            f"Response contains invalid additionalProperties: "
-            f"{invalid_extra_properties} are not of type {expected_type}."
-        )
-
-
-def _get_response_spec(
-    path: str, method: str, status_code: int, openapi_spec: dict[str, Any]
-) -> dict[str, Any]:
+def _get_response_object(
+    path: str, method: str, status_code: int, openapi_spec: OpenApiObject
+) -> ResponseObject:
     method = method.lower()
     status = str(status_code)
-    spec: dict[str, Any] = {**openapi_spec}["paths"][path][method]["responses"][status]
-    return spec
+    path_item = openapi_spec.paths[path]
+    path_operations = path_item.get_operations()
+    operation_data = path_operations.get(method)
+    if operation_data is None:
+        raise ValueError(f"method '{method}' not supported for {path}.")
+
+    return operation_data.responses[status]
