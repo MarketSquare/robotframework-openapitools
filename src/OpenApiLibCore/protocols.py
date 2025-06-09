@@ -30,3 +30,9 @@ class GetIdPropertyNameType(Protocol):
     ) -> tuple[
         str, Callable[[str], str] | Callable[[int], int]
     ]: ...  # pragma: no cover
+
+
+class GetPathDtoClassType(Protocol):
+    def __init__(self, mappings_module_name: str) -> None: ...  # pragma: no cover
+
+    def __call__(self, path: str) -> Type[Dto]: ...  # pragma: no cover

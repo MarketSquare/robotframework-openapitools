@@ -111,8 +111,8 @@ class EmployeeDto(Dto):
 
 class EnergyLabelDto(Dto):
     @staticmethod
-    def get_relations() -> list[ResourceRelation]:
-        relations: list[ResourceRelation] = [
+    def get_path_relations() -> list[PathPropertiesConstraint]:
+        relations: list[PathPropertiesConstraint] = [
             PathPropertiesConstraint(
                 path="/energy_label/1111AA/10",
                 invalid_value="/energy_label/0123AA",
@@ -173,4 +173,9 @@ ID_MAPPING: dict[str, str] = {
     "/wagegroups": "wagegroup_id",
     "/wagegroups/{wagegroup_id}": "wagegroup_id",
     "/wagegroups/{wagegroup_id}/employees": "identification",
+}
+
+
+PATH_MAPPING: dict[str, Type[Dto]] = {
+    "/energy_label/{zipcode}/{home_number}": EnergyLabelDto,
 }
