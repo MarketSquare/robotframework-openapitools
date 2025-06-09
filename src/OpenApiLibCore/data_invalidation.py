@@ -16,7 +16,6 @@ from OpenApiLibCore.dto_base import (
     NOT_SET,
     Dto,
     IdReference,
-    PathPropertiesConstraint,
     PropertyValueConstraint,
     UniquePropertyValueConstraint,
 )
@@ -35,10 +34,7 @@ def get_invalid_body_data(
     invalid_property_default_response: int,
 ) -> dict[str, Any]:
     method = method.lower()
-    data_relations = request_data.dto.get_relations_for_error_code(status_code)
-    data_relations = [
-        r for r in data_relations if not isinstance(r, PathPropertiesConstraint)
-    ]
+    data_relations = request_data.dto.get_body_relations_for_error_code(status_code)
     if not data_relations:
         if request_data.body_schema is None:
             raise ValueError(

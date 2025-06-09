@@ -7,7 +7,11 @@ from typing import Any, Callable, Type, overload
 from robot.api import logger
 
 from OpenApiLibCore.dto_base import Dto
-from OpenApiLibCore.protocols import GetDtoClassType, GetIdPropertyNameType
+from OpenApiLibCore.protocols import (
+    GetDtoClassType,
+    GetIdPropertyNameType,
+    GetPathDtoClassType,
+)
 
 
 @dataclass
@@ -46,6 +50,30 @@ class GetDtoClass:
             return self.dto_mapping[(path, method.lower())]
         except KeyError:
             logger.debug(f"No Dto mapping for {path} {method}.")
+            return DefaultDto
+
+
+def get_path_dto_class(mappings_module_name: str) -> GetPathDtoClassType:
+    return GetPathDtoClass(mappings_module_name=mappings_module_name)
+
+
+class GetPathDtoClass:
+    """Callable class to return Dtos from user-implemented mappings file."""
+
+    def __init__(self, mappings_module_name: str) -> None:
+        try:
+            mappings_module = import_module(mappings_module_name)
+            self.dto_mapping: dict[str, Type[Dto]] = mappings_module.PATH_MAPPING
+        except (ImportError, AttributeError, ValueError) as exception:
+            if mappings_module_name != "no mapping":
+                logger.error(f"PATH_MAPPING was not imported: {exception}")
+            self.dto_mapping = {}
+
+    def __call__(self, path: str) -> Type[Dto]:
+        try:
+            return self.dto_mapping[path]
+        except KeyError:
+            logger.debug(f"No Dto mapping for {path}.")
             return DefaultDto
 
 

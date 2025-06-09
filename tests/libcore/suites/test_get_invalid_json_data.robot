@@ -32,7 +32,7 @@ Test Get Invalid Body Data Raises If Data Cannot Be Invalidated
 
 Test Get Invalid Body Data Based On Schema
     ${request_data}=    Get Request Data    path=/events/    method=post
-    Should Be Empty    ${request_data.dto.get_relations_for_error_code(422)}
+    Should Be Empty    ${request_data.dto.get_body_relations_for_error_code(422)}
     ${invalid_json}=    Get Invalid Body Data
     ...    url=none
     ...    method=none

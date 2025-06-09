@@ -151,6 +151,7 @@ from OpenApiLibCore.dto_utils import (
     DEFAULT_ID_PROPERTY_NAME,
     get_dto_class,
     get_id_property_name,
+    get_path_dto_class,
 )
 from OpenApiLibCore.localized_faker import FAKE
 from OpenApiLibCore.models import (
@@ -359,12 +360,18 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             self.get_dto_class = get_dto_class(
                 mappings_module_name=mappings_module_name
             )
+            self.get_path_dto_class = get_path_dto_class(
+                mappings_module_name=mappings_module_name
+            )
             self.get_id_property_name = get_id_property_name(
                 mappings_module_name=mappings_module_name
             )
             sys.path.pop()
         else:
             self.get_dto_class = get_dto_class(mappings_module_name="no mapping")
+            self.get_path_dto_class = get_path_dto_class(
+                mappings_module_name="no mapping"
+            )
             self.get_id_property_name = get_id_property_name(
                 mappings_module_name="no mapping"
             )
@@ -558,7 +565,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         return _path_functions.get_valid_url(
             path=path,
             base_url=self.base_url,
-            get_dto_class=self.get_dto_class,
+            get_path_dto_class=self.get_path_dto_class,
             openapi_spec=self.openapi_spec,
         )
 
@@ -617,7 +624,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             valid_url=valid_url,
             path=path,
             base_url=self.base_url,
-            get_dto_class=self.get_dto_class,
+            get_path_dto_class=self.get_path_dto_class,
             expected_status_code=expected_status_code,
         )
 

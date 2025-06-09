@@ -8,9 +8,8 @@ from typing import Any
 from requests import Response
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore.dto_base import PathPropertiesConstraint
 from OpenApiLibCore.models import OpenApiObject
-from OpenApiLibCore.protocols import GetDtoClassType, GetIdPropertyNameType
+from OpenApiLibCore.protocols import GetIdPropertyNameType, GetPathDtoClassType
 from OpenApiLibCore.request_data import RequestData
 
 run_keyword = BuiltIn().run_keyword
@@ -64,7 +63,7 @@ def get_parametrized_path(path: str, openapi_spec: OpenApiObject) -> str:
 def get_valid_url(
     path: str,
     base_url: str,
-    get_dto_class: GetDtoClassType,
+    get_path_dto_class: GetPathDtoClassType,
     openapi_spec: OpenApiObject,
 ) -> str:
     try:
@@ -75,10 +74,9 @@ def get_valid_url(
         raise ValueError(
             f"{path} not found in paths section of the OpenAPI document."
         ) from None
-    # FIXME: method should be irrelevant for this mapping and apply to the path alone
-    dto_class = get_dto_class(path=path, method="get")
-    relations = dto_class.get_relations()
-    paths = [p.path for p in relations if isinstance(p, PathPropertiesConstraint)]
+    dto_class = get_path_dto_class(path=path)
+    relations = dto_class.get_path_relations()
+    paths = [p.path for p in relations]
     if paths:
         url = f"{base_url}{choice(paths)}"
         return url

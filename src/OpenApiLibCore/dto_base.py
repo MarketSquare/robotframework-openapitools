@@ -83,6 +83,26 @@ class Dto(ABC):
     """Base class for the Dto class."""
 
     @staticmethod
+    def get_path_relations() -> list[PathPropertiesConstraint]:
+        """Return the list of Relations for the header and query parameters."""
+        return []
+
+    def get_path_relations_for_error_code(
+        self, error_code: int
+    ) -> list[PathPropertiesConstraint]:
+        """Return the list of Relations associated with the given error_code."""
+        relations: list[PathPropertiesConstraint] = [
+            r
+            for r in self.get_path_relations()
+            if r.error_code == error_code
+            or (
+                getattr(r, "invalid_value_error_code", None) == error_code
+                and getattr(r, "invalid_value", None) != NOT_SET
+            )
+        ]
+        return relations
+
+    @staticmethod
     def get_parameter_relations() -> list[ResourceRelation]:
         """Return the list of Relations for the header and query parameters."""
         return []
@@ -107,8 +127,13 @@ class Dto(ABC):
         """Return the list of Relations for the (json) body."""
         return []
 
-    def get_relations_for_error_code(self, error_code: int) -> list[ResourceRelation]:
-        """Return the list of Relations associated with the given error_code."""
+    def get_body_relations_for_error_code(
+        self, error_code: int
+    ) -> list[ResourceRelation]:
+        """
+        Return the list of Relations associated with the given error_code that are
+        applicable to the body / payload of the request.
+        """
         relations: list[ResourceRelation] = [
             r
             for r in self.get_relations()
@@ -120,16 +145,6 @@ class Dto(ABC):
         ]
         return relations
 
-    def get_body_relations_for_error_code(
-        self, error_code: int
-    ) -> list[ResourceRelation]:
-        """
-        Return the list of Relations associated with the given error_code that are
-        applicable to the body / payload of the request.
-        """
-        all_relations = self.get_relations_for_error_code(error_code=error_code)
-        return [r for r in all_relations if not isinstance(r, PathPropertiesConstraint)]
-
     def get_invalidated_data(
         self,
         schema: ObjectSchema,
@@ -139,13 +154,7 @@ class Dto(ABC):
         """Return a data set with one of the properties set to an invalid value or type."""
         properties: dict[str, Any] = self.as_dict()
 
-        # schema = resolve_schema(schema)
-
-        relations = self.get_relations_for_error_code(error_code=status_code)
-        # filter PathProperyConstraints since in that case no data can be invalidated
-        relations = [
-            r for r in relations if not isinstance(r, PathPropertiesConstraint)
-        ]
+        relations = self.get_body_relations_for_error_code(error_code=status_code)
         property_names = [r.property_name for r in relations]
         if status_code == invalid_property_default_code:
             # add all properties defined in the schema, including optional properties
@@ -167,8 +176,8 @@ class Dto(ABC):
             if id_dependencies:
                 invalid_id = uuid4().hex
                 logger.debug(
-                    f"Breaking IdDependency for status_code {status_code}: replacing "
-                    f"{properties[property_name]} with {invalid_id}"
+                    f"Breaking IdDependency for status_code {status_code}: setting "
+                    f"{property_name} to {invalid_id}"
                 )
                 properties[property_name] = invalid_id
                 return properties

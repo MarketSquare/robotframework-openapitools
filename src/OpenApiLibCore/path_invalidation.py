@@ -5,8 +5,7 @@ from uuid import uuid4
 
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore.dto_base import PathPropertiesConstraint
-from OpenApiLibCore.protocols import GetDtoClassType
+from OpenApiLibCore.protocols import GetPathDtoClassType
 
 run_keyword = BuiltIn().run_keyword
 
@@ -15,16 +14,15 @@ def get_invalidated_url(
     valid_url: str,
     path: str,
     base_url: str,
-    get_dto_class: GetDtoClassType,
+    get_path_dto_class: GetPathDtoClassType,
     expected_status_code: int,
 ) -> str:
-    dto_class = get_dto_class(path=path, method="get")
-    relations = dto_class.get_relations()
+    dto_class = get_path_dto_class(path=path)
+    relations = dto_class.get_path_relations()
     paths = [
         p.invalid_value
         for p in relations
-        if isinstance(p, PathPropertiesConstraint)
-        and p.invalid_value_error_code == expected_status_code
+        if p.invalid_value_error_code == expected_status_code
     ]
     if paths:
         url = f"{base_url}{choice(paths)}"
