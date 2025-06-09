@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiLibCore" type="LIBRARY" format="HTML" scope="SUITE" generated="2025-05-21T10:07:29+00:00" specversion="6" source="/workspaces/robotframework-openapitools/src/OpenApiLibCore/openapi_libcore.py" lineno="174">
-<version>1.0.0b4</version>
+<keywordspec name="OpenApiLibCore" type="LIBRARY" format="HTML" scope="SUITE" generated="2025-06-09T18:35:46+00:00" specversion="6" source="/workspaces/robotframework-openapitools/src/OpenApiLibCore/openapi_libcore.py" lineno="174">
+<version>1.0.0b5</version>
 <doc>&lt;p&gt;Main class providing the keywords and core logic to interact with an OpenAPI server.&lt;/p&gt;
 &lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapi-libcore"&gt;library page&lt;/a&gt; for an introduction.&lt;/p&gt;</doc>
 <tags>
@@ -385,7 +385,7 @@
 </arguments>
 <returntype name="str" typedoc="string"/>
 <doc>&lt;p&gt;Return an url with all the path parameters in the &lt;span class="name"&gt;valid_url&lt;/span&gt; replaced by a random UUID if no PathPropertiesConstraint is mapped for the &lt;span class="name"&gt;"get"&lt;/span&gt; operation on the mapped &lt;a href="#type-Path" class="name"&gt;path&lt;/a&gt; and &lt;span class="name"&gt;expected_status_code&lt;/span&gt;. If a PathPropertiesConstraint is mapped, the &lt;span class="name"&gt;invalid_value&lt;/span&gt; is returned.&lt;/p&gt;
-&lt;p&gt;Raises ValueError if the valid_url cannot be invalidated.&lt;/p&gt;</doc>
+&lt;p&gt;Raises: ValueError if the valid_url cannot be invalidated.&lt;/p&gt;</doc>
 <shortdoc>Return an url with all the path parameters in the `valid_url` replaced by a random UUID if no PathPropertiesConstraint is mapped for the `"get"` operation on the mapped `path` and `expected_status_code`. If a PathPropertiesConstraint is mapped, the `invalid_value` is returned.</shortdoc>
 </kw>
 <kw name="Get Json Data With Conflict" lineno="528">

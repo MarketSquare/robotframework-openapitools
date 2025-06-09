@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2025-05-21T10:07:36+00:00" specversion="6" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapidriver.py" lineno="358">
-<version>1.0.0b4</version>
+<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2025-06-09T18:35:53+00:00" specversion="6" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapidriver.py" lineno="358">
+<version>1.0.0b5</version>
 <doc>&lt;p&gt;Visit the &lt;a href="https://github.com/MarketSquare/robotframework-openapidriver"&gt;library page&lt;/a&gt; for an introduction and examples.&lt;/p&gt;</doc>
 <tags>
 </tags>
@@ -247,7 +247,7 @@
 </init>
 </inits>
 <keywords>
-<kw name="Test Endpoint" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="162">
+<kw name="Test Endpoint" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapi_executors.py" lineno="166">
 <arguments repr="path: str, method: str, status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
