@@ -35,7 +35,7 @@
                     "200": {
                         "description": "Successful Response",
                         "content": {
-                            "application/xml": {
+                            "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Message"
                                 }
@@ -75,7 +75,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "default": "05a87bd27c2f47a38055bd47a49cdbae",
+                            "default": "235ee6b005b847a1b52dc92dc56fac5f",
                             "title": "Seal"
                         }
                     }
@@ -84,22 +84,7 @@
                     "200": {
                         "description": "Successful Response",
                         "content": {
-                            "application/xml": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Message"
-                                }
-                            },
                             "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Message"
-                                }
-                            },
-                            "application/jsonc": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Message"
-                                }
-                            },
-                            "application/*+json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Message"
                                 }
@@ -227,23 +212,6 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/reactions/": {
-            "get": {
-                "summary": "Get Reactions",
-                "responses": {
-                    "200": {
-                        "description": "Successful Response",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Reactions"
                                 }
                             }
                         }
@@ -427,7 +395,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/xml": {
+                        "application/json": {
                             "schema": {
                                 "$ref": "#/components/schemas/WageGroup"
                             }
@@ -608,16 +576,6 @@
                 "requestBody": {
                     "content": {
                         "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Employee"
-                            }
-                        },
-                        "application/jsonc": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Employee"
-                            }
-                        },
-                        "application/*+json": {
                             "schema": {
                                 "$ref": "#/components/schemas/Employee"
                             }
@@ -855,10 +813,6 @@
             },
             "Employee": {
                 "properties": {
-                    "team": {
-                        "title": "Team",
-                        "type": "string"
-                    },
                     "name": {
                         "type": "string",
                         "title": "Name"
@@ -885,7 +839,6 @@
                 },
                 "type": "object",
                 "required": [
-                    "team",
                     "name",
                     "wagegroup_id",
                     "date_of_birth"
@@ -915,10 +868,6 @@
                         "format": "date",
                         "title": "Date Of Birth"
                     },
-                    "team": {
-                        "title": "Team",
-                        "type": "string"
-                    },
                     "parttime_schedule": {
                         "anyOf": [
                             {
@@ -932,7 +881,6 @@
                 },
                 "type": "object",
                 "required": [
-                    "team",
                     "identification",
                     "name",
                     "employee_number",
@@ -975,8 +923,6 @@
                 "title": "EmployeeDigest"
             },
             "EmployeeUpdate": {
-                "minProperties": 1,
-                "maxProperties": 3,
                 "properties": {
                     "name": {
                         "anyOf": [
@@ -1048,9 +994,6 @@
                         },
                         "type": "array",
                         "title": "Details"
-                    },
-                    "event_number": {
-                        "type": "integer"
                     }
                 },
                 "additionalProperties": false,
@@ -1086,13 +1029,6 @@
                     "message"
                 ],
                 "title": "Message"
-            },
-            "Reactions": {
-                "title": "Reactions",
-                "type": "object",
-                "additionalProperties": {
-                    "type": "integer"
-                }
             },
             "ParttimeDay": {
                 "properties": {
@@ -1209,7 +1145,7 @@
                             }
                         ],
                         "title": "Overtime Percentage",
-                        "default": 3.147618035788867e+38
+                        "default": 8.922064946766398e+37
                     }
                 },
                 "type": "object",

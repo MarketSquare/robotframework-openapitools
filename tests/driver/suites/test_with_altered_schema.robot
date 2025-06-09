@@ -9,7 +9,7 @@ Library             OpenApiDriver
 ...                     origin=http://localhost:8000
 ...                     base_path=${EMPTY}
 ...                     mappings_path=${ROOT}/tests/user_implemented/custom_user_mappings.py
-...                     response_validation=INFO
+...                     response_validation=STRICT
 ...                     require_body_for_invalid_url=${TRUE}
 ...                     extra_headers=${API_KEY}
 ...                     faker_locale=nl_NL
@@ -20,18 +20,15 @@ Test Template       Validate Test Endpoint Keyword
 
 *** Variables ***
 @{EXPECTED_FAILURES}
-...                     GET / 200
-...                     GET /reactions/ 200
-...                     POST /events/ 201
-...                     POST /employees 201
-...                     GET /employees 200
-...                     PATCH /employees/{employee_id} 200
-...                     GET /employees/{employee_id} 200
-...                     GET /available_employees 200
-...                     PUT /wagegroups/{wagegroup_id} 200
-...                     PUT /wagegroups/{wagegroup_id} 404
-...                     PUT /wagegroups/{wagegroup_id} 418
-...                     PUT /wagegroups/{wagegroup_id} 422
+...                     GET / 200    # Unsupported MIME type for response schema
+...                     GET /reactions/ 200    # /reactions/ path not implemented on API server
+...                     POST /events/ 201    # added 'event_number' property to Event schema
+...                     POST /employees 201    # added 'team' property to Employee schema
+...                     GET /employees/{employee_id} 200    # added 'team' property to EmployeeDetails schema
+...                     PUT /wagegroups/{wagegroup_id} 200    # Unsupported MIME type for requestBody
+...                     PUT /wagegroups/{wagegroup_id} 404    # Unsupported MIME type for requestBody
+...                     PUT /wagegroups/{wagegroup_id} 418    # Unsupported MIME type for requestBody
+...                     PUT /wagegroups/{wagegroup_id} 422    # Unsupported MIME type for requestBody
 
 
 *** Test Cases ***
@@ -43,14 +40,19 @@ Test Endpoint for ${method} on ${path} where ${status_code} is expected
 Validate Test Endpoint Keyword
     [Arguments]    ${path}    ${method}    ${status_code}
     IF    ${status_code} == 404
-        Test Invalid Url    path=${path}    method=${method}
+        ${operation}=    Set Variable    ${method}${SPACE}${path}${SPACE}${status_code}
+        IF    $operation in $EXPECTED_FAILURES
+            Run Keyword And Expect Error    *
+            ...    Test Invalid Url    path=${path}    method=${method}
+        ELSE
+            Test Invalid Url    path=${path}    method=${method}
+        END
     ELSE
         ${operation}=    Set Variable    ${method}${SPACE}${path}${SPACE}${status_code}
         IF    $operation in $EXPECTED_FAILURES
-            Run Keyword And Expect Error    *    Test Endpoint
-            ...    path=${path}    method=${method}    status_code=${status_code}
+            Run Keyword And Expect Error    *
+            ...    Test Endpoint    path=${path}    method=${method}    status_code=${status_code}
         ELSE
-            Test Endpoint
-            ...    path=${path}    method=${method}    status_code=${status_code}
+            Test Endpoint    path=${path}    method=${method}    status_code=${status_code}
         END
     END
