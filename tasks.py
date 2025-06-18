@@ -230,6 +230,17 @@ def readme(context: Context) -> None:
 # readme_file.write(str(doc_string).replace("\\", "\\\\").replace("\\\\*", "\\*"))
 
 
-@task(format_code, libdoc, libspec, readme)
+@task (libdoc)
+def generate_docs(context: Context) -> None:
+    cmd = [
+        "python",
+        "-m",
+        "openapitools_docs.documentation_generator",
+        f"{ROOT}/docs",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False)
+
+
+@task(format_code, libspec, readme, generate_docs)
 def build(context: Context) -> None:
     subprocess.run("poetry build", shell=True, check=False)
