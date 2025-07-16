@@ -1,39 +1,69 @@
 <!DOCTYPE html>
 <html>
 
+
 <head>
     <title>Robot Framework OpenApiTools documentation</title>
+    <style>
+        .main {
+            /* Same as the width of the sidenav */
+            margin-left: 260px;
+        }
+
+        .sidenav {
+            height: 100%;
+            width: 260px;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+        }
+
+        .sidenav a {
+            display: block;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Robot Framework OpenApiTools</h1>
-    <p>OpenApiTools is a set of libraries centered around the OpenAPI Specification</p>
-
-    <div class="tab">
-        <button class="tablinks" onclick="openDocs(event, 'libgen')" id="defaultOpen">OpenApiLibGen</button>
-        <button class="tablinks" onclick="openDocs(event, 'driver')">OpenApiDriver</button>
-        <button class="tablinks" onclick="openDocs(event, 'libcore')">OpenApiLibCore</button>
-    </div>
-    <div id="libgen" class="tabcontent">
-        <h3>OpenApiLibGen</h3>
-        <p>OpenApiLibGen is a command-line tool to generate a Robot Framework library based on an OpenAPI Specification file.</p>
-        <p>{{ libgen_documentation }}</p>
+    <div class="sidenav">
+        <h3>Keyword documentation</h3>
+        <a href="openapidriver.html" target="_blank">OpenApiDriver</a>
+        <a href="openapi_libcore.html" target="_blank">OpenApiLibCore</a>
     </div>
 
-    <div id="driver" class="tabcontent">
-        <h3>OpenApiDriver</h3>
-        <p>OpenApiDriver is an extension of the Robot Framework DataDriver library that allows
-            for generation and execution of test cases based on the information in an OpenAPI
-            document (also known as Swagger document).</p>
-        <p>{{ driver_documentation }}</p>
-    </div>
+    <div class="main">
+        <h1>Robot Framework OpenApiTools</h1>
+        <p>OpenApiTools is a set of libraries centered around the OpenAPI Specification</p>
 
-    <div id="libcore" class="tabcontent">
-        <h3>OpenApiLibCore</h3>
-        <p>The OpenApiLibCore library is a utility library that is meant to simplify creation
-            of other Robot Framework libraries for API testing based on the information in
-            an OpenAPI document (also known as Swagger document).</p>
-        <p>{{ libcore_documentation }}</p>
+        <div class="tab">
+            <button class="tablinks" onclick="openDocs(event, 'libgen')" id="defaultOpen">OpenApiLibGen</button>
+            <button class="tablinks" onclick="openDocs(event, 'driver')">OpenApiDriver</button>
+            <button class="tablinks" onclick="openDocs(event, 'libcore')">OpenApiLibCore</button>
+        </div>
+        <div id="libgen" class="tabcontent">
+            <h3>OpenApiLibGen</h3>
+            <p>OpenApiLibGen is a command-line tool to generate a Robot Framework library based on an OpenAPI
+                Specification
+                file.</p>
+            <p>{{ libgen_documentation }}</p>
+        </div>
+
+        <div id="driver" class="tabcontent">
+            <h3>OpenApiDriver</h3>
+            <p>OpenApiDriver is an extension of the Robot Framework DataDriver library that allows
+                for generation and execution of test cases based on the information in an OpenAPI
+                document (also known as Swagger document).</p>
+            <p>{{ driver_documentation }}</p>
+        </div>
+
+        <div id="libcore" class="tabcontent">
+            <h3>OpenApiLibCore</h3>
+            <p>The OpenApiLibCore library is a utility library that is meant to simplify creation
+                of other Robot Framework libraries for API testing based on the information in
+                an OpenAPI document (also known as Swagger document).</p>
+            <p>{{ libcore_documentation }}</p>
+        </div>
     </div>
 
     <script>
