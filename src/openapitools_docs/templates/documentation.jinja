@@ -1,112 +1,105 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 
 <head>
     <title>Robot Framework OpenApiTools documentation</title>
+    <link rel="icon" type="image/png" href="https://robotframework.org/img/icons/favicon-32x32.png">
+    <link href="https://fonts.cdnfonts.com/css/ocr-a-std" rel="stylesheet">
+    <link href="https://fontlibrary.org//face/courier-code" rel="stylesheet" />
     <style>
+        @import url("https://fonts.cdnfonts.com/css/ocr-a-std");
+        @import url("https://fontlibrary.org//face/courier-code");
+
         :root {
-            --sash-size: 4px;
-            --color-scheme: dark;
-            --color-text: #f0f0f0;
-            --color-link: #00c0b5;
-            --color-background-secondary: #2b2b2b;
+            --font-title: "OCR A Std", sans-serif;
+            --font-body: "CourierCodeRoman";
             --color-theme: #00c0b5;
-            --color-theme-dark: #09504d;
-            --color-positive: #0c8;
-            --color-positive-opacity: #00cc8877;
-            --color-alert: #ff9f94;
-            --color-background: #f0f0f0;
-            --color-text: #000;
-            --color-background-darkmode: #222;
+            --color-link: #00857e;
+            --color-black: #000;
             --color-white: #f5f5f5;
             --color-grey-light: #e7e7e7;
-            --color-grey: #c6c6c6;
             --color-grey-dark: #292f33;
-            --color-black: #000;
-            --color-link: #00857e;
-            --color-link-visited: #578a88;
-            --color-red: #d32f2f;
-            --color-green: #388e3c;
-            --bp-md: 700px;
-            --bp-lg: 1400px;
-            --layout-container-max-width: 1400px;
-            --layout-container-narrow-max-width: 690px;
-            --container-padding: 0;
-            --font-title: "OCRA";
-            --font-body: "Courier Code";
-            --margin-h1: 1rem;
-            --size-base-lg: 18px;
-            --size-base-md: 2.5vw;
-            --size-base-sm: 3.5vw;
-            --type-xsmall: 0.75rem;
-            --type-small: 0.875rem;
-            --type-body: 1rem;
-            --type-large: 1.15rem;
-            --type-xlarge: 1.6rem;
-            --type-2xlarge: 3rem;
-            --weight-light: 300;
-            --weight-normal: 400;
-            --weight-semi-bold: 600;
-            --weight-bold: 700;
-            --weight-black: 900;
-            --line-height-small: 1.25;
+            --color-background: #222;
+            --color-background-secondary: #2b2b2b;
+            --font-size-body: 1rem;
             --line-height-body: 1.75;
-            --line-height-lead: 2;
-            --line-height-h1: 1;
-            --line-height-h2: 1.5;
-            --line-height-h3: 1.5;
-            --letter-spacing-body: 0;
-            --size-3xsmall: 0.25rem;
-            --size-2xsmall: 0.5rem;
-            --size-xsmall: 0.75rem;
-            --size-small: 1rem;
-            --size-medium: 1.5rem;
-            --size-large: 2.25rem;
-            --size-xlarge: 4rem;
-            --size-2xlarge: 6rem;
-            --size-3xlarge: 8rem;
+            --font-size-banner: 6rem;
+            --font-weight-banner: 900;
+            --font-size-tablinks: 0.875rem;
+            --padding-very-small: 0.5rem;
+            --padding-small: 0.75rem;
+            --padding-normal: 1rem;
+            --padding-large: 2.25rem;
             --border-radius-rounded: 0.2rem;
+        }
+
+        html {
+            font-size: 100%;
+        }
+
+        nav {
+            float: left;
+            width: 20%;
+            padding: 20px;
+        }
+
+        article {
+            float: left;
+            width: 80%;
+            padding: 20px;
+        }
+
+        body {
+            color: var(--color-white);
+            background-color: var(--color-background);
+            font-size: var(--font-size-body);
+            font-family: var(--font-body);
+            line-height: var(--line-height-body);
         }
 
         .flex-container {
             display: flex;
         }
 
-        nav {
-            float: left;
-            width: 30%;
-            padding: 20px;
-        }
-
-        article {
-            float: left;
-            width: 70%;
-            padding: 20px;
-        }
-
-        body {
-            color: var(--color-white);
-            background-color: var(--color-background-darkmode);
-            line-height: var(--line-height-body);
-            font-size: var(--size-base-lg);
-            font-family: var(--font-body);
-        }
-
         .banner {
             width: 100%;
             background-color: var(--color-theme);
-            color: var(--color-grey-light);
             font-family: var(--font-title);
+            font-weight: var(--font-weight-banner);
+            font-size: var(--font-size-banner);
+            text-align: center;
+        }
+
+        .color-white {
+            color: var(--color-white)
+        }
+
+        .color-black {
+            color: var(--color-black)
+        }
+
+        .secondary-background {
+            background-color: var(--color-background-secondary);
+            padding: var(--padding-large)
         }
 
         .sidenav {
             color: var(--color-grey-light);
-            background-color: var(--color-background-darkmode);
+            background-color: var(--color-background);
         }
 
         a {
             color: var(--color-link)
+        }
+
+        hr {
+            border: solid 2px var(--color-theme);
+            border-radius: 4px;
+        }
+
+        .code-block {
+            background-color: var(--color-grey-dark);
+            padding: 0 var(--padding-normal)
         }
 
         .sidenav a:link,
@@ -114,6 +107,8 @@
             background-color: var(--color-background-secondary);
             color: var(--color-white);
             padding: 14px 25px;
+            border: 1px outset var(--color-link);
+            border-radius: 4px;
             text-align: left;
             text-decoration: none;
             display: block;
@@ -132,10 +127,10 @@
             font-family: var(--font-title);
             border-radius: var(--border-radius-rounded);
             transition: color 0.2s, background-color 0.1s, box-shadow 0.1s;
-            padding: var(--size-2xsmall) var(--size-small);
-            font-size: var(--type-small);
-            margin-bottom: var(--size-xsmall);
-            margin-right: var(--size-small);
+            padding: var(--padding-very-small) var(--padding-normal);
+            font-size: var(--font-size-tablinks);
+            margin-bottom: var(--padding-small);
+            margin-right: var(--padding-normal);
         }
 
         .tablinks.active {
@@ -148,12 +143,15 @@
 
 <body>
     <header>
-        <h1 class="banner">Robot Framework OpenApiTools</h1>
+        <h1 class="banner">
+            <div class="color-white">ROBOT FRAMEWORK</div>
+            <div class="color-black">OPENAPITOOLS</div>
+        </h1>
     </header>
 
     <div class="flex-container">
         <nav class="sidenav">
-            <h3>Keyword documentation</h3>
+            <h3>Keyword documentation quicklinks</h3>
             <a href="openapidriver.html" target="_blank">OpenApiDriver</a>
             <a href="openapi_libcore.html" target="_blank">OpenApiLibCore</a>
         </nav>
@@ -171,23 +169,15 @@
                 <p>OpenApiLibGen is a command-line tool to generate a Robot Framework library based on an OpenAPI
                     Specification
                     file.</p>
-                <p>{{ libgen_documentation }}</p>
+                <div class="secondary-background">{{ libgen_documentation }}</div>
             </div>
 
             <div id="driver" class="tabcontent">
-                <h3>OpenApiDriver</h3>
-                <p>OpenApiDriver is an extension of the Robot Framework DataDriver library that allows
-                    for generation and execution of test cases based on the information in an OpenAPI
-                    document (also known as Swagger document).</p>
-                <p>{{ driver_documentation }}</p>
+                <div class="secondary-background">{{ driver_documentation }}</div>
             </div>
 
             <div id="libcore" class="tabcontent">
-                <h3>OpenApiLibCore</h3>
-                <p>The OpenApiLibCore library is a utility library that is meant to simplify creation
-                    of other Robot Framework libraries for API testing based on the information in
-                    an OpenAPI document (also known as Swagger document).</p>
-                <p>{{ libcore_documentation }}</p>
+                <div class="secondary-background">{{ libcore_documentation }}</div>
             </div>
         </article>
     </div>

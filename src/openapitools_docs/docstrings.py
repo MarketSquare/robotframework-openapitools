@@ -10,7 +10,7 @@ For more information about Robot Framework, see http://robotframework.org.
 
 If you already have Python >= 3.10 with pip installed, you can simply run:
 
-<pre><code>pip install --upgrade robotframework-openapitools</code></pre>
+<div class="code-block"><pre><code>pip install --upgrade robotframework-openapitools</code></pre></div>
 
 <hr>
 
@@ -42,7 +42,7 @@ that is installed as a prerequisite for OpenApiTools.
 Both a local openapi.json or openapi.yaml file or one hosted by the API server
 can be checked using the <code>prance validate <reference_to_file></code> shell command:
 
-<pre><code class="language-bash">
+<div class="code-block"><pre><code class="language-bash">
 prance validate --backend=openapi-spec-validator http://localhost:8000/openapi.json
 Processing "http://localhost:8000/openapi.json"...
  -> Resolving external references.
@@ -52,7 +52,8 @@ prance validate --backend=openapi-spec-validator /tests/files/petstore_openapi.y
 Processing "/tests/files/petstore_openapi.yaml"...
  -> Resolving external references.
 Validates OK as OpenAPI 3.0.2!
-</code></pre>
+
+</code></pre></div>
 
 You'll have to change the url or file reference to the location of the openapi
 document for your API.
@@ -71,7 +72,7 @@ run with a minimal test suite.
 The examples below can be used with <code>source</code>, <code>origin</code>
 and <code>path</code> altered to fit your situation.
 
-<pre><code class="language-robotframework">
+<div class="code-block"><pre><code class="language-robotframework">
 *** Settings ***
 Library            OpenApiDriver
 ...                    source=http://localhost:8000/openapi.json
@@ -87,9 +88,9 @@ Validate Using Test Endpoint Keyword
     Test Endpoint
     ...    path=${path}    method=${method}    status_code=${status_code}
 
-</code></pre>
+</code></pre></div>
 
-<pre><code class="language-robotframework">
+<div class="code-block"><pre><code class="language-robotframework">
 *** Settings ***
 Library            OpenApiLibCore
 ...                    source=http://localhost:8000/openapi.json
@@ -99,7 +100,7 @@ Library            OpenApiLibCore
 Getting Started
     ${url}=    Get Valid Url    path=/employees/{employee_id}
 
-</code></pre>
+</code></pre></div>
 
 Running the above tests for the first time may result in an error / failed test.
 You should look at the Robot Framework <code>log.html</code> to determine the reasons
