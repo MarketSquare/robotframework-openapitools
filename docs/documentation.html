@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Robot Framework OpenApiTools documentation</title>
+    <link rel="icon" type="image/png" href="https://robotframework.org/img/icons/favicon-32x32.png">
+    <link href="https://fonts.cdnfonts.com/css/ocr-a-std" rel="stylesheet">
+    <link href="https://fontlibrary.org//face/courier-code" rel="stylesheet" />
+    <style>
+        @import url("https://fonts.cdnfonts.com/css/ocr-a-std");
+        @import url("https://fontlibrary.org//face/courier-code");
+
+        :root {
+            --font-title: "OCR A Std", sans-serif;
+            --font-body: "CourierCodeRoman";
+            --color-theme: #00c0b5;
+            --color-link: #00857e;
+            --color-black: #000;
+            --color-white: #f5f5f5;
+            --color-grey-light: #e7e7e7;
+            --color-grey-dark: #292f33;
+            --color-background: #222;
+            --color-background-secondary: #2b2b2b;
+            --font-size-body: 1rem;
+            --line-height-body: 1.75;
+            --font-size-banner: 6rem;
+            --font-weight-banner: 900;
+            --font-size-tablinks: 0.875rem;
+            --padding-very-small: 0.5rem;
+            --padding-small: 0.75rem;
+            --padding-normal: 1rem;
+            --padding-large: 2.25rem;
+            --border-radius-rounded: 0.2rem;
+        }
+
+        html {
+            font-size: 100%;
+        }
+
+        nav {
+            float: left;
+            width: 20%;
+            padding: 20px;
+        }
+
+        article {
+            float: left;
+            width: 80%;
+            padding: 20px;
+        }
+
+        body {
+            color: var(--color-white);
+            background-color: var(--color-background);
+            font-size: var(--font-size-body);
+            font-family: var(--font-body);
+            line-height: var(--line-height-body);
+        }
+
+        .flex-container {
+            display: flex;
+        }
+
+        .banner {
+            width: 100%;
+            background-color: var(--color-theme);
+            font-family: var(--font-title);
+            font-weight: var(--font-weight-banner);
+            font-size: var(--font-size-banner);
+            text-align: center;
+        }
+
+        .color-white {
+            color: var(--color-white)
+        }
+
+        .color-black {
+            color: var(--color-black)
+        }
+
+        .secondary-background {
+            background-color: var(--color-background-secondary);
+            padding: var(--padding-large)
+        }
+
+        .sidenav {
+            color: var(--color-grey-light);
+            background-color: var(--color-background);
+        }
+
+        a {
+            color: var(--color-link)
+        }
+
+        hr {
+            border: solid 2px var(--color-theme);
+            border-radius: 4px;
+        }
+
+        .code-block {
+            background-color: var(--color-grey-dark);
+            padding: 0 var(--padding-normal)
+        }
+
+        .sidenav a:link,
+        .sidenav a:visited {
+            background-color: var(--color-background-secondary);
+            color: var(--color-white);
+            padding: 14px 25px;
+            border: 1px outset var(--color-link);
+            border-radius: 4px;
+            text-align: left;
+            text-decoration: none;
+            display: block;
+        }
+
+        .sidenav a:hover,
+        .sidenav a:active {
+            color: var(--color-theme);
+        }
+
+        .tablinks {
+            color: var(--color-black);
+            background-color: var(--color-white);
+            text-transform: uppercase;
+            box-shadow: rgba(0, 0, 0, 0.1) 2px 4px 3px -1px, rgba(0, 0, 0, 0.04) 6px 6px 15px -1px;
+            font-family: var(--font-title);
+            border-radius: var(--border-radius-rounded);
+            transition: color 0.2s, background-color 0.1s, box-shadow 0.1s;
+            padding: var(--padding-very-small) var(--padding-normal);
+            font-size: var(--font-size-tablinks);
+            margin-bottom: var(--padding-small);
+            margin-right: var(--padding-normal);
+        }
+
+        .tablinks.active {
+            color: var(--color-white);
+            background-color: var(--color-theme);
+            box-shadow: rgba(0, 0, 0, 0.2) 2px 3px 2px -1px inset;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1 class="banner">
+            <div class="color-white">ROBOT FRAMEWORK</div>
+            <div class="color-black">OPENAPITOOLS</div>
+        </h1>
+    </header>
+
+    <div class="flex-container">
+        <nav class="sidenav">
+            <h3>Keyword documentation quicklinks</h3>
+            <a href="openapidriver.html" target="_blank">OpenApiDriver</a>
+            <a href="openapi_libcore.html" target="_blank">OpenApiLibCore</a>
+        </nav>
+
+        <article>
+            <p>OpenApiTools is a set of libraries centered around the OpenAPI Specification</p>
+
+            <div class="tab">
+                <button class="tablinks" onclick="openDocs(event, 'libgen')" id="defaultOpen">OpenApiLibGen</button>
+                <button class="tablinks" onclick="openDocs(event, 'driver')">OpenApiDriver</button>
+                <button class="tablinks" onclick="openDocs(event, 'libcore')">OpenApiLibCore</button>
+            </div>
+            <div id="libgen" class="tabcontent">
+                <h3>OpenApiLibGen</h3>
+                <p>OpenApiLibGen is a command-line tool to generate a Robot Framework library based on an OpenAPI
+                    Specification
+                    file.</p>
+                <div class="secondary-background">To be added</div>
+            </div>
+
+            <div id="driver" class="tabcontent">
+                <div class="secondary-background">
+<h1>OpenApiDriver for Robot Framework</h1>
+
+OpenApiDriver is an extension of the Robot Framework DataDriver library that allows
+for generation and execution of test cases based on the information in an OpenAPI document.
+
+For more information about the DataDriver library, see
+https://github.com/Snooz82/robotframework-datadriver.
+
+<blockquote>
+Keyword documentation for OpenApiDriver can be found <a href="openapidriver.html" target="_blank">here</a>.
+</blockquote>
+
+<h2>Introduction</h2>
+
+My RoboCon 2022 talk about OpenApiDriver and OpenApiLibCore can be found
+<a href="https://www.youtube.com/watch?v=7YWZEHxk9Ps" target="_blank">here</a>.
+
+For more information about Robot Framework, see http://robotframework.org.
+
+<hr>
+
+<h2>Installation</h2>
+
+If you already have Python >= 3.10 with pip installed, you can simply run:
+
+<div class="code-block"><pre><code>pip install --upgrade robotframework-openapitools</code></pre></div>
+
+<hr>
+
+<h2>OpenAPI (aka Swagger)</h2>
+
+The OpenAPI Specification (OAS) defines a standard, language-agnostic interface
+to RESTful APIs, see https://www.openapis.org/
+
+The OpenApiTools libraries implement a number of Robot Framework keywords that make it
+easy to interact with an OpenAPI implementation by using the information in the
+OpenAPI document (previously: Swagger file), for examply by automatic generation of
+valid values for requests based on the schema information in the document.
+
+<blockquote><i>
+Note: The OpenApiTools libraries are designed for APIs based on the OAS v3.
+The libraries have not been tested for APIs based on the OAS v2.
+</i></blockquote>
+
+<hr>
+
+<h2>Getting started</h2>
+
+Before trying to use the keywords exposed by any of the libraries from OpenApiTools on
+the target API, it's recommended to first ensure that the OpenAPI document for the API
+is valid under the OpenAPI Specification.
+
+This can be done using the command line interface of the <code>prance</code> package
+that is installed as a prerequisite for OpenApiTools.
+Both a local openapi.json or openapi.yaml file or one hosted by the API server
+can be checked using the <code>prance validate <reference_to_file></code> shell command:
+
+<div class="code-block"><pre><code class="language-bash">
+prance validate --backend=openapi-spec-validator http://localhost:8000/openapi.json
+Processing "http://localhost:8000/openapi.json"...
+ -> Resolving external references.
+Validates OK as OpenAPI 3.0.2!
+
+prance validate --backend=openapi-spec-validator /tests/files/petstore_openapi.yaml
+Processing "/tests/files/petstore_openapi.yaml"...
+ -> Resolving external references.
+Validates OK as OpenAPI 3.0.2!
+
+</code></pre></div>
+
+You'll have to change the url or file reference to the location of the openapi
+document for your API.
+
+<blockquote><i>
+Note: Although recursion is technically allowed under the OAS, tool
+support is limited and changing the OAS to not use recursion is recommended.
+</i></blockquote>
+
+Support for parsing OpenAPI documents with recursion in them is limited.
+See the <code>recursion_limit</code> and <code>recursion_default</code> library
+parameters for the available options.
+
+If the OpenAPI document passes this validation, the next step is trying to do a test
+run with a minimal test suite.
+The examples below can be used with <code>source</code>, <code>origin</code>
+and <code>path</code> altered to fit your situation.
+
+<div class="code-block"><pre><code class="language-robotframework">
+*** Settings ***
+Library            OpenApiDriver
+...                    source=http://localhost:8000/openapi.json
+...                    origin=http://localhost:8000
+Test Template      Validate Using Test Endpoint Keyword
+
+*** Test Cases ***
+Test Endpoint for ${method} on ${path} where ${status_code} is expected
+
+*** Keywords ***
+Validate Using Test Endpoint Keyword
+    [Arguments]    ${path}    ${method}    ${status_code}
+    Test Endpoint
+    ...    path=${path}    method=${method}    status_code=${status_code}
+
+</code></pre></div>
+
+<div class="code-block"><pre><code class="language-robotframework">
+*** Settings ***
+Library            OpenApiLibCore
+...                    source=http://localhost:8000/openapi.json
+...                    origin=http://localhost:8000
+
+*** Test Cases ***
+Getting Started
+    ${url}=    Get Valid Url    path=/employees/{employee_id}
+
+</code></pre></div>
+
+Running the above tests for the first time may result in an error / failed test.
+You should look at the Robot Framework <code>log.html</code> to determine the reasons
+for the failing tests.
+Depending on the reasons for the failures, different solutions are possible.
+
+The OpenApiTools libraries also support handling of relations between resources within
+the scope of the API being validated as well as handling dependencies on resources
+outside the scope of the API. In addition there is support for handling restrictions
+on the values of parameters and properties.
+This is supported by the <code>mappings_path</code> library parameter.
+Details about the <code>mappings_path</code> parameter usage can be
+found <a href="advanced_use.md" target="_blank">here</a>.
+
+<hr>
+
+<h2>Limitations</h2>
+
+There are currently a number of limitations to supported API structures, supported data
+types and properties.
+The following list details the most important ones.
+- Only JSON request and response bodies are supported.
+- No support for per-path authorization levels (only simple 401 / 403 validation).
+
+For all open issues please visit the OpenApiTools <a href="https://github.com/MarketSquare/robotframework-openapitools" target="_blank">GitHub page</a>.
+
+
+</div>
+            </div>
+
+            <div id="libcore" class="tabcontent">
+                <div class="secondary-background">
+<h1>OpenApiLibCore for Robot Framework</h1>
+
+The OpenApiLibCore library is a utility library that is meant to simplify creation
+of other Robot Framework libraries for API testing based on the information in
+an OpenAPI document.
+Both OpenApiDriver and libraries generated using OpenApiLibGen rely on OpenApiLibCore
+and its keywords for their functionality.
+This document explains how to use the OpenApiLibCore library.
+
+<blockquote>
+Keyword documentation for OpenApiLibCore can be found <a href="openapi_libcore.html" target="_blank">here</a>.
+</blockquote>
+
+<h2>Introduction</h2>
+
+My RoboCon 2022 talk about OpenApiDriver and OpenApiLibCore can be found
+<a href="https://www.youtube.com/watch?v=7YWZEHxk9Ps" target="_blank">here</a>.
+
+For more information about Robot Framework, see http://robotframework.org.
+
+<hr>
+
+<h2>Installation</h2>
+
+If you already have Python >= 3.10 with pip installed, you can simply run:
+
+<div class="code-block"><pre><code>pip install --upgrade robotframework-openapitools</code></pre></div>
+
+<hr>
+
+<h2>OpenAPI (aka Swagger)</h2>
+
+The OpenAPI Specification (OAS) defines a standard, language-agnostic interface
+to RESTful APIs, see https://www.openapis.org/
+
+The OpenApiTools libraries implement a number of Robot Framework keywords that make it
+easy to interact with an OpenAPI implementation by using the information in the
+OpenAPI document (previously: Swagger file), for examply by automatic generation of
+valid values for requests based on the schema information in the document.
+
+<blockquote><i>
+Note: The OpenApiTools libraries are designed for APIs based on the OAS v3.
+The libraries have not been tested for APIs based on the OAS v2.
+</i></blockquote>
+
+<hr>
+
+<h2>Getting started</h2>
+
+Before trying to use the keywords exposed by any of the libraries from OpenApiTools on
+the target API, it's recommended to first ensure that the OpenAPI document for the API
+is valid under the OpenAPI Specification.
+
+This can be done using the command line interface of the <code>prance</code> package
+that is installed as a prerequisite for OpenApiTools.
+Both a local openapi.json or openapi.yaml file or one hosted by the API server
+can be checked using the <code>prance validate <reference_to_file></code> shell command:
+
+<div class="code-block"><pre><code class="language-bash">
+prance validate --backend=openapi-spec-validator http://localhost:8000/openapi.json
+Processing "http://localhost:8000/openapi.json"...
+ -> Resolving external references.
+Validates OK as OpenAPI 3.0.2!
+
+prance validate --backend=openapi-spec-validator /tests/files/petstore_openapi.yaml
+Processing "/tests/files/petstore_openapi.yaml"...
+ -> Resolving external references.
+Validates OK as OpenAPI 3.0.2!
+
+</code></pre></div>
+
+You'll have to change the url or file reference to the location of the openapi
+document for your API.
+
+<blockquote><i>
+Note: Although recursion is technically allowed under the OAS, tool
+support is limited and changing the OAS to not use recursion is recommended.
+</i></blockquote>
+
+Support for parsing OpenAPI documents with recursion in them is limited.
+See the <code>recursion_limit</code> and <code>recursion_default</code> library
+parameters for the available options.
+
+If the OpenAPI document passes this validation, the next step is trying to do a test
+run with a minimal test suite.
+The examples below can be used with <code>source</code>, <code>origin</code>
+and <code>path</code> altered to fit your situation.
+
+<div class="code-block"><pre><code class="language-robotframework">
+*** Settings ***
+Library            OpenApiDriver
+...                    source=http://localhost:8000/openapi.json
+...                    origin=http://localhost:8000
+Test Template      Validate Using Test Endpoint Keyword
+
+*** Test Cases ***
+Test Endpoint for ${method} on ${path} where ${status_code} is expected
+
+*** Keywords ***
+Validate Using Test Endpoint Keyword
+    [Arguments]    ${path}    ${method}    ${status_code}
+    Test Endpoint
+    ...    path=${path}    method=${method}    status_code=${status_code}
+
+</code></pre></div>
+
+<div class="code-block"><pre><code class="language-robotframework">
+*** Settings ***
+Library            OpenApiLibCore
+...                    source=http://localhost:8000/openapi.json
+...                    origin=http://localhost:8000
+
+*** Test Cases ***
+Getting Started
+    ${url}=    Get Valid Url    path=/employees/{employee_id}
+
+</code></pre></div>
+
+Running the above tests for the first time may result in an error / failed test.
+You should look at the Robot Framework <code>log.html</code> to determine the reasons
+for the failing tests.
+Depending on the reasons for the failures, different solutions are possible.
+
+The OpenApiTools libraries also support handling of relations between resources within
+the scope of the API being validated as well as handling dependencies on resources
+outside the scope of the API. In addition there is support for handling restrictions
+on the values of parameters and properties.
+This is supported by the <code>mappings_path</code> library parameter.
+Details about the <code>mappings_path</code> parameter usage can be
+found <a href="advanced_use.md" target="_blank">here</a>.
+
+<hr>
+
+<h2>Limitations</h2>
+
+There are currently a number of limitations to supported API structures, supported data
+types and properties.
+The following list details the most important ones.
+- Only JSON request and response bodies are supported.
+- No support for per-path authorization levels (only simple 401 / 403 validation).
+
+For all open issues please visit the OpenApiTools <a href="https://github.com/MarketSquare/robotframework-openapitools" target="_blank">GitHub page</a>.
+
+
+</div>
+            </div>
+        </article>
+    </div>
+
+    <script>
+        function openDocs(evt, moduleName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(moduleName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+        document.getElementById("defaultOpen").click();
+    </script>
+</body>
+
+</html>
