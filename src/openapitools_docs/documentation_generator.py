@@ -4,11 +4,7 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
 from openapitools_docs.docstrings import (
-    OPENAPIDRIVER_INIT_DOCSTRING,
-    OPENAPIDRIVER_LIBRARY_DOCSTRING,
     OPENAPIDRIVER_MODULE_DOCSTRING,
-    OPENAPILIBCORE_INIT_DOCSTRING,
-    OPENAPILIBCORE_LIBRARY_DOCSTRING,
     OPENAPILIBCORE_MODULE_DOCSTRING,
 )
 
