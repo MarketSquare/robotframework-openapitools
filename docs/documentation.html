@@ -11,16 +11,17 @@
         @import url("https://fontlibrary.org//face/courier-code");
 
         :root {
+            color-scheme: light dark;
             --font-title: "OCR A Std", sans-serif;
             --font-body: "CourierCodeRoman";
-            --color-theme: #00c0b5;
-            --color-link: #00857e;
+            --color-theme: light-dark(#00c0b5, #00c0b5);
+            --color-link: light-dark(#00857e, #00c0b5);
             --color-black: #000;
             --color-white: #f5f5f5;
             --color-grey-light: #e7e7e7;
             --color-grey-dark: #292f33;
-            --color-background: #222;
-            --color-background-secondary: #2b2b2b;
+            --color-background: light-dark(#f0f0f0, #222);
+            --color-background-secondary: light-dark(#fff, #2b2b2b);
             --font-size-body: 1rem;
             --line-height-body: 1.75;
             --font-size-banner: 6rem;
@@ -50,7 +51,7 @@
         }
 
         body {
-            color: var(--color-white);
+            color: light-dark(var(--color-black), var(--color-white));
             background-color: var(--color-background);
             font-size: var(--font-size-body);
             font-family: var(--font-body);
@@ -84,7 +85,7 @@
         }
 
         .sidenav {
-            color: var(--color-grey-light);
+            color: light-dark(var(--color-grey-dark), var(--color-grey-light));
             background-color: var(--color-background);
         }
 
@@ -98,14 +99,14 @@
         }
 
         .code-block {
-            background-color: var(--color-grey-dark);
+            background-color: light-dark(var(--color-grey-light), var(--color-grey-dark));
             padding: 0 var(--padding-normal)
         }
 
         .sidenav a:link,
         .sidenav a:visited {
             background-color: var(--color-background-secondary);
-            color: var(--color-white);
+            color: light-dark(var(--color-black), var(--color-white));
             padding: 14px 25px;
             border: 1px outset var(--color-link);
             border-radius: 4px;
