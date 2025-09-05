@@ -10,7 +10,7 @@ For more information about Robot Framework, see http://robotframework.org.
 
 If you already have Python >= 3.10 with pip installed, you can simply run:
 
-<div class="code-block"><pre><code>pip install --upgrade robotframework-openapitools</code></pre></div>
+<div class="code-block"><pre><code class="language-shell">pip install --upgrade robotframework-openapitools</code></pre></div>
 
 <hr>
 
@@ -42,7 +42,7 @@ that is installed as a prerequisite for OpenApiTools.
 Both a local openapi.json or openapi.yaml file or one hosted by the API server
 can be checked using the <code>prance validate <reference_to_file></code> shell command:
 
-<div class="code-block"><pre><code class="language-bash">
+<div class="code-block"><pre><code class="language-shell">
 prance validate --backend=openapi-spec-validator http://localhost:8000/openapi.json
 Processing "http://localhost:8000/openapi.json"...
  -> Resolving external references.
@@ -228,7 +228,7 @@ A <a href="https://requests.readthedocs.io/en/latest/api/#authentication" target
 <h3>cert</h3>
 The SSL certificate to use with all requests.
 If string: the path to ssl client cert file (<code>.pem</code>).
-If tuple: the <code class="language-python">("cert", "key")</code> pair.
+If tuple: the <pre><code class="language-python">("cert", "key")</code></pre> pair.
 
 <h3>verify_tls</h3>
 Whether or not to verify the TLS / SSL certificate of the server.
@@ -323,3 +323,88 @@ Specific test cases to ignore must be specified as a <code>tuple</code> or
 
 {shared_parameters}
 """.format(shared_parameters=SHARED_PARAMETERS)
+
+LIBGEN_MODULE_DOCSTRING = """
+Test shell
+<div class="code-block"><pre><code class="language-shell">
+(.venv) inv generate-docs
+    documentation generated!
+</code></pre></div>
+
+Test Robot Framework
+<div class="code-block"><pre><code class="language-robotframework">
+*** Settings ***
+Variables           ${ROOT}/tests/variables.py
+Library             OpenApiDriver
+...                     source=http://localhost:8000/openapi.json
+...                     origin=${EMPTY}
+...                     base_path=${EMPTY}
+...                     mappings_path=${ROOT}/tests/user_implemented/custom_user_mappings.py
+...                     response_validation=STRICT
+...                     require_body_for_invalid_url=${TRUE}
+...                     extra_headers=${API_KEY}
+...                     faker_locale=nl_NL
+...                     default_id_property_name=identification
+
+Suite Setup         Update Origin
+Test Template       Validate Test Endpoint Keyword
+
+
+*** Test Cases ***
+# robotcode: ignore[ModelError, VariableNotReplaced]
+Test Endpoint for ${method} on ${path} where ${status_code} is expected
+
+
+*** Keywords ***
+Validate Test Endpoint Keyword
+    [Arguments]    ${path}    ${method}    ${status_code}
+    IF    ${status_code} == 404
+        Test Invalid Url    path=${path}    method=${method}
+    ELSE
+        Test Endpoint
+        ...    path=${path}    method=${method}    status_code=${status_code}
+    END
+
+Update Origin
+    Set Origin    http://localhost:8000
+
+</code></pre></div>
+
+Test Python
+<div class="code-block"><pre><code class="language-shell">
+import sys
+from pathlib import Path
+
+from jinja2 import Environment, FileSystemLoader
+
+from openapitools_docs.docstrings import (
+    LIBGEN_MODULE_DOCSTRING,
+    OPENAPIDRIVER_MODULE_DOCSTRING,
+    OPENAPILIBCORE_MODULE_DOCSTRING,
+)
+
+HERE = Path(__file__).parent.resolve()
+
+
+def generate(output_folder: Path) -> None:
+    output_folder.mkdir(parents=True, exist_ok=True)
+
+    environment = Environment(loader=FileSystemLoader(f"{HERE}/templates/"))
+
+    documentation_template = environment.get_template("documentation.jinja")
+    output_file_path = output_folder / "documentation.html"
+    documentation_content = documentation_template.render(
+        libgen_documentation=LIBGEN_MODULE_DOCSTRING,
+        driver_documentation=OPENAPIDRIVER_MODULE_DOCSTRING,
+        libcore_documentation=OPENAPILIBCORE_MODULE_DOCSTRING,
+    )
+    with open(output_file_path, mode="w", encoding="utf-8") as html_file:
+        html_file.write(documentation_content)
+
+
+if __name__ == "__main__":  # pragma: no cover
+    output_folder = Path(sys.argv[1])
+    generate(output_folder=output_folder)
+
+</code></pre></div>
+"""
