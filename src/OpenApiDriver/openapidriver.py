@@ -15,18 +15,13 @@ from OpenApiLibCore.annotations import JSON
 from openapitools_docs.docstrings import (
     OPENAPIDRIVER_INIT_DOCSTRING,
     OPENAPIDRIVER_LIBRARY_DOCSTRING,
-    OPENAPIDRIVER_MODULE_DOCSTRING,
 )
-
-__doc__ = OPENAPIDRIVER_MODULE_DOCSTRING
 
 default_str_mapping: Mapping[str, str] = MappingProxyType({})
 
 
 @library(scope="SUITE", doc_format="HTML")
 class OpenApiDriver(OpenApiExecutors, DataDriver):
-    __doc__ = OPENAPIDRIVER_LIBRARY_DOCSTRING
-
     def __init__(  # noqa: PLR0913, pylint: disable=dangerous-default-value
         self,
         source: str,
@@ -55,8 +50,6 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         cookies: MutableMapping[str, str] | CookieJar | None = None,
         proxies: MutableMapping[str, str] | None = None,
     ) -> None:
-        self.__doc__ = OPENAPIDRIVER_INIT_DOCSTRING
-
         included_paths = included_paths if included_paths else ()
         ignored_paths = ignored_paths if ignored_paths else ()
         ignored_responses = ignored_responses if ignored_responses else ()
@@ -99,16 +92,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
             ignored_testcases=ignored_testcases,
         )
 
+    __init__.__doc__ = OPENAPIDRIVER_INIT_DOCSTRING
 
-class DocumentationGenerator(OpenApiDriver):
-    __doc__ = OpenApiDriver.__doc__
 
-    @staticmethod
-    def get_keyword_names() -> list[str]:
-        """Curated keywords for libdoc and libspec."""
-        return [
-            "test_unauthorized",
-            "test_forbidden",
-            "test_invalid_url",
-            "test_endpoint",
-        ]  # pragma: no cover
+OpenApiDriver.__doc__ = OPENAPIDRIVER_LIBRARY_DOCSTRING

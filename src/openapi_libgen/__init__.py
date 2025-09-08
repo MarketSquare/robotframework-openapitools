@@ -1,3 +1,3 @@
-from openapitools_docs.docstrings import LIBGEN_MODULE_DOCSTRING
+from openapitools_docs.docstrings import OPENAPILIBGEN_DOCUMENTATION
 
-__doc__ = LIBGEN_MODULE_DOCSTRING
+__doc__ = OPENAPILIBGEN_DOCUMENTATION

@@ -4,9 +4,9 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
 from openapitools_docs.docstrings import (
-    LIBGEN_MODULE_DOCSTRING,
-    OPENAPIDRIVER_MODULE_DOCSTRING,
-    OPENAPILIBCORE_MODULE_DOCSTRING,
+    OPENAPIDRIVER_DOCUMENTATION,
+    OPENAPILIBCORE_DOCUMENTATION,
+    OPENAPILIBGEN_DOCUMENTATION,
 )
 
 HERE = Path(__file__).parent.resolve()
@@ -20,9 +20,9 @@ def generate(output_folder: Path) -> None:
     documentation_template = environment.get_template("documentation.jinja")
     output_file_path = output_folder / "documentation.html"
     documentation_content = documentation_template.render(
-        libgen_documentation=LIBGEN_MODULE_DOCSTRING,
-        driver_documentation=OPENAPIDRIVER_MODULE_DOCSTRING,
-        libcore_documentation=OPENAPILIBCORE_MODULE_DOCSTRING,
+        libgen_documentation=OPENAPILIBGEN_DOCUMENTATION,
+        driver_documentation=OPENAPIDRIVER_DOCUMENTATION,
+        libcore_documentation=OPENAPILIBCORE_DOCUMENTATION,
     )
     with open(output_file_path, mode="w", encoding="utf-8") as html_file:
         html_file.write(documentation_content)

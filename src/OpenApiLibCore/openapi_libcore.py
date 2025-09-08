@@ -48,10 +48,7 @@ from OpenApiLibCore.request_data import RequestData, RequestValues
 from openapitools_docs.docstrings import (
     OPENAPILIBCORE_INIT_DOCSTRING,
     OPENAPILIBCORE_LIBRARY_DOCSTRING,
-    OPENAPILIBCORE_MODULE_DOCSTRING,
 )
-
-__doc__ = OPENAPILIBCORE_MODULE_DOCSTRING
 
 run_keyword = BuiltIn().run_keyword
 default_str_mapping: Mapping[str, str] = MappingProxyType({})
@@ -60,8 +57,6 @@ default_json_mapping: Mapping[str, JSON] = MappingProxyType({})
 
 @library(scope="SUITE", doc_format="HTML")
 class OpenApiLibCore:  # pylint: disable=too-many-public-methods
-    __doc__ = OPENAPILIBCORE_LIBRARY_DOCSTRING
-
     def __init__(  # noqa: PLR0913, pylint: disable=dangerous-default-value
         self,
         source: str,
@@ -86,8 +81,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         cookies: MutableMapping[str, str] | CookieJar | None = None,
         proxies: MutableMapping[str, str] | None = None,
     ) -> None:
-        self.__doc__ = OPENAPILIBCORE_INIT_DOCSTRING
-
         self._source = source
         self._origin = origin
         self._base_path = base_path
@@ -676,3 +669,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
 
     def read_paths(self) -> dict[str, PathItemObject]:
         return self.openapi_spec.paths
+
+    __init__.__doc__ = OPENAPILIBCORE_INIT_DOCSTRING
+
+
+OpenApiLibCore.__doc__ = OPENAPILIBCORE_LIBRARY_DOCSTRING

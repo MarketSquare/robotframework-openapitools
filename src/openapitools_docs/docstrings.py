@@ -43,12 +43,14 @@ Both a local openapi.json or openapi.yaml file or one hosted by the API server
 can be checked using the <code>prance validate <reference_to_file></code> shell command:
 
 <div class="code-block"><pre><code class="language-shell">
-prance validate --backend=openapi-spec-validator http://localhost:8000/openapi.json
+(.venv) prance validate --backend=openapi-spec-validator http://localhost:8000/openapi.json
+
 Processing "http://localhost:8000/openapi.json"...
  -> Resolving external references.
 Validates OK as OpenAPI 3.0.2!
 
-prance validate --backend=openapi-spec-validator /tests/files/petstore_openapi.yaml
+(.venv) prance validate --backend=openapi-spec-validator /tests/files/petstore_openapi.yaml
+
 Processing "/tests/files/petstore_openapi.yaml"...
  -> Resolving external references.
 Validates OK as OpenAPI 3.0.2!
@@ -249,7 +251,7 @@ to send with all requests.
 A dictionary of <code>"protocol": "proxy url"</code> to use for all requests.
 """
 
-OPENAPILIBCORE_MODULE_DOCSTRING = """
+OPENAPILIBCORE_DOCUMENTATION = """
 <h1>OpenApiLibCore for Robot Framework</h1>
 
 The OpenApiLibCore library is a utility library that is meant to simplify creation
@@ -269,14 +271,14 @@ Keyword documentation for OpenApiLibCore can be found <a href="openapi_libcore.h
 """.format(general_introduction=GENERAL_INTRODUCTION)
 
 OPENAPILIBCORE_LIBRARY_DOCSTRING = """
-Main class providing the keywords and core logic to interact with an OpenAPI server.
+The OpenApiLibCore library provides the keywords and core logic to interact with an OpenAPI server.
 
 Visit the <a href="documentation.html" target="_blank">OpenApiTools documentation</a> for an introduction.
 """
 
 OPENAPILIBCORE_INIT_DOCSTRING = SHARED_PARAMETERS
 
-OPENAPIDRIVER_MODULE_DOCSTRING = """
+OPENAPIDRIVER_DOCUMENTATION = """
 <h1>OpenApiDriver for Robot Framework</h1>
 
 OpenApiDriver is an extension of the Robot Framework DataDriver library that allows
@@ -295,7 +297,7 @@ Keyword documentation for OpenApiDriver can be found <a href="openapidriver.html
 """.format(general_introduction=GENERAL_INTRODUCTION)
 
 OPENAPIDRIVER_LIBRARY_DOCSTRING = """
-Main class providing the keywords and logic for execution of generated test cases based on an OpenAPI document.
+The OpenApiDriver library provides the keywords and logic for execution of generated test cases based on an OpenAPI document.
 
 Visit the <a href="documentation.html" target="_blank">OpenApiTools documentation</a> for an introduction.
 """
@@ -324,87 +326,136 @@ Specific test cases to ignore must be specified as a <code>tuple</code> or
 {shared_parameters}
 """.format(shared_parameters=SHARED_PARAMETERS)
 
-LIBGEN_MODULE_DOCSTRING = """
-Test shell
+OPENAPILIBGEN_DOCUMENTATION = """
+<h1>OpenApiLibGen for Robot Framework</h1>
+
+OpenApiLibGen is a command-line tool that can be used to generate a Robot Framework
+library based on an OpenAPI document.
+
+<hr>
+
+In a (virtual) environment where <code>robotframework-openapitools</code> is installed
+the <code>generate-library</code> shell command is availabe:
+
 <div class="code-block"><pre><code class="language-shell">
-(.venv) inv generate-docs
-    documentation generated!
+$ generate-library -h
+usage: openapi_libgen [-h] [-s SOURCE] [-d DESTINATION] [-n NAME] [--recursion-limit RECURSION_LIMIT]
+                      [--recursion-default RECURSION_DEFAULT]
+
+The OpenApiTools library generator
+
+options:
+  -h, --help            show this help message and exit
+  -s SOURCE, --source SOURCE
+  -d DESTINATION, --destination DESTINATION
+  -n NAME, --name NAME
+  --recursion-limit RECURSION_LIMIT
+  --recursion-default RECURSION_DEFAULT
+
+Inspired by roboswag. Thank you Bartlomiej and Mateusz for your work!
 </code></pre></div>
 
-Test Robot Framework
+Generation of your library is an interactive process with a few steps:
+
+<div class="code-block"><pre><code class="language-shell">
+$ generate-library
+Please provide a source for the generation:
+$ http://127.0.0.1:8000/openapi.json
+Please provide a path to where the library will be generated:
+$ ./generated
+Please provide a name for the library [default: FastAPI]:
+$ My Generated Library
+generated/MyGeneratedLibrary/__init__.py created
+generated/MyGeneratedLibrary/my_generated_library.py created
+</code></pre></div>
+
+<div><codeblock>
+Tip: The name for the  library that you provide (or that's taken from the OpenAPI document)
+will be transformed into a Python-legal module name and a Python-legal class name.
+This means special characters like <code>-</code> will be removed or replaced.
+If you used spaces in the desired name, they will be removed from the Library (class) name
+and the next character will be capitalized while the spaces will be replaced with an
+underscore in the module name as can be seen in the example above.
+</codeblock></div>
+
+<div><pre><codeblock><i>
+Note: There's currently 2 environment variables that are taken into account by the generator:
+    <code>USE_SUMMARY_AS_KEYWORD_NAME</code> can result in nicer keyword names (but: uniqueness is not guaranteed, so you might need to rename some of the generated keywords manually)
+    <code>EXPAND_BODY_ARGUMENTS</code> changes how body arguments are provided to keywords (either a single body dict or key-value pairs for the body parameters)
+</i><pre></codeblock></div>
+
+<hr>
+
+If the location where the library is located is in your Python search path, you'll be able
+to use it like a regular Robot Framework library (in fact, it's a drop-in replacement for
+OpenApiLibCore).
+
+The generated library has a keyword for every endpoint in the OpenAPI document used to generated it.
+In addition, all the keywords from OpenApiLibCore are available.
+<blockquote>
+Keyword documentation for OpenApiLibCore can be found <a href="openapi_libcore.html" target="_blank">here</a>.
+</blockquote>
+
+The generated library can be used as shown below:
+
 <div class="code-block"><pre><code class="language-robotframework">
 *** Settings ***
-Variables           ${ROOT}/tests/variables.py
-Library             OpenApiDriver
-...                     source=http://localhost:8000/openapi.json
-...                     origin=${EMPTY}
-...                     base_path=${EMPTY}
-...                     mappings_path=${ROOT}/tests/user_implemented/custom_user_mappings.py
-...                     response_validation=STRICT
-...                     require_body_for_invalid_url=${TRUE}
-...                     extra_headers=${API_KEY}
-...                     faker_locale=nl_NL
-...                     default_id_property_name=identification
+Library         MyGeneratedLibrary
+...                 source=${ORIGIN}/openapi.json
+...                 origin=${ORIGIN}
+...                 base_path=${EMPTY}
+...                 mappings_path=${ROOT}/tests/user_implemented/custom_user_mappings.py
+Variables       ${ROOT}/tests/variables.py
 
-Suite Setup         Update Origin
-Test Template       Validate Test Endpoint Keyword
+
+*** Variables ***
+${ORIGIN}=      http://localhost:8000
 
 
 *** Test Cases ***
-# robotcode: ignore[ModelError, VariableNotReplaced]
-Test Endpoint for ${method} on ${path} where ${status_code} is expected
+Test Generated Keywords: Get Employees
+    ${response}=    Get Employees
+    Should Be Equal As Integers    ${response.status_code}    200
 
+Test Generated Keywords: Post Employee
+    VAR    &{body}    name=Robin the Robot
+    ${response}=    Post Employee    body=${body}
+    # ${response}=    Post Employee    name=Robin the Robot
+    Should Be Equal As Integers    ${response.status_code}    201
+    Should Be Equal    ${response.json()}[name]    Robin the Robot
 
-*** Keywords ***
-Validate Test Endpoint Keyword
-    [Arguments]    ${path}    ${method}    ${status_code}
-    IF    ${status_code} == 404
-        Test Invalid Url    path=${path}    method=${method}
-    ELSE
-        Test Endpoint
-        ...    path=${path}    method=${method}    status_code=${status_code}
-    END
+Test Generated Keywords: Get Employee
+    ${response}=    Get Employee
+    Should Be Equal As Integers    ${response.status_code}    200
 
-Update Origin
-    Set Origin    http://localhost:8000
+Test Generated Keywords: Patch Employee
+    ${employee_id}=    Get Valid Id For Path    path=/employees/{employee_id}
+    VAR    &{body}    date_of_birth=2021-12-31
+    ${response}=    Patch Employee    employee_id=${employee_id}    body=${body}
+    # ${response}=    Patch Employee    employee_id=${employee_id}    date_of_birth=2021-12-31
+    Should Be Equal As Integers    ${response.status_code}    403
 
-</code></pre></div>
+Test Generated Keywords: Post WageGroup
+    VAR    &{body}    hourly_rate=99.99
+    ${response}=    Post Wagegroup    body=${body}
+    # ${response}=    Post Wagegroup    hourly_rate=99.99
+    Should Be Equal As Integers    ${response.status_code}    201
+    Should Be Equal As Numbers    ${response.json()}[hourly-rate]    99.99
 
-Test Python
-<div class="code-block"><pre><code class="language-shell">
-import sys
-from pathlib import Path
+Test Generated Keywords: Get Energy Label
+    ${response}=    Get Energy Label
+    ...    zipcode=1111AA
+    ...    home_number=10
+    ...    extension=too long to be acceptable
+    ...    validate_against_schema=${FALSE}
+    Should Be Equal As Integers    ${response.status_code}    422
 
-from jinja2 import Environment, FileSystemLoader
-
-from openapitools_docs.docstrings import (
-    LIBGEN_MODULE_DOCSTRING,
-    OPENAPIDRIVER_MODULE_DOCSTRING,
-    OPENAPILIBCORE_MODULE_DOCSTRING,
-)
-
-HERE = Path(__file__).parent.resolve()
-
-
-def generate(output_folder: Path) -> None:
-    output_folder.mkdir(parents=True, exist_ok=True)
-
-    environment = Environment(loader=FileSystemLoader(f"{HERE}/templates/"))
-
-    documentation_template = environment.get_template("documentation.jinja")
-    output_file_path = output_folder / "documentation.html"
-    documentation_content = documentation_template.render(
-        libgen_documentation=LIBGEN_MODULE_DOCSTRING,
-        driver_documentation=OPENAPIDRIVER_MODULE_DOCSTRING,
-        libcore_documentation=OPENAPILIBCORE_MODULE_DOCSTRING,
-    )
-    with open(output_file_path, mode="w", encoding="utf-8") as html_file:
-        html_file.write(documentation_content)
-
-
-if __name__ == "__main__":  # pragma: no cover
-    output_folder = Path(sys.argv[1])
-    generate(output_folder=output_folder)
-
+    VAR    @{omit}    extension
+    ${response}=    Get Energy Label
+    ...    zipcode=1111AA
+    ...    home_number=10
+    ...    extension=too long to be acceptable
+    ...    omit_parameters=${omit}
+    Should Be Equal As Integers    ${response.status_code}    200
 </code></pre></div>
 """
