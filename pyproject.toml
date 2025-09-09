@@ -59,7 +59,7 @@ lint-and-format = [
 
 [project.urls]
 Homepage = "https://github.com/MarketSquare/robotframework-openapitools"
-Documentation = "https://github.com/MarketSquare/robotframework-openapitools/blob/main/docs/index.html"
+Documentation = "https://marketsquare.github.io/robotframework-openapitools"
 Repository = "https://github.com/MarketSquare/robotframework-openapitools.git"
 
 [project.scripts]
