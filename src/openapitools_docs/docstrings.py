@@ -230,7 +230,7 @@ A <a href="https://requests.readthedocs.io/en/latest/api/#authentication" target
 <h3>cert</h3>
 The SSL certificate to use with all requests.
 If string: the path to ssl client cert file (<code>.pem</code>).
-If tuple: the <pre><code class="language-python">("cert", "key")</code></pre> pair.
+If tuple: the <code class="language-python">("cert", "key")</code> pair.
 
 <h3>verify_tls</h3>
 Whether or not to verify the TLS / SSL certificate of the server.
