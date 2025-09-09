@@ -58,7 +58,9 @@ lint-and-format = [
 ]
 
 [project.urls]
-homepage = "https://github.com/MarketSquare/robotframework-openapitools"
+Homepage = "https://github.com/MarketSquare/robotframework-openapitools"
+Documentation = "https://github.com/MarketSquare/robotframework-openapitools/blob/main/docs/index.html"
+Repository = "https://github.com/MarketSquare/robotframework-openapitools.git"
 
 [project.scripts]
 generate-library = 'openapi_libgen.command_line:main'
