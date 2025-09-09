@@ -174,8 +174,10 @@ def libdoc(context: Context) -> None:
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
 
+    env = os.environ.copy()
+    env["HIDE_INHERITED_KEYWORDS"] = "true"
     json_file = f"{ROOT}/tests/files/petstore_openapi.json"
-    source = f"OpenApiDriver.openapidriver.DocumentationGenerator::{json_file}"
+    source = f"OpenApiDriver::{json_file}"
     target = f"{ROOT}/docs/openapidriver.html"
     cmd = [
         "python",
@@ -186,7 +188,7 @@ def libdoc(context: Context) -> None:
         source,
         target,
     ]
-    subprocess.run(" ".join(cmd), shell=True, check=False)
+    subprocess.run(" ".join(cmd), shell=True, check=False, env=env)
 
 
 @task
@@ -204,8 +206,10 @@ def libspec(context: Context) -> None:
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
 
+    env = os.environ.copy()
+    env["HIDE_INHERITED_KEYWORDS"] = "true"
     json_file = f"{ROOT}/tests/files/petstore_openapi.json"
-    source = f"OpenApiDriver.openapidriver.DocumentationGenerator::{json_file}"
+    source = f"OpenApiDriver::{json_file}"
     target = f"{ROOT}/src/OpenApiDriver/openapidriver.libspec"
     cmd = [
         "python",
@@ -216,7 +220,7 @@ def libspec(context: Context) -> None:
         source,
         target,
     ]
-    subprocess.run(" ".join(cmd), shell=True, check=False)
+    subprocess.run(" ".join(cmd), shell=True, check=False, env=env)
 
 
 @task
@@ -230,6 +234,17 @@ def readme(context: Context) -> None:
 # readme_file.write(str(doc_string).replace("\\", "\\\\").replace("\\\\*", "\\*"))
 
 
-@task(format_code, libdoc, libspec, readme)
+@task(libdoc)
+def generate_docs(context: Context) -> None:
+    cmd = [
+        "python",
+        "-m",
+        "openapitools_docs.documentation_generator",
+        f"{ROOT}/docs",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False)
+
+
+@task(format_code, libspec, readme, generate_docs)
 def build(context: Context) -> None:
     subprocess.run("poetry build", shell=True, check=False)

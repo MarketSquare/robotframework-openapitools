@@ -1,0 +1,3 @@
+from openapitools_docs.docstrings import OPENAPILIBGEN_DOCUMENTATION
+
+__doc__ = OPENAPILIBGEN_DOCUMENTATION

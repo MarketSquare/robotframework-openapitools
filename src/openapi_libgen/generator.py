@@ -8,8 +8,6 @@ from openapi_libgen.spec_parser import get_keyword_data
 from OpenApiLibCore.models import OpenApiObject
 
 HERE = Path(__file__).parent.resolve()
-INIT_TEMPLATE_PATH = HERE / "templates/__init__.jinja"
-LIBRARY_TEMPLATE_PATH = HERE / "templates/library.jinja"
 
 
 def load_openapi_spec(

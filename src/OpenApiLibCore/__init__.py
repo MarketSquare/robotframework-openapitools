@@ -36,6 +36,32 @@ except Exception:  # pragma: no cover pylint: disable=broad-exception-caught
     pass
 
 
+KEYWORD_NAMES = [
+    "set_origin",
+    "set_security_token",
+    "set_basic_auth",
+    "set_auth",
+    "set_extra_headers",
+    "get_request_values",
+    "get_request_data",
+    "get_invalid_body_data",
+    "get_invalidated_parameters",
+    "get_json_data_with_conflict",
+    "get_valid_url",
+    "get_valid_id_for_path",
+    "get_parameterized_path_from_url",
+    "get_ids_from_url",
+    "get_invalidated_url",
+    "ensure_in_use",
+    "authorized_request",
+    "perform_validated_request",
+    "validate_response_using_validator",
+    "assert_href_to_resource_is_valid",
+    "validate_response",
+    "validate_send_response",
+]
+
+
 __all__ = [
     "IGNORE",
     "UNSET",

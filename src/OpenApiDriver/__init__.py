@@ -30,6 +30,7 @@ try:
 except Exception:  # pragma: no cover pylint: disable=broad-exception-caught
     pass
 
+
 __all__ = [
     "IGNORE",
     "Dto",

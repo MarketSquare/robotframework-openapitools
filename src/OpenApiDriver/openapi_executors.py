@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping, MutableMapping
 from http import HTTPStatus
+from os import getenv
 from pathlib import Path
 from random import choice
 from types import MappingProxyType
@@ -14,11 +15,27 @@ from robot.api.deco import keyword, library
 from robot.api.exceptions import SkipExecution
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore import OpenApiLibCore, RequestData, RequestValues, ValidationLevel
+from OpenApiLibCore import (
+    KEYWORD_NAMES as LIBCORE_KEYWORD_NAMES,
+)
+from OpenApiLibCore import (
+    OpenApiLibCore,
+    RequestData,
+    RequestValues,
+    ValidationLevel,
+)
 from OpenApiLibCore.annotations import JSON
 
 run_keyword = BuiltIn().run_keyword
 default_str_mapping: Mapping[str, str] = MappingProxyType({})
+
+
+KEYWORD_NAMES = [
+    "test_unauthorized",
+    "test_forbidden",
+    "test_invalid_url",
+    "test_endpoint",
+]
 
 
 @library(scope="SUITE", doc_format="ROBOT")
@@ -305,3 +322,10 @@ class OpenApiExecutors(OpenApiLibCore):
         if response.ok:
             original_data = response.json()
         return original_data
+
+    @staticmethod
+    def get_keyword_names() -> list[str]:
+        """Curated keywords for libdoc and libspec."""
+        if getenv("HIDE_INHERITED_KEYWORDS") == "true":
+            return KEYWORD_NAMES
+        return KEYWORD_NAMES + LIBCORE_KEYWORD_NAMES
