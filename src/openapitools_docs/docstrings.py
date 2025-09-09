@@ -115,7 +115,7 @@ outside the scope of the API. In addition there is support for handling restrict
 on the values of parameters and properties.
 This is supported by the <code>mappings_path</code> library parameter.
 Details about the <code>mappings_path</code> parameter usage can be
-found <a href="advanced_use.md" target="_blank">here</a>.
+found under the Advanced Use tab.
 
 <hr>
 
@@ -168,7 +168,7 @@ by Response validation.
 <h2>API-specific configurations</h2>
 
 <h3>mappings_path</h3>
-See <a href="advanced_use.md" target="_blank">this page</a> for an in-depth explanation.
+See the Advanced Use tab for an in-depth explanation.
 
 <h3>invalid_property_default_response</h3>
 The default response code for requests with a JSON body that does not comply
@@ -262,7 +262,7 @@ and its keywords for their functionality.
 This document explains how to use the OpenApiLibCore library.
 
 <blockquote>
-Keyword documentation for OpenApiLibCore can be found <a href="openapi_libcore.html" target="_blank">here</a>.
+Keyword documentation for OpenApiLibCore can be found <a href="./openapi_libcore.html" target="_blank">here</a>.
 </blockquote>
 
 <h2>Introduction</h2>
@@ -273,7 +273,7 @@ Keyword documentation for OpenApiLibCore can be found <a href="openapi_libcore.h
 OPENAPILIBCORE_LIBRARY_DOCSTRING = """
 The OpenApiLibCore library provides the keywords and core logic to interact with an OpenAPI server.
 
-Visit the <a href="documentation.html" target="_blank">OpenApiTools documentation</a> for an introduction.
+Visit the <a href="./index.html" target="_blank">OpenApiTools documentation</a> for an introduction.
 """
 
 OPENAPILIBCORE_INIT_DOCSTRING = SHARED_PARAMETERS
@@ -288,7 +288,7 @@ For more information about the DataDriver library, see
 https://github.com/Snooz82/robotframework-datadriver.
 
 <blockquote>
-Keyword documentation for OpenApiDriver can be found <a href="openapidriver.html" target="_blank">here</a>.
+Keyword documentation for OpenApiDriver can be found <a href="./openapidriver.html" target="_blank">here</a>.
 </blockquote>
 
 <h2>Introduction</h2>
@@ -299,7 +299,7 @@ Keyword documentation for OpenApiDriver can be found <a href="openapidriver.html
 OPENAPIDRIVER_LIBRARY_DOCSTRING = """
 The OpenApiDriver library provides the keywords and logic for execution of generated test cases based on an OpenAPI document.
 
-Visit the <a href="documentation.html" target="_blank">OpenApiTools documentation</a> for an introduction.
+Visit the <a href="./index.html" target="_blank">OpenApiTools documentation</a> for an introduction.
 """
 
 OPENAPIDRIVER_INIT_DOCSTRING = """
@@ -393,7 +393,7 @@ OpenApiLibCore).
 The generated library has a keyword for every endpoint in the OpenAPI document used to generated it.
 In addition, all the keywords from OpenApiLibCore are available.
 <blockquote>
-Keyword documentation for OpenApiLibCore can be found <a href="openapi_libcore.html" target="_blank">here</a>.
+Keyword documentation for OpenApiLibCore can be found <a href="./openapi_libcore.html" target="_blank">here</a>.
 </blockquote>
 
 The generated library can be used as shown below:
