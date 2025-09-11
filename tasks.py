@@ -130,6 +130,7 @@ def tests(context: Context) -> None:
     subprocess.run("coverage combine", shell=True, check=False)
     subprocess.run("coverage report", shell=True, check=False)
     subprocess.run("coverage html", shell=True, check=False)
+    subprocess.run("coverage xml", shell=True, check=False)
 
 
 @task
@@ -234,6 +235,17 @@ def generate_docs(context: Context) -> None:
     subprocess.run(" ".join(cmd), shell=True, check=False)
 
 
-@task(format_code, libspec, generate_docs)
+@task
+def update_coverage_badge(context: Context) -> None:
+    cmd = [
+        "genbadge",
+        "coverage",
+        f"-i {ROOT}/coverage.xml",
+        f"-o {ROOT}/docs/coverage-badge.svg",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False)
+
+
+@task(format_code, libspec, generate_docs, update_coverage_badge)
 def build(context: Context) -> None:
     subprocess.run("poetry build", shell=True, check=False)
