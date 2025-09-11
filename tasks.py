@@ -223,17 +223,6 @@ def libspec(context: Context) -> None:
     subprocess.run(" ".join(cmd), shell=True, check=False, env=env)
 
 
-@task
-def readme(context: Context) -> None:
-    front_matter = """---\n---\n"""
-
-
-#     with open(f"{ROOT}/docs/README.md", "w", encoding="utf-8") as readme_file:
-#         doc_string = openapi_libcore.__doc__
-# readme_file.write(front_matter)
-# readme_file.write(str(doc_string).replace("\\", "\\\\").replace("\\\\*", "\\*"))
-
-
 @task(libdoc)
 def generate_docs(context: Context) -> None:
     cmd = [
@@ -245,6 +234,6 @@ def generate_docs(context: Context) -> None:
     subprocess.run(" ".join(cmd), shell=True, check=False)
 
 
-@task(format_code, libspec, readme, generate_docs)
+@task(format_code, libspec, generate_docs)
 def build(context: Context) -> None:
     subprocess.run("poetry build", shell=True, check=False)
