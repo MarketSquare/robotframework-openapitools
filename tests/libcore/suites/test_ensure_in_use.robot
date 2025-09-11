@@ -14,19 +14,19 @@ ${ORIGIN}=      http://localhost:8000
 
 *** Test Cases ***
 Test Ensure In Use With Single Id In Url
-    ${url}=    Get Valid Url    endpoint=/wagegroups/{wagegroup_id}    method=get
+    ${url}=    Get Valid Url    path=/wagegroups/{wagegroup_id}
     Ensure In Use    url=${url}    resource_relation=${ID_REFERENCE}
 
 # Test Ensure In Use With Multiple Ids In Url
-#    ${url}=    Get Valid Url    endpoint=/wagegroups/{wagegroup_id}    method=get
+#    ${url}=    Get Valid Url    path=/wagegroups/{wagegroup_id}
 #    Ensure In Use    url=${url}    resource_relation=${ID_REFERENCE}
 
 Test Ensure In Use Raises When No Id In Url
-    ${url}=    Get Valid Url    endpoint=/wagegroups    method=post
+    ${url}=    Get Valid Url    path=/wagegroups
     Run Keyword And Expect Error    ValueError: The provided url*
     ...    Ensure In Use    url=${url}    resource_relation=${ID_REFERENCE}
 
 Test Ensure In Use Raises When Post Fails
-    ${url}=    Get Valid Url    endpoint=/wagegroups/{wagegroup_id}    method=get
+    ${url}=    Get Valid Url    path=/wagegroups/{wagegroup_id}
     Run Keyword And Expect Error    HTTPError: 405 Client Error*
     ...    Ensure In Use    url=${url}    resource_relation=${INVALID_ID_REFERENCE}

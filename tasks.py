@@ -1,12 +1,11 @@
 # pylint: disable=missing-function-docstring, unused-argument
+import os
 import pathlib
 import subprocess
 from importlib.metadata import version
 
 from invoke.context import Context
 from invoke.tasks import task
-
-# from OpenApiLibCore import openapi_libcore
 
 ROOT = pathlib.Path(__file__).parent.resolve().as_posix()
 VERSION = version("robotframework-openapitools")
@@ -24,6 +23,54 @@ def start_api(context: Context) -> None:
         "--port 8000",
         "--reload",
         f"--reload-dir {ROOT}/tests/server",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False)
+
+
+@task
+def libgen(context: Context) -> None:
+    cmd = [
+        "coverage",
+        "run",
+        "-m",
+        "openapi_libgen.generator",
+        "http://127.0.0.1:8000/openapi.json",
+        f"{ROOT}/tests/generated",
+        "MyGeneratedLibrary",
+        "my_generated_library",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False)
+
+
+@task
+def libgen_with_envs(context: Context) -> None:
+    env = os.environ.copy()
+    env["USE_SUMMARY_AS_KEYWORD_NAME"] = "true"
+    env["EXPAND_BODY_ARGUMENTS"] = "true"
+    cmd = [
+        "coverage",
+        "run",
+        "-m",
+        "openapi_libgen.generator",
+        "http://127.0.0.1:8000/openapi.json",
+        f"{ROOT}/tests/generated",
+        "MyOtherGeneratedLibrary",
+        "my_other_generated_library",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False, env=env)
+
+
+@task
+def libgen_edge_cases(context: Context) -> None:
+    cmd = [
+        "coverage",
+        "run",
+        "-m",
+        "openapi_libgen.generator",
+        f"{ROOT}/tests/files/schema_with_parameter_name_duplication.yaml",
+        f"{ROOT}/tests/generated",
+        "MyGeneratedEdgeCaseLibrary",
+        "my_generated_edge_case_library",
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
 
@@ -50,19 +97,29 @@ def utests(context: Context) -> None:
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
 
+    cmd = [
+        "coverage",
+        "run",
+        "-m",
+        "unittest",
+        "discover ",
+        f"{ROOT}/tests/libgen/unittests",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False)
 
-@task
+
+@task(libgen, libgen_with_envs, libgen_edge_cases)
 def atests(context: Context) -> None:
     cmd = [
         "coverage",
         "run",
         "-m",
         "robot",
+        f"--pythonpath={ROOT}/tests/generated",
         f"--argumentfile={ROOT}/tests/rf_cli.args",
         f"--variable=root:{ROOT}",
         f"--outputdir={ROOT}/tests/logs",
         "--loglevel=TRACE:DEBUG",
-        "--exclude=roboswag",
         f"{ROOT}/tests",
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
@@ -73,12 +130,18 @@ def tests(context: Context) -> None:
     subprocess.run("coverage combine", shell=True, check=False)
     subprocess.run("coverage report", shell=True, check=False)
     subprocess.run("coverage html", shell=True, check=False)
+    subprocess.run("coverage xml", shell=True, check=False)
 
 
 @task
 def type_check(context: Context) -> None:
     subprocess.run(f"mypy {ROOT}/src", shell=True, check=False)
     subprocess.run(f"pyright {ROOT}/src", shell=True, check=False)
+    # subprocess.run(
+    #     f"robotcode analyze code {ROOT}/tests",
+    #     shell=True,
+    #     check=False,
+    # )
 
 
 @task
@@ -87,7 +150,6 @@ def lint(context: Context) -> None:
     subprocess.run(f"ruff check {ROOT}/src/OpenApiLibCore", shell=True, check=False)
     subprocess.run(f"pylint {ROOT}/src/OpenApiDriver", shell=True, check=False)
     subprocess.run(f"pylint {ROOT}/src/OpenApiLibCore", shell=True, check=False)
-    # subprocess.run(f"pylint {ROOT}/src/roboswag", shell=True, check=False)
     subprocess.run(f"robocop {ROOT}/tests", shell=True, check=False)
 
 
@@ -113,8 +175,10 @@ def libdoc(context: Context) -> None:
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
 
+    env = os.environ.copy()
+    env["HIDE_INHERITED_KEYWORDS"] = "true"
     json_file = f"{ROOT}/tests/files/petstore_openapi.json"
-    source = f"OpenApiDriver.openapidriver.DocumentationGenerator::{json_file}"
+    source = f"OpenApiDriver::{json_file}"
     target = f"{ROOT}/docs/openapidriver.html"
     cmd = [
         "python",
@@ -125,7 +189,7 @@ def libdoc(context: Context) -> None:
         source,
         target,
     ]
-    subprocess.run(" ".join(cmd), shell=True, check=False)
+    subprocess.run(" ".join(cmd), shell=True, check=False, env=env)
 
 
 @task
@@ -143,8 +207,10 @@ def libspec(context: Context) -> None:
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
 
+    env = os.environ.copy()
+    env["HIDE_INHERITED_KEYWORDS"] = "true"
     json_file = f"{ROOT}/tests/files/petstore_openapi.json"
-    source = f"OpenApiDriver.openapidriver.DocumentationGenerator::{json_file}"
+    source = f"OpenApiDriver::{json_file}"
     target = f"{ROOT}/src/OpenApiDriver/openapidriver.libspec"
     cmd = [
         "python",
@@ -155,20 +221,31 @@ def libspec(context: Context) -> None:
         source,
         target,
     ]
+    subprocess.run(" ".join(cmd), shell=True, check=False, env=env)
+
+
+@task(libdoc)
+def generate_docs(context: Context) -> None:
+    cmd = [
+        "python",
+        "-m",
+        "openapitools_docs.documentation_generator",
+        f"{ROOT}/docs",
+    ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
 
 
 @task
-def readme(context: Context) -> None:
-    front_matter = """---\n---\n"""
+def update_coverage_badge(context: Context) -> None:
+    cmd = [
+        "genbadge",
+        "coverage",
+        f"-i {ROOT}/coverage.xml",
+        f"-o {ROOT}/docs/coverage-badge.svg",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False)
 
 
-#     with open(f"{ROOT}/docs/README.md", "w", encoding="utf-8") as readme_file:
-#         doc_string = openapi_libcore.__doc__
-# readme_file.write(front_matter)
-# readme_file.write(str(doc_string).replace("\\", "\\\\").replace("\\\\*", "\\*"))
-
-
-@task(format_code, libdoc, libspec, readme)
+@task(format_code, libspec, generate_docs, update_coverage_badge)
 def build(context: Context) -> None:
     subprocess.run("poetry build", shell=True, check=False)

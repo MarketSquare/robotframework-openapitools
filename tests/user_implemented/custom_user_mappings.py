@@ -60,6 +60,30 @@ class WagegroupDeleteDto(Dto):
         return relations
 
 
+class ParttimeDayDto(Dto):
+    @staticmethod
+    def get_relations() -> list[ResourceRelation]:
+        relations: list[ResourceRelation] = [
+            PropertyValueConstraint(
+                property_name="weekday",
+                values=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            ),
+        ]
+        return relations
+
+
+class ParttimeScheduleDto(Dto):
+    @staticmethod
+    def get_relations() -> list[ResourceRelation]:
+        relations: list[ResourceRelation] = [
+            PropertyValueConstraint(
+                property_name="parttime_days",
+                values=[ParttimeDayDto],
+            ),
+        ]
+        return relations
+
+
 class EmployeeDto(Dto):
     @staticmethod
     def get_relations() -> list[ResourceRelation]:
@@ -77,8 +101,8 @@ class EmployeeDto(Dto):
                 error_code=422,
             ),
             PropertyValueConstraint(
-                property_name="parttime_day",
-                values=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                property_name="parttime_schedule",
+                values=[ParttimeScheduleDto],
                 treat_as_mandatory=True,
             ),
         ]
@@ -87,8 +111,8 @@ class EmployeeDto(Dto):
 
 class EnergyLabelDto(Dto):
     @staticmethod
-    def get_relations() -> list[ResourceRelation]:
-        relations: list[ResourceRelation] = [
+    def get_path_relations() -> list[PathPropertiesConstraint]:
+        relations: list[PathPropertiesConstraint] = [
             PathPropertiesConstraint(
                 path="/energy_label/1111AA/10",
                 invalid_value="/energy_label/0123AA",
@@ -119,6 +143,11 @@ class MessageDto(Dto):
                 error_code=401,
             ),
             PropertyValueConstraint(
+                property_name="dummy",  # note: error code and property don't exist
+                values=[42],
+                error_code=402,
+            ),
+            PropertyValueConstraint(
                 property_name="seal",
                 values=[IGNORE],
                 error_code=403,
@@ -144,4 +173,9 @@ ID_MAPPING: dict[str, str] = {
     "/wagegroups": "wagegroup_id",
     "/wagegroups/{wagegroup_id}": "wagegroup_id",
     "/wagegroups/{wagegroup_id}/employees": "identification",
+}
+
+
+PATH_MAPPING: dict[str, Type[Dto]] = {
+    "/energy_label/{zipcode}/{home_number}": EnergyLabelDto,
 }

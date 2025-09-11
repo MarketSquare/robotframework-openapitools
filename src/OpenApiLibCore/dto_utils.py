@@ -2,12 +2,16 @@
 
 from dataclasses import dataclass
 from importlib import import_module
-from logging import getLogger
-from typing import Callable, Type
+from typing import Any, Callable, Type, overload
+
+from robot.api import logger
 
 from OpenApiLibCore.dto_base import Dto
-
-logger = getLogger(__name__)
+from OpenApiLibCore.protocols import (
+    GetDtoClassType,
+    GetIdPropertyNameType,
+    GetPathDtoClassType,
+)
 
 
 @dataclass
@@ -23,8 +27,11 @@ class DefaultDto(Dto):
     """A default Dto that can be instantiated."""
 
 
-# pylint: disable=invalid-name, too-few-public-methods
-class get_dto_class:
+def get_dto_class(mappings_module_name: str) -> GetDtoClassType:
+    return GetDtoClass(mappings_module_name=mappings_module_name)
+
+
+class GetDtoClass:
     """Callable class to return Dtos from user-implemented mappings file."""
 
     def __init__(self, mappings_module_name: str) -> None:
@@ -38,16 +45,43 @@ class get_dto_class:
                 logger.error(f"DTO_MAPPING was not imported: {exception}")
             self.dto_mapping = {}
 
-    def __call__(self, endpoint: str, method: str) -> Type[Dto]:
+    def __call__(self, path: str, method: str) -> Type[Dto]:
         try:
-            return self.dto_mapping[(endpoint, method.lower())]
+            return self.dto_mapping[(path, method.lower())]
         except KeyError:
-            logger.debug(f"No Dto mapping for {endpoint} {method}.")
+            logger.debug(f"No Dto mapping for {path} {method}.")
             return DefaultDto
 
 
-# pylint: disable=invalid-name, too-few-public-methods
-class get_id_property_name:
+def get_path_dto_class(mappings_module_name: str) -> GetPathDtoClassType:
+    return GetPathDtoClass(mappings_module_name=mappings_module_name)
+
+
+class GetPathDtoClass:
+    """Callable class to return Dtos from user-implemented mappings file."""
+
+    def __init__(self, mappings_module_name: str) -> None:
+        try:
+            mappings_module = import_module(mappings_module_name)
+            self.dto_mapping: dict[str, Type[Dto]] = mappings_module.PATH_MAPPING
+        except (ImportError, AttributeError, ValueError) as exception:
+            if mappings_module_name != "no mapping":
+                logger.error(f"PATH_MAPPING was not imported: {exception}")
+            self.dto_mapping = {}
+
+    def __call__(self, path: str) -> Type[Dto]:
+        try:
+            return self.dto_mapping[path]
+        except KeyError:
+            logger.debug(f"No Dto mapping for {path}.")
+            return DefaultDto
+
+
+def get_id_property_name(mappings_module_name: str) -> GetIdPropertyNameType:
+    return GetIdPropertyName(mappings_module_name=mappings_module_name)
+
+
+class GetIdPropertyName:
     """
     Callable class to return the name of the property that uniquely identifies
     the resource from user-implemented mappings file.
@@ -58,8 +92,7 @@ class get_id_property_name:
             mappings_module = import_module(mappings_module_name)
             self.id_mapping: dict[
                 str,
-                str
-                | tuple[str, tuple[Callable[[str | int | float], str | int | float]]],
+                str | tuple[str, Callable[[str], str] | Callable[[int], int]],
             ] = mappings_module.ID_MAPPING
         except (ImportError, AttributeError, ValueError) as exception:
             if mappings_module_name != "no mapping":
@@ -67,13 +100,26 @@ class get_id_property_name:
             self.id_mapping = {}
 
     def __call__(
-        self, endpoint: str
-    ) -> str | tuple[str, tuple[Callable[[str | int | float], str | int | float]]]:
+        self, path: str
+    ) -> tuple[str, Callable[[str], str] | Callable[[int], int]]:
         try:
-            return self.id_mapping[endpoint]
+            value_or_mapping = self.id_mapping[path]
+            if isinstance(value_or_mapping, str):
+                return (value_or_mapping, dummy_transformer)
+            return value_or_mapping
         except KeyError:
             default_id_name = DEFAULT_ID_PROPERTY_NAME.id_property_name
-            logger.debug(
-                f"No id mapping for {endpoint} ('{default_id_name}' will be used)"
-            )
-            return default_id_name
+            logger.debug(f"No id mapping for {path} ('{default_id_name}' will be used)")
+            return (default_id_name, dummy_transformer)
+
+
+@overload
+def dummy_transformer(valid_id: str) -> str: ...  # pragma: no cover
+
+
+@overload
+def dummy_transformer(valid_id: int) -> int: ...  # pragma: no cover
+
+
+def dummy_transformer(valid_id: Any) -> Any:
+    return valid_id

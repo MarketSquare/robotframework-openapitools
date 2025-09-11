@@ -39,6 +39,15 @@ class WeekDay(str, Enum):
     Friday = "Friday"
 
 
+class ParttimeDay(BaseModel):
+    weekday: WeekDay
+    available_hours: int = Field(4, ge=0, lt=8)
+
+
+class ParttimeSchedule(BaseModel):
+    parttime_days: list[ParttimeDay] = Field(..., min_length=1, max_length=5)
+
+
 class Wing(str, Enum):
     N = "North"
     E = "East"
@@ -71,14 +80,21 @@ class EmployeeDetails(BaseModel):
     employee_number: int
     wagegroup_id: str
     date_of_birth: datetime.date
-    parttime_day: WeekDay | None = None
+    parttime_schedule: ParttimeSchedule | None = None
+
+
+class EmployeeDigest(BaseModel):
+    identification: str
+    name: str
+    employee_number: int
+    parttime_schedule: ParttimeSchedule | None = None
 
 
 class Employee(BaseModel):
     name: str
     wagegroup_id: str
     date_of_birth: datetime.date
-    parttime_day: WeekDay | None = None
+    parttime_schedule: ParttimeSchedule | None = None
 
 
 class EmployeeUpdate(BaseModel):
@@ -86,7 +102,7 @@ class EmployeeUpdate(BaseModel):
     employee_number: int | None = None
     wagegroup_id: str | None = None
     date_of_birth: datetime.date | None = None
-    parttime_day: WeekDay | None = None
+    parttime_schedule: ParttimeSchedule | None = None
 
 
 WAGE_GROUPS: dict[str, WageGroup] = {}
@@ -101,8 +117,14 @@ ENERGY_LABELS: dict[str, dict[int, dict[str, EnergyLabel]]] = {
     }
 }
 EVENTS: list[Event] = [
-    Event(message=Message(message="Hello?"), details=[Detail(detail="First post")]),
-    Event(message=Message(message="First!"), details=[Detail(detail="Second post")]),
+    Event(
+        message=Message(message="Hello?"),
+        details=[Detail(detail="First post")],
+    ),
+    Event(
+        message=Message(message="First!"),
+        details=[Detail(detail="Second post")],
+    ),
 ]
 
 
@@ -145,8 +167,10 @@ def get_events(
 
 # deliberate trailing /
 @app.post("/events/", status_code=201, response_model=Event)
-def post_event(event: Event) -> Event:
-    event.details.append(Detail(detail=str(datetime.datetime.now())))
+def post_event(event: Event, draft: bool = Header(False)) -> Event:
+    event.details.append(Detail(detail=f"Published {datetime.datetime.now()}"))
+    if draft:
+        event.details.append(Detail(detail="Event details subject to change."))
     EVENTS.append(event)
     return event
 
@@ -280,10 +304,16 @@ def post_employee(employee: Employee) -> EmployeeDetails:
         raise HTTPException(
             status_code=403, detail="An employee must be at least 18 years old."
         )
+    parttime_schedule = employee.parttime_schedule
+    if parttime_schedule is not None:
+        parttime_schedule = ParttimeSchedule.model_validate(parttime_schedule)
     new_employee = EmployeeDetails(
         identification=uuid4().hex,
+        name=employee.name,
         employee_number=next(EMPLOYEE_NUMBERS),
-        **employee.model_dump(),
+        wagegroup_id=employee.wagegroup_id,
+        date_of_birth=employee.date_of_birth,
+        parttime_schedule=parttime_schedule,
     )
     EMPLOYEES[new_employee.identification] = new_employee
     return new_employee
@@ -292,9 +322,9 @@ def post_employee(employee: Employee) -> EmployeeDetails:
 @app.get(
     "/employees",
     status_code=200,
-    response_model=list[EmployeeDetails],
+    response_model=list[EmployeeDigest],
 )
-def get_employees() -> list[EmployeeDetails]:
+def get_employees() -> list[EmployeeDigest]:
     return list(EMPLOYEES.values())
 
 
@@ -314,7 +344,9 @@ def get_employee(employee_id: str) -> EmployeeDetails:
     "/employees/{employee_id}",
     status_code=200,
     responses={
+        403: {"model": Detail},
         404: {"model": Detail},
+        451: {"model": Detail},
         200: {
             "description": "A JSON boolean response",
             "content": {
@@ -349,12 +381,28 @@ def patch_employee(employee_id: str, employee: EmployeeUpdate) -> JSONResponse:
             )
 
     updated_employee = stored_employee_data.model_copy(update=employee_update_data)
+    if updated_employee.parttime_schedule is not None:
+        parttime_schedule = ParttimeSchedule.model_validate(
+            updated_employee.parttime_schedule
+        )
+        updated_employee.parttime_schedule = parttime_schedule
     EMPLOYEES[employee_id] = updated_employee
     return JSONResponse(content=True)
 
 
-@app.get("/available_employees", status_code=200, response_model=list[EmployeeDetails])
-def get_available_employees(weekday: WeekDay = Query(...)) -> list[EmployeeDetails]:
-    return [
-        e for e in EMPLOYEES.values() if getattr(e, "parttime_day", None) != weekday
-    ]
+@app.get("/available_employees", status_code=200, response_model=list[EmployeeDigest])
+def get_available_employees(weekday: WeekDay = Query(...)) -> list[EmployeeDigest]:
+    available_employees: list[EmployeeDigest] = []
+    for employee in EMPLOYEES.values():
+        if not employee.parttime_schedule:
+            continue
+
+        weekday_availability = [
+            d.available_hours
+            for d in employee.parttime_schedule.parttime_days
+            if d.weekday == weekday
+        ]
+        if weekday_availability and weekday_availability[0] > 0:
+            available_employees.append(employee)
+
+    return available_employees

@@ -1,12 +1,13 @@
 """Module holding the OpenApiReader reader_class implementation."""
 
-from typing import Any
+from typing import Sequence
 
 from DataDriver.AbstractReaderClass import AbstractReaderClass
 from DataDriver.ReaderConfig import TestCaseData
 
+from OpenApiLibCore.models import PathItemObject
 
-# pylint: disable=too-few-public-methods
+
 class Test:
     """
     Helper class to support ignoring endpoint responses when generating the test cases.
@@ -17,7 +18,7 @@ class Test:
         self.method = method.lower()
         self.response = str(response)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return False
         return (
@@ -34,7 +35,7 @@ class OpenApiReader(AbstractReaderClass):
         test_data: list[TestCaseData] = []
 
         read_paths_method = getattr(self, "read_paths_method")
-        paths: dict[str, Any] = read_paths_method()
+        paths: dict[str, PathItemObject] = read_paths_method()
         self._filter_paths(paths)
 
         ignored_responses_ = [
@@ -44,15 +45,12 @@ class OpenApiReader(AbstractReaderClass):
         ignored_tests = [Test(*test) for test in getattr(self, "ignored_testcases", [])]
 
         for path, path_item in paths.items():
+            path_operations = path_item.get_operations()
+
             # by reseversing the items, post/put operations come before get and delete
-            for item_name, item_data in reversed(path_item.items()):
-                # this level of the OAS also contains data that's not related to a
-                # path operation
-                if item_name not in ["get", "put", "post", "delete", "patch"]:
-                    continue
-                method, method_data = item_name, item_data
-                tags_from_spec = method_data.get("tags", [])
-                for response in method_data.get("responses"):
+            for method, operation_data in reversed(path_operations.items()):
+                tags_from_spec = operation_data.tags
+                for response in operation_data.responses.keys():
                     # 'default' applies to all status codes that are not specified, in
                     # which case we don't know what to expect and therefore can't verify
                     if (
@@ -77,7 +75,7 @@ class OpenApiReader(AbstractReaderClass):
                     )
         return test_data
 
-    def _filter_paths(self, paths: dict[str, Any]) -> None:
+    def _filter_paths(self, paths: dict[str, PathItemObject]) -> None:
         def matches_include_pattern(path: str) -> bool:
             for included_path in included_paths:
                 if path == included_path:
@@ -112,5 +110,5 @@ class OpenApiReader(AbstractReaderClass):
                     paths.pop(path)
 
 
-def _get_tag_list(tags: list[str], method: str, response: str) -> list[str]:
+def _get_tag_list(tags: Sequence[str], method: str, response: str) -> list[str]:
     return [*tags, f"Method: {method.upper()}", f"Response: {response}"]

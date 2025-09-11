@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 """
 The OpenApiDriver package is intended to be used as a Robot Framework library.
 The following classes and constants are exposed to be used by the library user:
@@ -21,21 +22,24 @@ from OpenApiLibCore.dto_base import (
     ResourceRelation,
     UniquePropertyValueConstraint,
 )
+from OpenApiLibCore.validation import ValidationLevel
 from OpenApiLibCore.value_utils import IGNORE
 
 try:
     __version__ = version("robotframework-openapidriver")
-except Exception:  # pragma: no cover
+except Exception:  # pragma: no cover pylint: disable=broad-exception-caught
     pass
 
+
 __all__ = [
+    "IGNORE",
     "Dto",
     "IdDependency",
     "IdReference",
+    "OpenApiDriver",
     "PathPropertiesConstraint",
     "PropertyValueConstraint",
     "ResourceRelation",
     "UniquePropertyValueConstraint",
-    "IGNORE",
-    "OpenApiDriver",
+    "ValidationLevel",
 ]
