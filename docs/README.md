@@ -1,6 +1,6 @@
 [![build](https://github.com/MarketSquare/robotframework-openapitools/actions/workflows/on-push.yml/badge.svg)](https://github.com/MarketSquare/robotframework-openapitools/actions/workflows/on-push.yml)
 
-![coverage](./badges/coverage.svg)
+![coverage](coverage-badge.svg)
 <!-- ![coverage](https://img.shields.io/codecov/c/github/MarketSquare/robotframework-openapitools/main)
 [![coverage](https://codecov.io/gh/MarketSquare/robotframework-openapitools/branch/main/graph/badge.svg)](https://codecov.io/gh/MarketSquare/robotframework-openapitools) -->
 
