@@ -1,8 +1,10 @@
 [![build](https://github.com/MarketSquare/robotframework-openapitools/actions/workflows/on-push.yml/badge.svg)](https://github.com/MarketSquare/robotframework-openapitools/actions/workflows/on-push.yml)
-![coverage](https://img.shields.io/codecov/c/github/MarketSquare/robotframework-openapitools/main)
+
+![coverage](./badges/coverage.svg)
+<!-- ![coverage](https://img.shields.io/codecov/c/github/MarketSquare/robotframework-openapitools/main)
+[![coverage](https://codecov.io/gh/MarketSquare/robotframework-openapitools/branch/main/graph/badge.svg)](https://codecov.io/gh/MarketSquare/robotframework-openapitools) -->
 
 <!-- [![build](https://github.com/MarketSquare/robotframework-openapitools/actions/workflows/pythonapp.yml/badge.svg)](https://github.com/MarketSquare/robotframework-openapitools/actions/workflows/pythonapp.yml) -->
-<!-- [![coverage](https://codecov.io/gh/MarketSquare/robotframework-openapitools/branch/master/graph/badge.svg)](https://codecov.io/gh/MarketSquare/robotframework-openapitools) -->
 
 ![latest release](https://img.shields.io/pypi/v/robotframework-openapitools?label=latest%20release)
 ![Python versions](https://img.shields.io/pypi/pyversions/robotframework-openapitools)
