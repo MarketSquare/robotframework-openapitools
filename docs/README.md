@@ -1,6 +1,5 @@
 [![build](https://github.com/MarketSquare/robotframework-openapitools/actions/workflows/on-push.yml/badge.svg)](https://github.com/MarketSquare/robotframework-openapitools/actions/workflows/on-push.yml)
-<!-- ![coverage](https://img.shields.io/codecov/c/github/MarketSquare/robotframework-openapitools/master) -->
-![license](https://img.shields.io/pypi/l/robotframework-openapitools)
+![coverage](https://img.shields.io/codecov/c/github/MarketSquare/robotframework-openapitools/main)
 
 <!-- [![build](https://github.com/MarketSquare/robotframework-openapitools/actions/workflows/pythonapp.yml/badge.svg)](https://github.com/MarketSquare/robotframework-openapitools/actions/workflows/pythonapp.yml) -->
 <!-- [![coverage](https://codecov.io/gh/MarketSquare/robotframework-openapitools/branch/master/graph/badge.svg)](https://codecov.io/gh/MarketSquare/robotframework-openapitools) -->
@@ -8,6 +7,7 @@
 ![latest release](https://img.shields.io/pypi/v/robotframework-openapitools?label=latest%20release)
 ![Python versions](https://img.shields.io/pypi/pyversions/robotframework-openapitools)
 ![PyPi downloads](https://img.shields.io/pypi/dm/robotframework-openapitools)
+![license](https://img.shields.io/pypi/l/robotframework-openapitools)
 <!-- ![license](https://img.shields.io/pypi/l/robotframework-openapitools) -->
 
 <!-- [![PyPi downloads](https://img.shields.io/pypi/dm/robotframework-openapitools)](https://pypi.python.org/pypi/robotframework-openapitools) -->
