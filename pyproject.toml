@@ -1,6 +1,6 @@
 [project]
 name="robotframework-openapitools"
-version = "1.0.0"
+version = "1.0.1"
 description = "A set of Robot Framework libraries to test APIs for which the OAS is available."
 authors = [
     {name = "Robin Mackaij", email = "r.a.mackaij@gmail.com"},
@@ -13,6 +13,9 @@ license = { file = "LICENSE"}
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Topic :: Software Development :: Testing",
@@ -72,6 +75,7 @@ packages = [
     {include = "OpenApiDriver", from = "src"},
     {include = "OpenApiLibCore", from = "src"},
     {include = "openapi_libgen", from = "src"},
+    {include = "openapitools_docs", from = "src"}
 ]
 include = ["*.libspec", "*.jinja"]
 
