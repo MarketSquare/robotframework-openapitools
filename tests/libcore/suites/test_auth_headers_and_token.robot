@@ -4,7 +4,6 @@ Documentation
 ...                 This is due to the fact that the keywords tested here have a Suite scope
 ...                 impact, which cannot be tested isolated in a single test case.
 
-Variables           ${root}/tests/variables.py
 Library             OpenApiLibCore
 ...                     source=${ORIGIN}/openapi.json
 ...                     origin=${ORIGIN}
@@ -12,6 +11,8 @@ Library             OpenApiLibCore
 ...                     mappings_path=${root}/tests/user_implemented/custom_user_mappings.py
 ...                     security_token=secret
 ...                     extra_headers=${EXTRA_HEADERS}
+Variables           ${ROOT}/tests/variables.py
+Test Tags           RF7
 
 
 *** Variables ***

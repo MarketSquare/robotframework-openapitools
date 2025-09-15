@@ -117,7 +117,24 @@ def atests(context: Context) -> None:
         "robot",
         f"--pythonpath={ROOT}/tests/generated",
         f"--argumentfile={ROOT}/tests/rf_cli.args",
-        f"--variable=root:{ROOT}",
+        f"--variable=ROOT:{ROOT}",
+        f"--outputdir={ROOT}/tests/logs",
+        "--loglevel=TRACE:DEBUG",
+        f"{ROOT}/tests",
+    ]
+    subprocess.run(" ".join(cmd), shell=True, check=False)
+
+
+@task(libgen, libgen_with_envs, libgen_edge_cases)
+def atests_rf6(context: Context) -> None:
+    cmd = [
+        "python",
+        "-m",
+        "robot",
+        f"--pythonpath={ROOT}/tests/generated",
+        f"--argumentfile={ROOT}/tests/rf_cli.args",
+        f"--variable=ROOT:{ROOT}",
+        "--exclude RF7",
         f"--outputdir={ROOT}/tests/logs",
         "--loglevel=TRACE:DEBUG",
         f"{ROOT}/tests",

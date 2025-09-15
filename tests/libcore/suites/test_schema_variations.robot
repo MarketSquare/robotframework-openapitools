@@ -3,7 +3,8 @@ Library         OpenApiLibCore
 ...                 source=${root}/tests/files/schema_with_allof.yaml
 ...                 origin=${ORIGIN}
 ...                 base_path=${EMPTY}
-Variables       ${root}/tests/variables.py
+Variables       ${ROOT}/tests/variables.py
+Test Tags       RF7
 
 
 *** Variables ***

@@ -5,7 +5,8 @@ Library         OpenApiLibCore
 ...                 origin=${ORIGIN}
 ...                 base_path=${EMPTY}
 ...                 mappings_path=${root}/tests/user_implemented/custom_user_mappings.py
-Variables       ${root}/tests/variables.py
+Variables       ${ROOT}/tests/variables.py
+Test Tags       RF7
 
 
 *** Variables ***
