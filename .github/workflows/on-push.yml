@@ -92,7 +92,7 @@ jobs:
       uses: JarvusInnovations/background-action@v1.0.7
       with:
         run: |
-          inv start-api
+          inv start-api &
         wait-on: |
           http://localhost:8000
         tail: true
