@@ -5,6 +5,7 @@ Library         MyOtherGeneratedLibrary
 ...                 origin=${ORIGIN}
 ...                 base_path=${EMPTY}
 ...                 mappings_path=${ROOT}/tests/user_implemented/custom_user_mappings.py
+
 Test Tags       rf7
 
 

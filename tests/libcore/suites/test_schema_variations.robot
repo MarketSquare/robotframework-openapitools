@@ -4,6 +4,7 @@ Library         OpenApiLibCore
 ...                 source=${ROOT}/tests/files/schema_with_allof.yaml
 ...                 origin=${ORIGIN}
 ...                 base_path=${EMPTY}
+
 Test Tags       rf7
 
 

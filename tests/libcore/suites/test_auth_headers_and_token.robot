@@ -12,6 +12,7 @@ Library             OpenApiLibCore
 ...                     mappings_path=${ROOT}/tests/user_implemented/custom_user_mappings.py
 ...                     security_token=secret
 ...                     extra_headers=${EXTRA_HEADERS}
+
 Test Tags           rf7
 
 
