@@ -58,7 +58,6 @@ lint-and-format = [
     "ruff >= 0.9.0",
     "pylint >= 3.3.3",
     "robotframework-robocop >= 5.7.0",
-    "robotframework-tidy >= 4.15.0",
 ]
 
 [project.urls]
@@ -92,7 +91,6 @@ genbadge = {version = ">=1.1.2", extras = ["coverage"]}
 ruff = ">=0.9.0"
 pylint = ">=3.3.3"
 robotframework-robocop = ">=5.7.0"
-robotframework-tidy = ">=4.15.0"
 
 [tool.poetry.group.type-checking.dependencies]
 mypy = ">=1.14.1"
@@ -180,18 +178,13 @@ max-line-length=140
 ignore-imports="yes"
 min-similarity-lines=10
 
-[tool.robotidy]
-line_length = 120
-spacecount = 4
-
-[tool.robocop]
-filetypes = [".robot", ".resource"]
+[tool.robocop.lint]
 configure = [
-    "line-too-long:line_length:120",
-    "too-long-test-case:max_len:30",
-    "too-many-calls-in-test-case:max_calls:25",
+    "line-too-long.line_length=120",
+    "too-long-test-case.max_len=30",
+    "too-many-calls-in-test-case.max_calls=25",
 ]
-exclude = [
+ignore = [
     "missing-doc-suite",
     "missing-doc-test-case",
     "missing-doc-keyword",

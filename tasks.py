@@ -10,6 +10,9 @@ from invoke.tasks import task
 ROOT = pathlib.Path(__file__).parent.resolve().as_posix()
 VERSION = version("robotframework-openapitools")
 
+utests_exit_sum = None
+atests_exit_code = None
+
 
 @task
 def start_api(context: Context) -> None:
@@ -77,6 +80,8 @@ def libgen_edge_cases(context: Context) -> None:
 
 @task
 def utests(context: Context) -> None:
+    global utests_exit_sum
+
     cmd = [
         "coverage",
         "run",
@@ -85,7 +90,7 @@ def utests(context: Context) -> None:
         "discover ",
         f"{ROOT}/tests/driver/unittests",
     ]
-    subprocess.run(" ".join(cmd), shell=True, check=False)
+    driver_result = subprocess.run(" ".join(cmd), shell=True, check=False)
 
     cmd = [
         "coverage",
@@ -95,7 +100,7 @@ def utests(context: Context) -> None:
         "discover ",
         f"{ROOT}/tests/libcore/unittests",
     ]
-    subprocess.run(" ".join(cmd), shell=True, check=False)
+    libcore_result = subprocess.run(" ".join(cmd), shell=True, check=False)
 
     cmd = [
         "coverage",
@@ -105,11 +110,17 @@ def utests(context: Context) -> None:
         "discover ",
         f"{ROOT}/tests/libgen/unittests",
     ]
-    subprocess.run(" ".join(cmd), shell=True, check=False)
+    libgen_result = subprocess.run(" ".join(cmd), shell=True, check=False)
+
+    utests_exit_sum = (
+        driver_result.returncode + libcore_result.returncode + libgen_result.returncode
+    )
 
 
 @task(libgen, libgen_with_envs, libgen_edge_cases)
 def atests(context: Context) -> None:
+    global atests_exit_code
+
     cmd = [
         "coverage",
         "run",
@@ -122,7 +133,8 @@ def atests(context: Context) -> None:
         "--loglevel=TRACE:DEBUG",
         f"{ROOT}/tests",
     ]
-    subprocess.run(" ".join(cmd), shell=True, check=False)
+    result = subprocess.run(" ".join(cmd), shell=True, check=False)
+    atests_exit_code = result.returncode
 
 
 @task(libgen, libgen_with_envs, libgen_edge_cases)
@@ -134,12 +146,16 @@ def atests_rf6(context: Context) -> None:
         f"--pythonpath={ROOT}/tests/generated",
         f"--argumentfile={ROOT}/tests/rf_cli.args",
         f"--variable=ROOT:{ROOT}",
-        "--exclude RF7",
+        "--exclude rf7",
         f"--outputdir={ROOT}/tests/logs",
         "--loglevel=TRACE:DEBUG",
         f"{ROOT}/tests",
     ]
-    subprocess.run(" ".join(cmd), shell=True, check=False)
+    result = subprocess.run(" ".join(cmd), shell=True, check=False)
+    if result.returncode > 0:
+        raise Exception(
+            f"There were {result.returncode} failures while running the tests."
+        )
 
 
 @task(utests, atests)
@@ -149,16 +165,26 @@ def tests(context: Context) -> None:
     subprocess.run("coverage html", shell=True, check=False)
     subprocess.run("coverage xml", shell=True, check=False)
 
+    if utests_exit_sum is None or atests_exit_code is None:
+        raise Exception(
+            "Coverage cannot be calculated; not all test suites ran correctly."
+        )
+
+    if utests_exit_sum + atests_exit_code > 0:
+        raise Exception(
+            f"There were {utests_exit_sum + atests_exit_code} failures while running the tests."
+        )
+
 
 @task
 def type_check(context: Context) -> None:
     subprocess.run(f"mypy {ROOT}/src", shell=True, check=False)
     subprocess.run(f"pyright {ROOT}/src", shell=True, check=False)
-    # subprocess.run(
-    #     f"robotcode analyze code {ROOT}/tests",
-    #     shell=True,
-    #     check=False,
-    # )
+    subprocess.run(
+        f"robotcode analyze code {ROOT}/tests",
+        shell=True,
+        check=False,
+    )
 
 
 @task
@@ -167,14 +193,14 @@ def lint(context: Context) -> None:
     subprocess.run(f"ruff check {ROOT}/src/OpenApiLibCore", shell=True, check=False)
     subprocess.run(f"pylint {ROOT}/src/OpenApiDriver", shell=True, check=False)
     subprocess.run(f"pylint {ROOT}/src/OpenApiLibCore", shell=True, check=False)
-    subprocess.run(f"robocop {ROOT}/tests", shell=True, check=False)
+    subprocess.run(f"robocop check {ROOT}/tests", shell=True, check=False)
 
 
 @task
 def format_code(context: Context) -> None:
     subprocess.run("ruff check --select I --fix", shell=True, check=False)
     subprocess.run("ruff format", shell=True, check=False)
-    subprocess.run(f"robotidy {ROOT}/tests", shell=True, check=False)
+    subprocess.run(f"robocop format {ROOT}/tests", shell=True, check=False)
 
 
 @task

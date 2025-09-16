@@ -1,10 +1,10 @@
 *** Settings ***
+Variables       ${ROOT}/tests/variables.py
 Library         OpenApiLibCore
-...                 source=${root}/tests/files/schema_with_allof.yaml
+...                 source=${ROOT}/tests/files/schema_with_allof.yaml
 ...                 origin=${ORIGIN}
 ...                 base_path=${EMPTY}
-Variables       ${ROOT}/tests/variables.py
-Test Tags       RF7
+Test Tags       rf7
 
 
 *** Variables ***

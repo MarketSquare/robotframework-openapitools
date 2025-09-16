@@ -4,25 +4,25 @@ Documentation
 ...                 This is due to the fact that the keywords tested here have a Suite scope
 ...                 impact, which cannot be tested isolated in a single test case.
 
+Variables           ${ROOT}/tests/variables.py
 Library             OpenApiLibCore
 ...                     source=${ORIGIN}/openapi.json
 ...                     origin=${ORIGIN}
 ...                     base_path=${EMPTY}
-...                     mappings_path=${root}/tests/user_implemented/custom_user_mappings.py
+...                     mappings_path=${ROOT}/tests/user_implemented/custom_user_mappings.py
 ...                     security_token=secret
 ...                     extra_headers=${EXTRA_HEADERS}
-Variables           ${ROOT}/tests/variables.py
-Test Tags           RF7
+Test Tags           rf7
 
 
 *** Variables ***
-${ORIGIN}=      http://localhost:8000
+${ORIGIN}       http://localhost:8000
 
 
 *** Test Cases ***
 Test Authorized Request With Security Token And Extra Headers
-    ${request_data}=    Get Request Data    path=/secret_message    method=get
-    ${response}=    Authorized Request
+    ${request_data}    Get Request Data    path=/secret_message    method=get
+    ${response}    Authorized Request
     ...    url=${ORIGIN}/secret_message    method=get    headers=${request_data.headers}
     Should Be Equal As Integers    ${response.status_code}    200
 
@@ -37,8 +37,8 @@ Test Authorized Request With Security Token And Extra Headers
 Test Set Security Token
     Set Security Token    another secret
 
-    ${request_data}=    Get Request Data    path=/secret_message    method=get
-    ${response}=    Authorized Request
+    ${request_data}    Get Request Data    path=/secret_message    method=get
+    ${response}    Authorized Request
     ...    url=${ORIGIN}/secret_message    method=get    headers=${request_data.headers}
     Should Be Equal As Integers    ${response.status_code}    200
 
@@ -53,8 +53,8 @@ Test Set Security Token
 Test Set Extra Headers
     Set Extra Headers    {"spam": "bacon"}
 
-    ${request_data}=    Get Request Data    path=/secret_message    method=get
-    ${response}=    Authorized Request
+    ${request_data}    Get Request Data    path=/secret_message    method=get
+    ${response}    Authorized Request
     ...    url=${ORIGIN}/secret_message    method=get    headers=${request_data.headers}
     Should Be Equal As Integers    ${response.status_code}    200
 
@@ -71,8 +71,8 @@ Test Set Extra Headers
 Test Set Basic Auth
     Set Basic Auth    username=Joe    password=Jane
 
-    ${request_data}=    Get Request Data    path=/secret_message    method=get
-    ${response}=    Authorized Request
+    ${request_data}    Get Request Data    path=/secret_message    method=get
+    ${response}    Authorized Request
     ...    url=${ORIGIN}/secret_message    method=get    headers=${request_data.headers}
     Should Be Equal As Integers    ${response.status_code}    200
 
@@ -89,8 +89,8 @@ Test Set Basic Auth
 Test Set Auth
     Set Auth    auth=${DIGEST_AUTH}
 
-    ${request_data}=    Get Request Data    path=/secret_message    method=get
-    ${response}=    Authorized Request
+    ${request_data}    Get Request Data    path=/secret_message    method=get
+    ${response}    Authorized Request
     ...    url=${ORIGIN}/secret_message    method=get    headers=${request_data.headers}
     Should Be Equal As Integers    ${response.status_code}    200
 

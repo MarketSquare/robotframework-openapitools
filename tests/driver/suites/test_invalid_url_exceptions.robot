@@ -5,7 +5,7 @@ Library             OpenApiDriver
 ...                     origin=http://localhost:8000
 ...                     included_paths=${INCLUDED_PATHS}
 ...                     mappings_path=${ROOT}/tests/user_implemented/custom_user_mappings.py
-...                     require_body_for_invalid_url=${False}
+...                     require_body_for_invalid_url=${FALSE}
 
 Test Template       Validate Test Invalid Url Skips Or Raises
 

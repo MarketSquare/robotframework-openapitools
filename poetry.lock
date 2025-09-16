@@ -254,7 +254,7 @@ files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
-markers = {main = "platform_system == \"Windows\""}
+markers = {main = "platform_system == \"Windows\"", lint-and-format = "platform_system == \"Windows\" or sys_platform == \"win32\""}
 
 [[package]]
 name = "coverage"
@@ -1545,7 +1545,7 @@ version = "1.8.9"
 description = "Format click help output nicely with rich"
 optional = false
 python-versions = ">=3.7"
-groups = ["main", "lint-and-format"]
+groups = ["main"]
 files = [
     {file = "rich_click-1.8.9-py3-none-any.whl", hash = "sha256:c3fa81ed8a671a10de65a9e20abf642cfdac6fdb882db1ef465ee33919fbcfe2"},
     {file = "rich_click-1.8.9.tar.gz", hash = "sha256:fd98c0ab9ddc1cf9c0b7463f68daf28b4d0033a74214ceb02f761b3ff2af3136"},
@@ -1762,32 +1762,6 @@ files = [
 
 [package.dependencies]
 robotframework = ">=3.2"
-
-[[package]]
-name = "robotframework-tidy"
-version = "4.18.0"
-description = "Code autoformatter for Robot Framework"
-optional = false
-python-versions = ">=3.8"
-groups = ["lint-and-format"]
-files = [
-    {file = "robotframework_tidy-4.18.0-py3-none-any.whl", hash = "sha256:98b421fc6782fc7340fbcec7fe1aa0653c4c241f2d687dab11e8160006eabe78"},
-    {file = "robotframework_tidy-4.18.0.tar.gz", hash = "sha256:1ddbcf4c429c4e1c30ea9c04f98d43fc2127d5e193d611dbbb7ae85dc8e85872"},
-]
-
-[package.dependencies]
-click = ">=8.1"
-colorama = ">=0.4.3"
-jinja2 = ">=3.1.3"
-pathspec = ">=0.9.0"
-rich_click = ">=1.4"
-robotframework = ">=4.0"
-tomli = ">=2.0"
-
-[package.extras]
-dev = ["coverage", "invoke", "jinja2", "packaging (>=21.0)", "pre-commit", "pyflakes (>=2.4,<3.3)", "pylama", "pytest", "tomli_w (>=1.0,<1.2)"]
-doc = ["furo", "sphinx", "sphinx-copybutton (==0.5.2)", "sphinx-design"]
-generate-config = ["tomli_w (>=1.0,<1.2)"]
 
 [[package]]
 name = "rpds-py"
@@ -2142,6 +2116,7 @@ description = "A lil' TOML parser"
 optional = false
 python-versions = ">=3.8"
 groups = ["main", "dev", "lint-and-format", "type-checking"]
+markers = "python_version < \"3.11\""
 files = [
     {file = "tomli-2.2.1-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:678e4fa69e4575eb77d103de3df8a895e1591b48e740211bd1067378c69e8249"},
     {file = "tomli-2.2.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:023aa114dd824ade0100497eb2318602af309e5a55595f76b626d6d9f3b7b0a6"},
@@ -2176,7 +2151,6 @@ files = [
     {file = "tomli-2.2.1-py3-none-any.whl", hash = "sha256:cb55c73c5f4408779d0cf3eef9f762b9c9f147a77de7b258bef0a5628adc85cc"},
     {file = "tomli-2.2.1.tar.gz", hash = "sha256:cd45e1dc79c835ce60f7404ec8119f2eb06d38b1deba146f07ced3bbc44505ff"},
 ]
-markers = {main = "python_version < \"3.11\"", dev = "python_version < \"3.11\"", type-checking = "python_version < \"3.11\""}
 
 [[package]]
 name = "tomli-w"
@@ -2346,4 +2320,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10, <4"
-content-hash = "071afbf640959d0dc6dd079d857fd840e1da0bb8dfc19ca22bab60e9e6de7d8e"
+content-hash = "b7ea95a1a29ef5ce4aec7eb44e253601508ae6b67b5d1091db3e5dc0d4252e8c"

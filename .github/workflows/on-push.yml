@@ -98,11 +98,11 @@ jobs:
     - name: Run tests on latest RF 7 version
       if: matrix.robot-version == '7.3.2'
       run: |
-       inv tests
+        inv tests
     - name: Run tests on latest RF 6 version
       if: matrix.robot-version == '6.1.1'
       run: |
-       inv atests-rf6
+        inv atests-rf6
     - uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:

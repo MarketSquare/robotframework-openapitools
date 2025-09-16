@@ -1,11 +1,11 @@
 *** Settings ***
+Variables       ${ROOT}/tests/variables.py
 Library         String
 Library         OpenApiLibCore
 ...                 source=${ORIGIN}/openapi.json
 ...                 origin=${ORIGIN}
 ...                 base_path=${EMPTY}
-...                 mappings_path=${root}/tests/user_implemented/custom_user_mappings.py
-Variables       ${ROOT}/tests/variables.py
+...                 mappings_path=${ROOT}/tests/user_implemented/custom_user_mappings.py
 
 
 *** Variables ***

@@ -1,15 +1,15 @@
 *** Settings ***
+Variables       ${ROOT}/tests/variables.py
 Library         MyOtherGeneratedLibrary
 ...                 source=${ORIGIN}/openapi.json
 ...                 origin=${ORIGIN}
 ...                 base_path=${EMPTY}
 ...                 mappings_path=${ROOT}/tests/user_implemented/custom_user_mappings.py
-Variables       ${ROOT}/tests/variables.py
-Test Tags       RF7
+Test Tags       rf7
 
 
 *** Variables ***
-${ORIGIN}=      http://localhost:8000
+${ORIGIN}       http://localhost:8000
 
 
 *** Test Cases ***
@@ -44,7 +44,7 @@ Test Generated Keywords: Get Energy Label
     ...    validate_against_schema=${FALSE}
     Should Be Equal As Integers    ${response.status_code}    422
 
-    VAR    @{omit}    extension
+    VAR    @{omit}=    extension
     ${response}=    Get Energy Label
     ...    zipcode=1111AA
     ...    home_number=10
