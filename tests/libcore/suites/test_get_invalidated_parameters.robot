@@ -7,9 +7,11 @@ Library         OpenApiLibCore
 ...                 base_path=${EMPTY}
 ...                 mappings_path=${ROOT}/tests/user_implemented/custom_user_mappings.py
 
+Test Tags       rf7
+
 
 *** Variables ***
-${ORIGIN}=      http://localhost:8000
+${ORIGIN}       http://localhost:8000
 
 
 *** Test Cases ***
@@ -47,7 +49,7 @@ Test Get Invalidated Parameters For Invalid Propery Default Response
     ${invalidated}=    Get Invalidated Parameters
     ...    status_code=422
     ...    request_data=${request_data}
-    ${secret_code}=    Set Variable    ${invalidated[1].get("secret-code")}
+    VAR    ${secret_code}=    ${invalidated[1].get("secret-code")}
     Length Should Be    ${secret_code}    36
 
 Test Get Invalidated Parameters For PropertyValueConstraint
@@ -55,14 +57,14 @@ Test Get Invalidated Parameters For PropertyValueConstraint
     ${invalidated}=    Get Invalidated Parameters
     ...    status_code=401
     ...    request_data=${request_data}
-    ${secret_code}=    Set Variable    ${invalidated[1].get("secret-code")}
+    VAR    ${secret_code}=    ${invalidated[1].get("secret-code")}
     Should Be True    int($secret_code) != 42
 
     ${request_data}=    Get Request Data    path=/secret_message    method=get
     ${invalidated}=    Get Invalidated Parameters
     ...    status_code=403
     ...    request_data=${request_data}
-    ${seal}=    Set Variable    ${invalidated[1].get("seal")}
+    VAR    ${seal}=    ${invalidated[1].get("seal")}
     Should Not Be Equal    ${seal}    ${NONE}
 
 Test Get Invalidated Parameters Adds Optional Parameter If Not Provided
@@ -71,7 +73,7 @@ Test Get Invalidated Parameters Adds Optional Parameter If Not Provided
     ${invalidated}=    Get Invalidated Parameters
     ...    status_code=422
     ...    request_data=${request_data}
-    ${headers}=    Set Variable    ${invalidated[1]}
+    VAR    ${headers}=    ${invalidated[1]}
     Length Should Be    ${headers}    1
 
 Test Get Invalidated Parameters Adds Optional Parameter If treat_as_mandatory Is True
@@ -80,5 +82,5 @@ Test Get Invalidated Parameters Adds Optional Parameter If treat_as_mandatory Is
     ${invalidated}=    Get Invalidated Parameters
     ...    status_code=422
     ...    request_data=${request_data}
-    ${extension}=    Set Variable    ${invalidated[0].get("extension")}
+    VAR    ${extension}=    ${invalidated[0].get("extension")}
     Length Should Be    ${extension}    20

@@ -17,6 +17,8 @@ Library             OpenApiDriver
 
 Test Template       Validate Test Endpoint Keyword
 
+Test Tags           rf7
+
 
 *** Variables ***
 @{EXPECTED_FAILURES}
@@ -40,7 +42,7 @@ Test Endpoint for ${method} on ${path} where ${status_code} is expected
 Validate Test Endpoint Keyword
     [Arguments]    ${path}    ${method}    ${status_code}
     IF    ${status_code} == 404
-        ${operation}=    Set Variable    ${method}${SPACE}${path}${SPACE}${status_code}
+        VAR    ${operation}    ${method}${SPACE}${path}${SPACE}${status_code}
         IF    $operation in $EXPECTED_FAILURES
             Run Keyword And Expect Error    *
             ...    Test Invalid Url    path=${path}    method=${method}
@@ -48,7 +50,7 @@ Validate Test Endpoint Keyword
             Test Invalid Url    path=${path}    method=${method}
         END
     ELSE
-        ${operation}=    Set Variable    ${method}${SPACE}${path}${SPACE}${status_code}
+        VAR    ${operation}    ${method}${SPACE}${path}${SPACE}${status_code}
         IF    $operation in $EXPECTED_FAILURES
             Run Keyword And Expect Error    *
             ...    Test Endpoint    path=${path}    method=${method}    status_code=${status_code}

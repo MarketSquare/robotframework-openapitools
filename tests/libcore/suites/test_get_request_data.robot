@@ -11,7 +11,7 @@ Test Tags       rf7
 
 
 *** Variables ***
-${ORIGIN}=      http://localhost:8000
+${ORIGIN}       http://localhost:8000
 
 
 *** Test Cases ***

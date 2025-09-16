@@ -8,11 +8,11 @@ Test Template       Do Nothing
 
 
 *** Variables ***
-@{IGNORED_RESPONSES}=       200    404    400
-${IGNORE_POST_PET}=         ${{("/pet", "POST", 405)}}
-${IGNORE_POST_PET_ID}=      ${{("/pet/{petId}", "post", 405)}}
-${IGNORE_POST_ORDER}=       ${{("/store/order", "post", 405)}}
-@{IGNORED_TESTS}=           ${IGNORE_POST_PET}    ${IGNORE_POST_PET_ID}    ${IGNORE_POST_ORDER}
+@{IGNORED_RESPONSES}        200    404    400
+${IGNORE_POST_PET}          ${{("/pet", "POST", 405)}}
+${IGNORE_POST_PET_ID}       ${{("/pet/{petId}", "post", 405)}}
+${IGNORE_POST_ORDER}        ${{("/store/order", "post", 405)}}
+@{IGNORED_TESTS}            ${IGNORE_POST_PET}    ${IGNORE_POST_PET_ID}    ${IGNORE_POST_ORDER}
 
 
 *** Test Cases ***
