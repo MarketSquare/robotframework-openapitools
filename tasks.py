@@ -126,6 +126,7 @@ def atests(context: Context) -> None:
         "run",
         "-m",
         "robot",
+        f"--pythonpath={ROOT}/tests/user_implemented",
         f"--pythonpath={ROOT}/tests/generated",
         f"--argumentfile={ROOT}/tests/rf_cli.args",
         f"--variable=ROOT:{ROOT}",

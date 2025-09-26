@@ -2,6 +2,7 @@
 import datetime
 from enum import Enum
 from sys import float_info
+from typing import Annotated
 from uuid import uuid4
 
 from fastapi import FastAPI, Header, HTTPException, Path, Query, Response
@@ -107,6 +108,7 @@ class EmployeeUpdate(BaseModel):
 
 WAGE_GROUPS: dict[str, WageGroup] = {}
 EMPLOYEES: dict[str, EmployeeDetails] = {}
+EMPLOYEE_ETAGS: dict[str, str] = {}
 EMPLOYEE_NUMBERS = iter(range(1, 1000))
 ENERGY_LABELS: dict[str, dict[int, dict[str, EnergyLabel]]] = {
     "1111AA": {
@@ -292,7 +294,7 @@ def get_employees_in_wagegroup(wagegroup_id: str) -> list[EmployeeDetails]:
     response_model=EmployeeDetails,
     responses={403: {"model": Detail}, 451: {"model": Detail}},
 )
-def post_employee(employee: Employee) -> EmployeeDetails:
+def post_employee(employee: Employee, response: Response) -> EmployeeDetails:
     wagegroup_id = employee.wagegroup_id
     if wagegroup_id not in WAGE_GROUPS:
         raise HTTPException(
@@ -316,6 +318,11 @@ def post_employee(employee: Employee) -> EmployeeDetails:
         parttime_schedule=parttime_schedule,
     )
     EMPLOYEES[new_employee.identification] = new_employee
+
+    etag = uuid4().hex
+    response.headers["ETag"] = etag
+    EMPLOYEE_ETAGS[new_employee.identification] = etag
+
     return new_employee
 
 
@@ -334,9 +341,11 @@ def get_employees() -> list[EmployeeDigest]:
     response_model=EmployeeDetails,
     responses={404: {"model": Detail}},
 )
-def get_employee(employee_id: str) -> EmployeeDetails:
+def get_employee(employee_id: str, response: Response) -> EmployeeDetails:
     if employee_id not in EMPLOYEES:
         raise HTTPException(status_code=404, detail="Employee not found")
+
+    response.headers["ETag"] = EMPLOYEE_ETAGS.get(employee_id, "")
     return EMPLOYEES[employee_id]
 
 
@@ -346,6 +355,7 @@ def get_employee(employee_id: str) -> EmployeeDetails:
     responses={
         403: {"model": Detail},
         404: {"model": Detail},
+        412: {"model": Detail},
         451: {"model": Detail},
         200: {
             "description": "A JSON boolean response",
@@ -358,9 +368,20 @@ def get_employee(employee_id: str) -> EmployeeDetails:
     },
     response_class=JSONResponse,
 )
-def patch_employee(employee_id: str, employee: EmployeeUpdate) -> JSONResponse:
+def patch_employee(
+    employee_id: str,
+    employee: EmployeeUpdate,
+    If_Match: Annotated[str, Header()],
+) -> JSONResponse:
     if employee_id not in EMPLOYEES.keys():
         raise HTTPException(status_code=404, detail="Employee not found")
+
+    if If_Match != EMPLOYEE_ETAGS.get(employee_id):
+        raise HTTPException(
+            status_code=412,
+            detail="Provided ETag value does not match the latest ETag of the resource.",
+        )
+
     stored_employee_data = EMPLOYEES[employee_id]
     employee_update_data = employee.model_dump(
         exclude_defaults=True, exclude_unset=True
@@ -387,6 +408,7 @@ def patch_employee(employee_id: str, employee: EmployeeUpdate) -> JSONResponse:
         )
         updated_employee.parttime_schedule = parttime_schedule
     EMPLOYEES[employee_id] = updated_employee
+    EMPLOYEE_ETAGS[employee_id] = uuid4().hex
     return JSONResponse(content=True)
 
 

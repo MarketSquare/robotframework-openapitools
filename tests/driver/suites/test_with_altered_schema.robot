@@ -4,6 +4,7 @@ Documentation       This suite runs against an altered OpenAPI spec that is deri
 ...                 will not be covered using the normal spec.
 
 Variables           ${ROOT}/tests/variables.py
+Library             EtagListener
 Library             OpenApiDriver
 ...                     source=${ROOT}/tests/files/altered_openapi.json
 ...                     origin=http://localhost:8000

@@ -841,7 +841,7 @@ PATH_MAPPING = {
 <hr>
 
 <h3><code>IGNORE</code></h3>
-<blockquote><u>Never send this query parameter as part of a request</u></blockquote>
+<blockquote><u>Never send this parameter as part of a request</u></blockquote>
 
 Some optional query parameters have a range of valid values that depend on one or more path parameters.
 Since path parameters are part of an url, they cannot be optional or empty so to extend the path parameters with optional parameters, query parameters can be used.
@@ -873,13 +873,43 @@ class EnergyLabelDto(Dto):
         return relations
 
 DTO_MAPPING = {
-    ("/energy_label/{zipcode}/{home_number}", "get"): EnergyLabelDto
+    ("/energy_label/{zipcode}/{home_number}", "get"): EnergyLabelDto,
 }
 
 </code></pre></div>
 
 Note that in this example, the <code class="language-python">get_parameter_relations()</code> method is implemented.
 This method works mostly the same as the <code class="language-python">get_relations()</code> method but applies to headers and query parameters.
+
+<p>
+Another use case for <code>IGNORE</code> is in situations where a certain <code>error_code</code> will only be returned when the <code>parameter</code> is omitted from the request, e.g. a required <code>If-Match</code> header.
+Such situations can be handled by a mapping as shown below:
+</p>
+<div class="code-block"><pre><code class="language-python">
+class PatchEmployeeDto(Dto):
+    @staticmethod
+    def get_parameter_relations() -> list[ResourceRelation]:
+        relations: list[ResourceRelation] = [
+            PropertyValueConstraint(
+                property_name="If-Match",
+                values=["overridden by listener"],
+                invalid_value="not an etag",
+                invalid_value_error_code=412,
+            ),
+            PropertyValueConstraint(
+                property_name="If-Match",
+                values=["will be updated by listener"],
+                invalid_value=IGNORE,
+                invalid_value_error_code=422,
+            ),
+        ]
+        return relations
+
+DTO_MAPPING = {
+    ("/employees/{employee_id}", "patch"): PatchEmployeeDto,
+}
+
+</code></pre></div>
 
 <hr>
 

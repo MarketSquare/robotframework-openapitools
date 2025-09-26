@@ -4,6 +4,7 @@ for the requests made as part of keyword exection.
 """
 
 from dataclasses import Field, field, make_dataclass
+from itertools import chain
 from random import choice
 from typing import Any, cast
 
@@ -220,7 +221,8 @@ def get_parameter_data(
         if constrained_values := [
             r.values for r in relations if isinstance(r, PropertyValueConstraint)
         ]:
-            value = choice(*constrained_values)
+            values_to_choose_from = list(chain.from_iterable(constrained_values))
+            value = choice(values_to_choose_from)
             if value is IGNORE:
                 continue
             result[parameter_name] = value
