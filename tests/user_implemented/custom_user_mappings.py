@@ -109,6 +109,26 @@ class EmployeeDto(Dto):
         return relations
 
 
+class PatchEmployeeDto(EmployeeDto):
+    @staticmethod
+    def get_parameter_relations() -> list[ResourceRelation]:
+        relations: list[ResourceRelation] = [
+            PropertyValueConstraint(
+                property_name="If-Match",
+                values=["overridden by listener"],
+                invalid_value="not an etag",
+                invalid_value_error_code=412,
+            ),
+            PropertyValueConstraint(
+                property_name="If-Match",
+                values=["will be updated by listener"],
+                invalid_value=IGNORE,
+                invalid_value_error_code=422,
+            ),
+        ]
+        return relations
+
+
 class EnergyLabelDto(Dto):
     @staticmethod
     def get_path_relations() -> list[PathPropertiesConstraint]:
@@ -161,7 +181,7 @@ DTO_MAPPING: dict[tuple[str, str], Type[Dto]] = {
     ("/wagegroups/{wagegroup_id}", "delete"): WagegroupDeleteDto,
     ("/wagegroups/{wagegroup_id}", "put"): WagegroupDto,
     ("/employees", "post"): EmployeeDto,
-    ("/employees/{employee_id}", "patch"): EmployeeDto,
+    ("/employees/{employee_id}", "patch"): PatchEmployeeDto,
     ("/energy_label/{zipcode}/{home_number}", "get"): EnergyLabelDto,
     ("/secret_message", "get"): MessageDto,
 }

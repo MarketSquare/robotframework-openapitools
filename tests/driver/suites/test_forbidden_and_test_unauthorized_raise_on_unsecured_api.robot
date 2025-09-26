@@ -12,7 +12,7 @@ Test Template       Validate Unsecured Requests
 
 
 *** Variables ***
-@{IGNORED_RESPONSES}    401    403    404    406    418    422    451
+@{IGNORED_RESPONSES}    401    403    404    406    412    418    422    451
 
 
 *** Test Cases ***

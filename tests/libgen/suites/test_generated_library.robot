@@ -30,9 +30,9 @@ Test Generated Keywords: Get Employee
 
 Test Generated Keywords: Patch Employee
     ${employee_id}=    Get Valid Id For Path    path=/employees/{employee_id}
-    VAR    &{body}=    date_of_birth=2021-12-31
+    VAR    &{body}=    date_of_birth=2001-12-31
     ${response}=    Patch Employee Employees Employee Id Patch    employee_id=${employee_id}    body=${body}
-    Should Be Equal As Integers    ${response.status_code}    403
+    Should Be Equal As Integers    ${response.status_code}    412
 
 Test Generated Keywords: Post WageGroup
     VAR    &{body}=    hourly_rate=99.99

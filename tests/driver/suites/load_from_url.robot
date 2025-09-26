@@ -1,5 +1,6 @@
 *** Settings ***
 Variables           ${ROOT}/tests/variables.py
+Library             EtagListener
 Library             OpenApiDriver
 ...                     source=http://localhost:8000/openapi.json
 ...                     origin=${EMPTY}
@@ -13,6 +14,8 @@ Library             OpenApiDriver
 
 Suite Setup         Update Origin
 Test Template       Validate Test Endpoint Keyword
+
+Test Tags           rf7
 
 
 *** Test Cases ***

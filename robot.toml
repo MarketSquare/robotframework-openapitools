@@ -2,6 +2,7 @@ output-dir = "tests/logs"
 log-level = "TRACE:DEBUG"
 python-path = [
     "/workspaces/robotframework-openapitools/tests/generated",
+    "/workspaces/robotframework-openapitools/tests/user_implemented",
 ]
 
 [variables]

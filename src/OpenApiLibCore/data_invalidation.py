@@ -128,12 +128,17 @@ def get_invalidated_parameters(
         )
         parameter_names = parameter_names - additional_relation_property_names
 
+    parameter_names = parameter_names - parameters_to_ignore
     if not parameter_names:
+        if parameters_to_ignore:
+            for parameter_to_ignore in parameters_to_ignore:
+                params.pop(parameter_to_ignore, None)
+                headers.pop(parameter_to_ignore, None)
+            return params, headers
         raise ValueError(
             f"No parameter can be changed to cause status_code {status_code}."
         )
 
-    parameter_names = parameter_names - parameters_to_ignore
     parameter_to_invalidate = choice(tuple(parameter_names))
 
     # check for invalid parameters in the provided request_data

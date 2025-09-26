@@ -729,6 +729,15 @@
                             "type": "string",
                             "title": "Employee Id"
                         }
+                    },
+                    {
+                        "name": "If-Match",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "If-Match"
+                        }
                     }
                 ],
                 "requestBody": {
