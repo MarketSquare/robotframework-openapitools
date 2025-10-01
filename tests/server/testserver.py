@@ -177,6 +177,15 @@ def post_event(event: Event, draft: bool = Header(False)) -> Event:
     return event
 
 
+@app.put("/events/", status_code=201, response_model=list[Event])
+def put_events(events: list[Event]) -> list[Event]:
+    for event in events:
+        event.details.append(Detail(detail=f"Published {datetime.datetime.now()}"))
+        event.details.append(Detail(detail="Event details subject to change."))
+        EVENTS.append(event)
+    return events
+
+
 @app.get(
     "/energy_label/{zipcode}/{home_number}",
     status_code=200,
