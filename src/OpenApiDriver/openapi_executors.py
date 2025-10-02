@@ -25,6 +25,7 @@ from OpenApiLibCore import (
     ValidationLevel,
 )
 from OpenApiLibCore.annotations import JSON
+from OpenApiLibCore.models.oas_models import ArraySchema, ObjectSchema
 
 run_keyword = BuiltIn().run_keyword
 default_str_mapping: Mapping[str, str] = MappingProxyType({})
@@ -199,7 +200,10 @@ class OpenApiExecutors(OpenApiLibCore):
         params = request_data.params
         headers = request_data.headers
         if request_data.has_body:
-            json_data = request_data.dto.as_dict()
+            if isinstance(request_data.body_schema, ArraySchema):
+                json_data = request_data.dto.as_list()
+            else:
+                json_data = request_data.dto.as_dict()
         # when patching, get the original data to check only patched data has changed
         if method == "PATCH":
             original_data = self.get_original_data(url=url)
@@ -285,9 +289,12 @@ class OpenApiExecutors(OpenApiLibCore):
             request_data = run_keyword("get_request_data", path, method)
             params = request_data.get_required_params()
             headers = request_data.get_required_headers()
-            json_data = (
-                request_data.get_minimal_body_dict() if request_data.has_body else {}
-            )
+            if isinstance(request_data.body_schema, ObjectSchema):
+                json_data = (
+                    request_data.get_minimal_body_dict()
+                    if request_data.has_body
+                    else {}
+                )
             original_data = {}
             if method == "PATCH":
                 original_data = self.get_original_data(url=url)

@@ -12,16 +12,20 @@ from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore.annotations import JSON
-from OpenApiLibCore.dto_base import (
+from OpenApiLibCore.data_constraints.dto_base import (
     NOT_SET,
     Dto,
     IdReference,
     PropertyValueConstraint,
     UniquePropertyValueConstraint,
 )
-from OpenApiLibCore.models import ParameterObject, UnionTypeSchema
-from OpenApiLibCore.request_data import RequestData
-from OpenApiLibCore.value_utils import IGNORE, get_invalid_value
+from OpenApiLibCore.data_generation.value_utils import IGNORE
+from OpenApiLibCore.models.oas_models import (
+    ArraySchema,
+    ParameterObject,
+    UnionTypeSchema,
+)
+from OpenApiLibCore.models.request_data import RequestData
 
 run_keyword = BuiltIn().run_keyword
 
@@ -32,7 +36,7 @@ def get_invalid_body_data(
     status_code: int,
     request_data: RequestData,
     invalid_property_default_response: int,
-) -> dict[str, Any]:
+) -> dict[str, Any] | list[Any]:
     method = method.lower()
     data_relations = request_data.dto.get_body_relations_for_error_code(status_code)
     if not data_relations:
@@ -40,6 +44,13 @@ def get_invalid_body_data(
             raise ValueError(
                 "Failed to invalidate: request_data does not contain a body_schema."
             )
+        if isinstance(request_data.body_schema, ArraySchema):
+            invalid_item_data = request_data.dto.get_invalidated_data(
+                schema=request_data.body_schema.items,
+                status_code=status_code,
+                invalid_property_default_code=invalid_property_default_response,
+            )
+            return [invalid_item_data]
         json_data = request_data.dto.get_invalidated_data(
             schema=request_data.body_schema,
             status_code=status_code,
@@ -200,8 +211,7 @@ def get_invalidated_parameters(
             # FIXME: extra handling may be needed in case of values_from_constraint
             value_schema = choice(value_schema.resolved_schemas)
 
-        invalid_value = get_invalid_value(
-            value_schema=value_schema,
+        invalid_value = value_schema.get_invalid_value(
             current_value=valid_value,
             values_from_constraint=values_from_constraint,
         )

@@ -18,13 +18,13 @@ from robot.api import logger
 from robot.api.exceptions import Failure
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore.models import (
+from OpenApiLibCore.models.oas_models import (
     OpenApiObject,
     ResponseObject,
     UnionTypeSchema,
 )
+from OpenApiLibCore.models.request_data import RequestData, RequestValues
 from OpenApiLibCore.protocols import ResponseValidatorType
-from OpenApiLibCore.request_data import RequestData, RequestValues
 
 run_keyword = BuiltIn().run_keyword
 

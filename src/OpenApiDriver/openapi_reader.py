@@ -5,7 +5,7 @@ from typing import Sequence
 from DataDriver.AbstractReaderClass import AbstractReaderClass
 from DataDriver.ReaderConfig import TestCaseData
 
-from OpenApiLibCore.models import PathItemObject
+from OpenApiLibCore.models.oas_models import PathItemObject
 
 
 class Test:

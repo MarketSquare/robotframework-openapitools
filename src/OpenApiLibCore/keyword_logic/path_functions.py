@@ -8,9 +8,9 @@ from typing import Any
 from requests import Response
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore.models import OpenApiObject
+from OpenApiLibCore.models import oas_models
+from OpenApiLibCore.models.request_data import RequestData
 from OpenApiLibCore.protocols import GetIdPropertyNameType, GetPathDtoClassType
-from OpenApiLibCore.request_data import RequestData
 
 run_keyword = BuiltIn().run_keyword
 
@@ -24,7 +24,7 @@ def match_parts(parts: list[str], spec_parts: list[str]) -> bool:
     return True
 
 
-def get_parametrized_path(path: str, openapi_spec: OpenApiObject) -> str:
+def get_parametrized_path(path: str, openapi_spec: oas_models.OpenApiObject) -> str:
     path_parts = path.split("/")
     # if the last part is empty, the path has a trailing `/` that
     # should be ignored during matching
@@ -64,7 +64,7 @@ def get_valid_url(
     path: str,
     base_url: str,
     get_path_dto_class: GetPathDtoClassType,
-    openapi_spec: OpenApiObject,
+    openapi_spec: oas_models.OpenApiObject,
 ) -> str:
     try:
         # path can be partially resolved or provided by a PathPropertiesConstraint

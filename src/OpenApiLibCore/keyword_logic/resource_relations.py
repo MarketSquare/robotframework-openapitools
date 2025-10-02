@@ -4,10 +4,10 @@ from requests import Response
 from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
-import OpenApiLibCore.path_functions as _path_functions
-from OpenApiLibCore.dto_base import IdReference
-from OpenApiLibCore.models import OpenApiObject
-from OpenApiLibCore.request_data import RequestData
+import OpenApiLibCore.keyword_logic.path_functions as _path_functions
+from OpenApiLibCore.data_constraints.dto_base import IdReference
+from OpenApiLibCore.models.oas_models import OpenApiObject
+from OpenApiLibCore.models.request_data import RequestData
 
 run_keyword = BuiltIn().run_keyword
 

@@ -8,23 +8,23 @@ from typing import Any
 
 from robot.api import logger
 
-import OpenApiLibCore.path_functions as _path_functions
+import OpenApiLibCore.keyword_logic.path_functions as _path_functions
 from OpenApiLibCore.annotations import JSON
-from OpenApiLibCore.dto_base import (
+from OpenApiLibCore.data_constraints.dto_base import (
+    DefaultDto,
     Dto,
     IdDependency,
     PropertyValueConstraint,
 )
-from OpenApiLibCore.dto_utils import DefaultDto
-from OpenApiLibCore.models import (
+from OpenApiLibCore.data_generation.value_utils import IGNORE
+from OpenApiLibCore.models.oas_models import (
     ArraySchema,
     ObjectSchema,
     SchemaObjectTypes,
     UnionTypeSchema,
 )
-from OpenApiLibCore.parameter_utils import get_safe_name_for_oas_name
 from OpenApiLibCore.protocols import GetIdPropertyNameType
-from OpenApiLibCore.value_utils import IGNORE
+from OpenApiLibCore.utils.parameter_utils import get_safe_name_for_oas_name
 
 
 def get_json_data_for_dto_class(

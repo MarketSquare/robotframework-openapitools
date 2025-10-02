@@ -5,14 +5,14 @@ from typing import Generator
 from robot.utils import is_truthy
 
 from openapi_libgen.parsing_utils import remove_unsafe_characters_from_string
-from OpenApiLibCore.models import (
+from OpenApiLibCore.models.oas_models import (
     ObjectSchema,
     OpenApiObject,
     OperationObject,
     PathItemObject,
     SchemaObjectTypes,
 )
-from OpenApiLibCore.parameter_utils import get_safe_name_for_oas_name
+from OpenApiLibCore.utils.parameter_utils import get_safe_name_for_oas_name
 
 KEYWORD_TEMPLATE = r"""@keyword
     {signature}

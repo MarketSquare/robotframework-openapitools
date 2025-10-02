@@ -1,5 +1,7 @@
 """A module holding Protcols."""
 
+from __future__ import annotations
+
 from typing import Callable, Protocol, Type
 
 from openapi_core.contrib.requests import (
@@ -7,7 +9,7 @@ from openapi_core.contrib.requests import (
     RequestsOpenAPIResponse,
 )
 
-from OpenApiLibCore.dto_base import Dto
+from OpenApiLibCore.data_constraints import dto_base
 
 
 class ResponseValidatorType(Protocol):
@@ -19,7 +21,9 @@ class ResponseValidatorType(Protocol):
 class GetDtoClassType(Protocol):
     def __init__(self, mappings_module_name: str) -> None: ...  # pragma: no cover
 
-    def __call__(self, path: str, method: str) -> Type[Dto]: ...  # pragma: no cover
+    def __call__(
+        self, path: str, method: str
+    ) -> Type[dto_base.Dto]: ...  # pragma: no cover
 
 
 class GetIdPropertyNameType(Protocol):
@@ -35,4 +39,4 @@ class GetIdPropertyNameType(Protocol):
 class GetPathDtoClassType(Protocol):
     def __init__(self, mappings_module_name: str) -> None: ...  # pragma: no cover
 
-    def __call__(self, path: str) -> Type[Dto]: ...  # pragma: no cover
+    def __call__(self, path: str) -> Type[dto_base.Dto]: ...  # pragma: no cover

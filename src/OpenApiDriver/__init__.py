@@ -13,7 +13,7 @@ The following classes and constants are exposed to be used by the library user:
 from importlib.metadata import version
 
 from OpenApiDriver.openapidriver import OpenApiDriver
-from OpenApiLibCore.dto_base import (
+from OpenApiLibCore.data_constraints.dto_base import (
     Dto,
     IdDependency,
     IdReference,
@@ -22,8 +22,8 @@ from OpenApiLibCore.dto_base import (
     ResourceRelation,
     UniquePropertyValueConstraint,
 )
-from OpenApiLibCore.validation import ValidationLevel
-from OpenApiLibCore.value_utils import IGNORE
+from OpenApiLibCore.data_generation.value_utils import IGNORE
+from OpenApiLibCore.keyword_logic.validation import ValidationLevel
 
 try:
     __version__ = version("robotframework-openapidriver")

@@ -6,10 +6,9 @@ from functools import cached_property
 from random import sample
 from typing import Any
 
+from OpenApiLibCore import DefaultDto, Dto
 from OpenApiLibCore.annotations import JSON
-from OpenApiLibCore.dto_base import Dto
-from OpenApiLibCore.dto_utils import DefaultDto
-from OpenApiLibCore.models import (
+from OpenApiLibCore.models.oas_models import (
     ObjectSchema,
     ParameterObject,
     ResolvedSchemaObjectTypes,
@@ -56,7 +55,7 @@ class RequestData:
     """Helper class to manage parameters used when making requests."""
 
     dto: Dto | DefaultDto = field(default_factory=DefaultDto)
-    body_schema: ObjectSchema | None = None
+    body_schema: ResolvedSchemaObjectTypes | None = None
     parameters: list[ParameterObject] = field(default_factory=list)
     params: dict[str, JSON] = field(default_factory=dict)
     headers: dict[str, JSON] = field(default_factory=dict)
@@ -79,7 +78,7 @@ class RequestData:
 
     @property
     def required_property_names(self) -> list[str]:
-        if self.body_schema:
+        if isinstance(self.body_schema, ObjectSchema):
             return self.body_schema.required
         return []
 

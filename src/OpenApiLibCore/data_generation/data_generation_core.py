@@ -10,25 +10,27 @@ from typing import Any, cast
 
 from robot.api import logger
 
-import OpenApiLibCore.path_functions as _path_functions
+import OpenApiLibCore.keyword_logic.path_functions as _path_functions
 from OpenApiLibCore.annotations import JSON
-from OpenApiLibCore.dto_base import (
+from OpenApiLibCore.data_constraints.dto_base import (
+    DefaultDto,
     Dto,
     PropertyValueConstraint,
     ResourceRelation,
 )
-from OpenApiLibCore.dto_utils import DefaultDto
-from OpenApiLibCore.models import (
+from OpenApiLibCore.data_generation.value_utils import IGNORE
+from OpenApiLibCore.models.oas_models import (
+    ArraySchema,
     ObjectSchema,
     OpenApiObject,
     OperationObject,
     ParameterObject,
+    ResolvedSchemaObjectTypes,
     UnionTypeSchema,
 )
-from OpenApiLibCore.parameter_utils import get_safe_name_for_oas_name
+from OpenApiLibCore.models.request_data import RequestData
 from OpenApiLibCore.protocols import GetDtoClassType, GetIdPropertyNameType
-from OpenApiLibCore.request_data import RequestData
-from OpenApiLibCore.value_utils import IGNORE
+from OpenApiLibCore.utils.parameter_utils import get_safe_name_for_oas_name
 
 from .body_data_generation import (
     get_json_data_for_dto_class as _get_json_data_for_dto_class,
@@ -91,9 +93,6 @@ def get_request_data(
         resolved_schemas = body_schema.resolved_schemas
         body_schema = choice(resolved_schemas)
 
-    if not isinstance(body_schema, ObjectSchema):
-        raise ValueError(f"Selected schema is not an object schema: {body_schema}")
-
     dto_data = _get_json_data_for_dto_class(
         schema=body_schema,
         dto_class=dto_class,
@@ -101,7 +100,7 @@ def get_request_data(
         operation_id=operation_spec.operationId,
     )
     dto_instance = _get_dto_instance_from_dto_data(
-        object_schema=body_schema,
+        schema=body_schema,
         dto_class=dto_class,
         dto_data=dto_data,
         method_spec=operation_spec,
@@ -135,26 +134,43 @@ def _get_dto_instance_for_empty_body(
 
 
 def _get_dto_instance_from_dto_data(
-    object_schema: ObjectSchema,
+    schema: ResolvedSchemaObjectTypes,
     dto_class: type[Dto],
     dto_data: JSON,
     method_spec: OperationObject,
     dto_cls_name: str,
 ) -> Dto:
-    if not isinstance(dto_data, (dict, list)):
+    if not isinstance(schema, (ObjectSchema, ArraySchema)):
+        # if not isinstance(dto_data, (dict, list)):
         return DefaultDto()
 
-    if isinstance(dto_data, list):
-        raise NotImplementedError
+    if isinstance(schema, ArraySchema):
+        if not dto_data or not isinstance(dto_data, list):
+            return DefaultDto()
+        first_item_data = dto_data[0]
+        item_object_schema = schema.items
+        if isinstance(item_object_schema, UnionTypeSchema):
+            resolved_schemas = item_object_schema.resolved_schemas
+            item_object_schema = choice(resolved_schemas)
+        item_dto = _get_dto_instance_from_dto_data(
+            schema=item_object_schema,
+            dto_class=dto_class,
+            dto_data=first_item_data,
+            method_spec=method_spec,
+            dto_cls_name=dto_cls_name,
+        )
+        return item_dto
 
-    fields = get_fields_from_dto_data(object_schema, dto_data)
+    assert isinstance(dto_data, dict), (
+        "Data consistency error: schema is of type ObjectSchema but dto_data is not a dict."
+    )
+    fields = get_fields_from_dto_data(schema, dto_data)
     cls_name = method_spec.operationId if method_spec.operationId else dto_cls_name
     dto_class_ = make_dataclass(
         cls_name=cls_name,
         fields=fields,
         bases=(dto_class,),
     )
-    # dto_data = {get_safe_key(key): value for key, value in dto_data.items()}
     dto_data = {
         get_safe_name_for_oas_name(key): value for key, value in dto_data.items()
     }
@@ -168,9 +184,7 @@ def get_fields_from_dto_data(
     fields: list[tuple[str, type[object], Field[object]]] = []
 
     for key, value in dto_data.items():
-        # safe_key = get_safe_key(key)
         safe_key = get_safe_name_for_oas_name(key)
-        # metadata = {"original_property_name": key}
         if key in object_schema.required:
             # The fields list is used to create a dataclass, so non-default fields
             # must go before fields with a default

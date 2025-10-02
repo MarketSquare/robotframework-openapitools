@@ -5,7 +5,7 @@ names and the original names in the parsed OpenApi Specification document.
 
 from typing import Generator
 
-from OpenApiLibCore.models import ParameterObject, PathItemObject
+from OpenApiLibCore.models.oas_models import ParameterObject, PathItemObject
 
 PARAMETER_REGISTRY: dict[str, str] = {
     "body": "body",

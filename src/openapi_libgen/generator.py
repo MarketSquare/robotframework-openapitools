@@ -5,7 +5,7 @@ from jinja2 import Environment, FileSystemLoader
 from prance import ResolvingParser
 
 from openapi_libgen.spec_parser import get_keyword_data
-from OpenApiLibCore.models import OpenApiObject
+from OpenApiLibCore.models.oas_models import OpenApiObject
 
 HERE = Path(__file__).parent.resolve()
 

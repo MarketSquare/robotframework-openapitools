@@ -7,6 +7,7 @@ from sys import float_info
 from typing import (
     Generator,
     Generic,
+    Iterable,
     Literal,
     Mapping,
     TypeAlias,
@@ -18,7 +19,12 @@ from pydantic import BaseModel, Field, RootModel
 from robot.api import logger
 
 from OpenApiLibCore.annotations import JSON
-from OpenApiLibCore.localized_faker import FAKE, fake_string
+from OpenApiLibCore.data_generation.localized_faker import FAKE, fake_string
+from OpenApiLibCore.data_generation.value_utils import (
+    get_invalid_value_from_constraint,
+    python_type_by_json_type_name,
+)
+from OpenApiLibCore.models import Ignore
 
 EPSILON = float_info.epsilon
 
@@ -37,6 +43,54 @@ class SchemaBase(BaseModel, Generic[O], frozen=True):
 
     @abstractmethod
     def get_invalid_value_from_const_or_enum(self) -> O: ...
+
+    def get_invalid_value(
+        self,
+        current_value: JSON,
+        values_from_constraint: Iterable[JSON] = tuple(),
+    ) -> JSON | Ignore:
+        """Return a random value that violates the provided value_schema."""
+        invalid_values: list[JSON | Ignore] = []
+        value_type = getattr(self, "type")
+
+        if not isinstance(current_value, python_type_by_json_type_name(value_type)):
+            current_value = self.get_valid_value()
+
+        if values_from_constraint:
+            try:
+                return get_invalid_value_from_constraint(
+                    values_from_constraint=list(values_from_constraint),
+                    value_type=value_type,
+                )
+            except ValueError:
+                pass
+
+        # For schemas with a const or enum, add invalidated values from those
+        try:
+            invalid_value = self.get_invalid_value_from_const_or_enum()
+            invalid_values.append(invalid_value)
+        except ValueError:
+            pass
+
+        # Violate min / max values or length if possible
+        try:
+            values_out_of_bounds = self.get_values_out_of_bounds(
+                current_value=current_value  # type: ignore[arg-type]
+            )
+            invalid_values += values_out_of_bounds
+        except ValueError:
+            pass
+
+        # No value constraints or min / max ranges to violate, so change the data type
+        if value_type == "string":
+            # Since int / float / bool can always be cast to sting, change
+            # the string to a nested object.
+            # An array gets exploded in query strings, "null" is then often invalid
+            invalid_values.append([{"invalid": [None, False]}, "null", None, True])
+        else:
+            invalid_values.append(FAKE.uuid())
+
+        return choice(invalid_values)
 
 
 class NullSchema(SchemaBase[None], frozen=True):
@@ -693,6 +747,7 @@ class OperationObject(BaseModel):
     parameters: list[ParameterObject] | None = None
     requestBody: RequestBodyObject | None = None
     responses: dict[str, ResponseObject] = {}
+    # dto: Dto = DefaultDto()
 
 
 class PathItemObject(BaseModel):

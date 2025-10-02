@@ -19,32 +19,33 @@ from robot.api.deco import keyword, library
 from robot.api.exceptions import FatalError
 from robot.libraries.BuiltIn import BuiltIn
 
-import OpenApiLibCore.data_generation as _data_generation
-import OpenApiLibCore.data_invalidation as _data_invalidation
-import OpenApiLibCore.path_functions as _path_functions
-import OpenApiLibCore.path_invalidation as _path_invalidation
-import OpenApiLibCore.resource_relations as _resource_relations
-import OpenApiLibCore.validation as _validation
+import OpenApiLibCore.data_generation.data_generation_core as _data_generation
+import OpenApiLibCore.data_generation.data_invalidation as _data_invalidation
+import OpenApiLibCore.keyword_logic.path_functions as _path_functions
+import OpenApiLibCore.keyword_logic.path_invalidation as _path_invalidation
+import OpenApiLibCore.keyword_logic.resource_relations as _resource_relations
+import OpenApiLibCore.keyword_logic.validation as _validation
 from OpenApiLibCore.annotations import JSON
-from OpenApiLibCore.dto_base import Dto, IdReference
-from OpenApiLibCore.dto_utils import (
+from OpenApiLibCore.data_constraints.dto_base import (
     DEFAULT_ID_PROPERTY_NAME,
+    Dto,
+    IdReference,
     get_dto_class,
     get_id_property_name,
     get_path_dto_class,
 )
-from OpenApiLibCore.localized_faker import FAKE
-from OpenApiLibCore.models import (
+from OpenApiLibCore.data_generation.localized_faker import FAKE
+from OpenApiLibCore.models.oas_cache import PARSER_CACHE, CachedParser
+from OpenApiLibCore.models.oas_models import (
     OpenApiObject,
     PathItemObject,
 )
-from OpenApiLibCore.oas_cache import PARSER_CACHE, CachedParser
-from OpenApiLibCore.parameter_utils import (
+from OpenApiLibCore.models.request_data import RequestData, RequestValues
+from OpenApiLibCore.protocols import ResponseValidatorType
+from OpenApiLibCore.utils.parameter_utils import (
     get_oas_name_from_safe_name,
     register_path_parameters,
 )
-from OpenApiLibCore.protocols import ResponseValidatorType
-from OpenApiLibCore.request_data import RequestData, RequestValues
 from openapitools_docs.docstrings import (
     OPENAPILIBCORE_INIT_DOCSTRING,
     OPENAPILIBCORE_LIBRARY_DOCSTRING,

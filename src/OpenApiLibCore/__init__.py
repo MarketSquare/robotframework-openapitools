@@ -13,7 +13,8 @@ The following classes and constants are exposed to be used by the library user:
 
 from importlib.metadata import version
 
-from OpenApiLibCore.dto_base import (
+from OpenApiLibCore.data_constraints.dto_base import (
+    DefaultDto,
     Dto,
     IdDependency,
     IdReference,
@@ -22,13 +23,10 @@ from OpenApiLibCore.dto_base import (
     ResourceRelation,
     UniquePropertyValueConstraint,
 )
-from OpenApiLibCore.dto_utils import DefaultDto
-from OpenApiLibCore.openapi_libcore import (
-    OpenApiLibCore,
-)
-from OpenApiLibCore.request_data import RequestData, RequestValues
-from OpenApiLibCore.validation import ValidationLevel
-from OpenApiLibCore.value_utils import IGNORE, UNSET
+from OpenApiLibCore.keyword_logic.validation import ValidationLevel
+from OpenApiLibCore.models import IGNORE, UNSET
+from OpenApiLibCore.models.request_data import RequestData, RequestValues
+from OpenApiLibCore.openapi_libcore import OpenApiLibCore
 
 try:
     __version__ = version("robotframework-openapi-libcore")

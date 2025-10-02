@@ -2,31 +2,10 @@
 """Utility module with functions to handle OpenAPI value types and restrictions."""
 
 from copy import deepcopy
-from random import choice
-from typing import Any, Iterable, cast, overload
+from typing import Any, cast, overload
 
 from OpenApiLibCore.annotations import JSON
-from OpenApiLibCore.localized_faker import FAKE
-from OpenApiLibCore.models import ResolvedSchemaObjectTypes
-
-
-class Ignore:
-    """Helper class to flag properties to be ignored in data generation."""
-
-    def __str__(self) -> str:
-        return "IGNORE"
-
-
-class UnSet:
-    """Helper class to flag arguments that have not been set in a keyword call."""
-
-    def __str__(self) -> str:
-        return "UNSET"
-
-
-IGNORE = Ignore()
-
-UNSET = UnSet()
+from OpenApiLibCore.models import IGNORE, Ignore
 
 
 def json_type_name_of_python_type(python_type: Any) -> str:
@@ -65,55 +44,6 @@ def python_type_by_json_type_name(type_name: str) -> type:
     if type_name == "null":
         return type(None)
     raise ValueError(f"No Python type mapping for JSON type '{type_name}' available.")
-
-
-def get_invalid_value(
-    value_schema: ResolvedSchemaObjectTypes,
-    current_value: JSON,
-    values_from_constraint: Iterable[JSON] = tuple(),
-) -> JSON | Ignore:
-    """Return a random value that violates the provided value_schema."""
-    invalid_values: list[JSON | Ignore] = []
-    value_type = value_schema.type
-
-    if not isinstance(current_value, python_type_by_json_type_name(value_type)):
-        current_value = value_schema.get_valid_value()
-
-    if values_from_constraint:
-        try:
-            return get_invalid_value_from_constraint(
-                values_from_constraint=list(values_from_constraint),
-                value_type=value_type,
-            )
-        except ValueError:
-            pass
-
-    # For schemas with a const or enum, add invalidated values from those
-    try:
-        invalid_value = value_schema.get_invalid_value_from_const_or_enum()
-        invalid_values.append(invalid_value)
-    except ValueError:
-        pass
-
-    # Violate min / max values or length if possible
-    try:
-        values_out_of_bounds = value_schema.get_values_out_of_bounds(
-            current_value=current_value  # type: ignore[arg-type]
-        )
-        invalid_values += values_out_of_bounds
-    except ValueError:
-        pass
-
-    # No value constraints or min / max ranges to violate, so change the data type
-    if value_type == "string":
-        # Since int / float / bool can always be cast to sting, change
-        # the string to a nested object.
-        # An array gets exploded in query strings, "null" is then often invalid
-        invalid_values.append([{"invalid": [None, False]}, "null", None, True])
-    else:
-        invalid_values.append(FAKE.uuid())
-
-    return choice(invalid_values)
 
 
 def get_invalid_value_from_constraint(
