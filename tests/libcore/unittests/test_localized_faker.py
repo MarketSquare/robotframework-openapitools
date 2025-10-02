@@ -2,7 +2,7 @@
 import datetime
 import unittest
 
-from OpenApiLibCore.localized_faker import LocalizedFaker
+from OpenApiLibCore.data_generation.localized_faker import LocalizedFaker
 
 
 class TestLocalizedFaker(unittest.TestCase):

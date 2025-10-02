@@ -2,7 +2,7 @@
 import unittest
 from sys import float_info
 
-from OpenApiLibCore.models import (
+from OpenApiLibCore.models.oas_models import (
     ArraySchema,
     BooleanSchema,
     IntegerSchema,

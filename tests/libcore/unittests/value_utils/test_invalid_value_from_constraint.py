@@ -2,7 +2,8 @@
 import unittest
 from typing import Any
 
-from OpenApiLibCore import IGNORE, value_utils
+from OpenApiLibCore import IGNORE
+from OpenApiLibCore.data_generation import value_utils
 
 
 class TestInvalidValueFromConstraint(unittest.TestCase):
