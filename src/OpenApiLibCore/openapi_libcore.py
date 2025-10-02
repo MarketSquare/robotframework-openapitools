@@ -323,7 +323,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         return _path_functions.get_valid_url(
             path=path,
             base_url=self.base_url,
-            get_path_dto_class=self.get_path_dto_class,
             openapi_spec=self.openapi_spec,
         )
 
@@ -367,22 +366,20 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
     def get_invalidated_url(
         self,
         valid_url: str,
-        path: str = "",
         expected_status_code: int = 404,
     ) -> str:
         """
         Return an url with all the path parameters in the `valid_url` replaced by a
         random UUID if no PathPropertiesConstraint is mapped for the `"get"` operation
-        on the mapped `path` and `expected_status_code`.
+        on the related `path` and `expected_status_code`.
         If a PathPropertiesConstraint is mapped, the `invalid_value` is returned.
 
         Raises: ValueError if the valid_url cannot be invalidated.
         """
         return _path_invalidation.get_invalidated_url(
             valid_url=valid_url,
-            path=path,
             base_url=self.base_url,
-            get_path_dto_class=self.get_path_dto_class,
+            openapi_spec=self.openapi_spec,
             expected_status_code=expected_status_code,
         )
 
@@ -568,7 +565,31 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
     def _openapi_spec(self) -> OpenApiObject:
         parser, _, _ = self._load_specs_and_validator()
         spec_model = OpenApiObject.model_validate(parser.specification)
+        spec_model = self._attach_user_mappings(spec_model=spec_model)
         register_path_parameters(spec_model.paths)
+        return spec_model
+
+    def _attach_user_mappings(self, spec_model: OpenApiObject) -> OpenApiObject:
+        data_constraints_mapping = self.get_dto_class.dto_mapping
+        for (path, operation), data_constraint in data_constraints_mapping.items():
+            try:
+                operation_item = getattr(spec_model.paths[path], operation.lower())
+                operation_item.dto = data_constraint
+            except KeyError:
+                logger.warn(
+                    f"The DTO_MAPPING contains a path that is not found in the OpenAPI spec: {path}"
+                )
+
+        path_constraints_mapping = self.get_path_dto_class.dto_mapping
+        for path, path_constraint in path_constraints_mapping.items():
+            try:
+                path_item = spec_model.paths[path]
+                path_item.dto = path_constraint
+            except KeyError:
+                logger.warn(
+                    f"The PATH_MAPPING contains a path that is not found in the OpenAPI spec: {path}"
+                )
+
         return spec_model
 
     @cached_property

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import base64
 from abc import abstractmethod
 from collections import ChainMap
@@ -25,6 +27,7 @@ from OpenApiLibCore.data_generation.value_utils import (
     python_type_by_json_type_name,
 )
 from OpenApiLibCore.models import Ignore
+from OpenApiLibCore.protocols import DtoType
 
 EPSILON = float_info.epsilon
 
@@ -747,7 +750,7 @@ class OperationObject(BaseModel):
     parameters: list[ParameterObject] | None = None
     requestBody: RequestBodyObject | None = None
     responses: dict[str, ResponseObject] = {}
-    # dto: Dto = DefaultDto()
+    dto: DtoType | None = None
 
 
 class PathItemObject(BaseModel):
@@ -759,6 +762,7 @@ class PathItemObject(BaseModel):
     summary: str = ""
     description: str = ""
     parameters: list[ParameterObject] | None = None
+    dto: DtoType | None = None
 
     def get_operations(self) -> dict[str, OperationObject]:
         return {

@@ -10,7 +10,7 @@ from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore.models import oas_models
 from OpenApiLibCore.models.request_data import RequestData
-from OpenApiLibCore.protocols import GetIdPropertyNameType, GetPathDtoClassType
+from OpenApiLibCore.protocols import GetIdPropertyNameType
 
 run_keyword = BuiltIn().run_keyword
 
@@ -63,19 +63,19 @@ def get_parametrized_path(path: str, openapi_spec: oas_models.OpenApiObject) -> 
 def get_valid_url(
     path: str,
     base_url: str,
-    get_path_dto_class: GetPathDtoClassType,
     openapi_spec: oas_models.OpenApiObject,
 ) -> str:
     try:
         # path can be partially resolved or provided by a PathPropertiesConstraint
         parametrized_path = get_parametrized_path(path=path, openapi_spec=openapi_spec)
-        _ = openapi_spec.paths[parametrized_path]
+        path_item = openapi_spec.paths[parametrized_path]
     except KeyError:
         raise ValueError(
             f"{path} not found in paths section of the OpenAPI document."
         ) from None
-    dto_class = get_path_dto_class(path=path)
-    relations = dto_class.get_path_relations()
+
+    dto_class = path_item.dto
+    relations = dto_class.get_path_relations() if dto_class else []
     paths = [p.path for p in relations]
     if paths:
         url = f"{base_url}{choice(paths)}"

@@ -152,9 +152,7 @@ class OpenApiExecutors(OpenApiLibCore):
         valid_url: str = run_keyword("get_valid_url", path)
 
         try:
-            url = run_keyword(
-                "get_invalidated_url", valid_url, path, expected_status_code
-            )
+            url = run_keyword("get_invalidated_url", valid_url, expected_status_code)
         except Exception as exception:
             message = getattr(exception, "message", "")
             if not message.startswith("ValueError"):

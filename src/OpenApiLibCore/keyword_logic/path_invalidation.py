@@ -5,20 +5,27 @@ from uuid import uuid4
 
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore.protocols import GetPathDtoClassType
+from OpenApiLibCore.models import oas_models
 
 run_keyword = BuiltIn().run_keyword
 
 
 def get_invalidated_url(
     valid_url: str,
-    path: str,
     base_url: str,
-    get_path_dto_class: GetPathDtoClassType,
+    openapi_spec: oas_models.OpenApiObject,
     expected_status_code: int,
 ) -> str:
-    dto_class = get_path_dto_class(path=path)
-    relations = dto_class.get_path_relations()
+    path: str = run_keyword("get_parameterized_path_from_url", valid_url)
+    try:
+        path_item = openapi_spec.paths[path]
+    except KeyError:
+        raise ValueError(
+            f"{path} not found in paths section of the OpenAPI document."
+        ) from None
+
+    dto_class = path_item.dto
+    relations = dto_class.get_path_relations() if dto_class else []
     paths = [
         p.invalid_value
         for p in relations
