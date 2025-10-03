@@ -19,7 +19,7 @@ Test Get Request Data For Invalid Method On Endpoint
     ${request_data}=    Get Request Data    path=/events/    method=delete
     VAR    &{dict}=    &{EMPTY}
     VAR    @{list}=    @{EMPTY}
-    Should Be Equal    ${request_data.dto}    ${DEFAULT_DTO()}
+    Should Be Equal    ${request_data.dto.__doc__}    DeleteEvents()
     Should Be Equal    ${request_data.body_schema}    ${NONE}
     Should Be Equal    ${request_data.parameters}    ${list}
     Should Be Equal    ${request_data.params}    ${dict}
@@ -62,9 +62,9 @@ Test Get Request Data For Endpoint With Array Request Body
             Dictionary Should Contain Key    ${request_data.dto.message}    message
             List Should Not Contain Duplicates    ${request_data.dto.details}
             VAR    ${non_empty_array_seen}=    ${TRUE}
-        EXCEPT    * AttributeError: 'DefaultDto' object has no attribute 'message'    type=glob
+        EXCEPT    * AttributeError: 'put_events_events__put' object has no attribute 'message'    type=glob
             Should Be Equal    ${request_data.body_schema.type}    array
-            Should Be Equal As Strings    ${request_data.dto}    DefaultDto()
+            Should Be Equal As Strings    ${request_data.dto}    put_events_events__put()
             VAR    ${empty_array_seen}=    ${TRUE}
         END
     END

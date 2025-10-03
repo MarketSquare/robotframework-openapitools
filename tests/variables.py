@@ -4,7 +4,6 @@ from requests.auth import HTTPDigestAuth
 
 from OpenApiLibCore import (
     IGNORE,
-    DefaultDto,
     Dto,
     IdDependency,
     IdReference,
@@ -76,12 +75,10 @@ def get_variables() -> dict[str, Any]:
     )
     wagegroup_dto = WagegroupDto
     employee_dto = EmployeeDto
-    default_dto = DefaultDto
     extra_headers: dict[str, str] = {"foo": "bar", "eggs": "bacon"}
     return {
         "ID_REFERENCE": id_reference,
         "INVALID_ID_REFERENCE": invalid_id_reference,
-        "DEFAULT_DTO": default_dto,
         "WAGEGROUP_DTO": wagegroup_dto,
         "EMPLOYEE_DTO": employee_dto,
         "EXTRA_HEADERS": extra_headers,

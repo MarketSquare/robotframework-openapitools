@@ -8,7 +8,7 @@ from abc import ABC
 from dataclasses import dataclass, fields
 from importlib import import_module
 from random import choice, shuffle
-from typing import Any, Callable, Type
+from typing import Any, Callable
 from uuid import uuid4
 
 from robot.api import logger
@@ -16,7 +16,6 @@ from robot.api import logger
 from OpenApiLibCore.models.oas_models import NullSchema, ObjectSchema, UnionTypeSchema
 from OpenApiLibCore.protocols import (
     DtoType,
-    GetDtoClassType,
     GetIdPropertyNameType,
 )
 from OpenApiLibCore.utils import parameter_utils
@@ -270,35 +269,16 @@ class Dto(ABC):
         return [items] if items else []
 
 
-@dataclass
-class DefaultDto(Dto):
-    """A default Dto that can be instantiated."""
-
-
-def get_dto_class(mappings_module_name: str) -> GetDtoClassType:
-    return GetDtoClass(mappings_module_name=mappings_module_name)
-
-
-class GetDtoClass:
-    """Callable class to return Dtos from user-implemented mappings file."""
-
-    def __init__(self, mappings_module_name: str) -> None:
-        try:
-            mappings_module = import_module(mappings_module_name)
-            self.dto_mapping: dict[tuple[str, str], Type[Dto]] = (
-                mappings_module.DTO_MAPPING
-            )
-        except (ImportError, AttributeError, ValueError) as exception:
-            if mappings_module_name != "no mapping":
-                logger.error(f"DTO_MAPPING was not imported: {exception}")
-            self.dto_mapping = {}
-
-    def __call__(self, path: str, method: str) -> Type[Dto]:
-        try:
-            return self.dto_mapping[(path, method.lower())]
-        except KeyError:
-            logger.debug(f"No Dto mapping for {path} {method}.")
-            return DefaultDto
+def get_value_constraints_mapping_dict(
+    mappings_module_name: str,
+) -> dict[tuple[str, str], DtoType]:
+    try:
+        mappings_module = import_module(mappings_module_name)
+        return mappings_module.DTO_MAPPING
+    except (ImportError, AttributeError, ValueError) as exception:
+        if mappings_module_name != "no mapping":
+            logger.error(f"DTO_MAPPING was not imported: {exception}")
+        return {}
 
 
 def get_path_mapping_dict(mappings_module_name: str) -> dict[str, DtoType]:

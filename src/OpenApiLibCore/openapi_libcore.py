@@ -29,9 +29,9 @@ from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.data_constraints.dto_base import (
     Dto,
     IdReference,
-    get_dto_class,
     get_id_property_name,
     get_path_mapping_dict,
+    get_value_constraints_mapping_dict,
 )
 from OpenApiLibCore.data_generation.localized_faker import FAKE
 from OpenApiLibCore.models.oas_models import (
@@ -119,7 +119,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             mappings_folder = str(mappings_path.parent)
             sys.path.append(mappings_folder)
             mappings_module_name = mappings_path.stem
-            self.get_dto_class = get_dto_class(
+            self.value_constraints_mapping_dict = get_value_constraints_mapping_dict(
                 mappings_module_name=mappings_module_name
             )
             self.path_mapping_dict = get_path_mapping_dict(
@@ -131,7 +131,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             )
             sys.path.pop()
         else:
-            self.get_dto_class = get_dto_class(mappings_module_name="no mapping")
+            self.value_constraints_mapping_dict = get_value_constraints_mapping_dict(
+                mappings_module_name="no mapping"
+            )
             self.path_mapping_dict = get_path_mapping_dict(
                 mappings_module_name="no mapping"
             )
@@ -245,7 +247,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         return _data_generation.get_request_data(
             path=path,
             method=method,
-            get_dto_class=self.get_dto_class,
             openapi_spec=self.openapi_spec,
         )
 
@@ -567,8 +568,10 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         return spec_model
 
     def _attach_user_mappings(self, spec_model: OpenApiObject) -> OpenApiObject:
-        data_constraints_mapping = self.get_dto_class.dto_mapping
-        for (path, operation), data_constraint in data_constraints_mapping.items():
+        for (
+            path,
+            operation,
+        ), data_constraint in self.value_constraints_mapping_dict.items():
             try:
                 operation_item = getattr(spec_model.paths[path], operation.lower())
                 operation_item.dto = data_constraint

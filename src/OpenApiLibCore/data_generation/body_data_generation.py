@@ -11,8 +11,6 @@ from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.data_constraints.dto_base import (
-    DefaultDto,
-    Dto,
     IdDependency,
     PropertyValueConstraint,
 )
@@ -23,6 +21,7 @@ from OpenApiLibCore.models.oas_models import (
     SchemaObjectTypes,
     UnionTypeSchema,
 )
+from OpenApiLibCore.protocols import DtoType
 from OpenApiLibCore.utils.parameter_utils import get_safe_name_for_oas_name
 
 run_keyword = BuiltIn().run_keyword
@@ -30,7 +29,7 @@ run_keyword = BuiltIn().run_keyword
 
 def get_json_data_for_dto_class(
     schema: SchemaObjectTypes,
-    dto_class: type[Dto],
+    dto_class: type[DtoType] | None,
     operation_id: str | None = None,
 ) -> JSON:
     if isinstance(schema, UnionTypeSchema):
@@ -60,7 +59,7 @@ def get_json_data_for_dto_class(
 
 def get_dict_data_for_dto_class(
     schema: ObjectSchema,
-    dto_class: type[Dto],
+    dto_class: type[DtoType] | None,
     operation_id: str | None = None,
 ) -> dict[str, Any]:
     json_data: dict[str, Any] = {}
@@ -84,7 +83,7 @@ def get_dict_data_for_dto_class(
 
 def get_list_data_for_dto_class(
     schema: ArraySchema,
-    dto_class: type[Dto],
+    dto_class: type[DtoType] | None,
     operation_id: str | None = None,
 ) -> list[JSON]:
     json_data: list[JSON] = []
@@ -105,7 +104,7 @@ def get_list_data_for_dto_class(
 def get_data_for_property(
     property_name: str,
     property_schema: SchemaObjectTypes,
-    dto_class: type[Dto],
+    dto_class: type[DtoType] | None,
     operation_id: str | None,
 ) -> JSON:
     if constrained_values := get_constrained_values(
@@ -133,13 +132,13 @@ def get_data_for_property(
 
     return get_json_data_for_dto_class(
         schema=property_schema,
-        dto_class=DefaultDto,
+        dto_class=None,
     )
 
 
 def get_value_constrained_by_nested_dto(
     property_schema: SchemaObjectTypes,
-    nested_dto_class: type[Dto],
+    nested_dto_class: type[DtoType],
     operation_id: str | None,
 ) -> JSON:
     nested_schema = get_schema_for_nested_dto(property_schema=property_schema)
@@ -161,7 +160,7 @@ def get_schema_for_nested_dto(property_schema: SchemaObjectTypes) -> SchemaObjec
 
 def get_property_names_to_process(
     schema: ObjectSchema,
-    dto_class: type[Dto],
+    dto_class: type[DtoType] | None,
 ) -> list[str]:
     property_names = []
 
@@ -192,9 +191,9 @@ def get_property_names_to_process(
 
 
 def get_constrained_values(
-    dto_class: type[Dto], property_name: str
-) -> list[JSON | type[Dto]]:
-    relations = dto_class.get_relations()
+    dto_class: type[DtoType] | None, property_name: str
+) -> list[JSON | type[DtoType]]:
+    relations = dto_class.get_relations() if dto_class else []
     values_list = [
         c.values
         for c in relations
@@ -205,11 +204,11 @@ def get_constrained_values(
 
 
 def get_dependent_id(
-    dto_class: type[Dto],
+    dto_class: type[DtoType] | None,
     property_name: str,
     operation_id: str | None,
 ) -> str | int | float | None:
-    relations = dto_class.get_relations()
+    relations = dto_class.get_relations() if dto_class else []
     # multiple get paths are possible based on the operation being performed
     id_get_paths = [
         (d.get_path, d.operation_id)

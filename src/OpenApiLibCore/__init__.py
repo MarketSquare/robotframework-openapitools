@@ -14,7 +14,6 @@ The following classes and constants are exposed to be used by the library user:
 from importlib.metadata import version
 
 from OpenApiLibCore.data_constraints.dto_base import (
-    DefaultDto,
     Dto,
     IdDependency,
     IdReference,
@@ -63,7 +62,6 @@ KEYWORD_NAMES = [
 __all__ = [
     "IGNORE",
     "UNSET",
-    "DefaultDto",
     "Dto",
     "IdDependency",
     "IdReference",

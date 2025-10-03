@@ -6,7 +6,6 @@ from functools import cached_property
 from random import sample
 from typing import Any
 
-from OpenApiLibCore import DefaultDto, Dto
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.models.oas_models import (
     ObjectSchema,
@@ -14,6 +13,7 @@ from OpenApiLibCore.models.oas_models import (
     ResolvedSchemaObjectTypes,
     UnionTypeSchema,
 )
+from OpenApiLibCore.protocols import DtoType
 
 
 @dataclass
@@ -54,7 +54,7 @@ class RequestValues:
 class RequestData:
     """Helper class to manage parameters used when making requests."""
 
-    dto: Dto | DefaultDto = field(default_factory=DefaultDto)
+    dto: DtoType
     body_schema: ResolvedSchemaObjectTypes | None = None
     parameters: list[ParameterObject] = field(default_factory=list)
     params: dict[str, JSON] = field(default_factory=dict)

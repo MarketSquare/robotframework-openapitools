@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Protocol, Type
+from typing import Any, Callable, Protocol
 
 from openapi_core.contrib.requests import (
     RequestsOpenAPIRequest,
@@ -18,14 +18,6 @@ class ResponseValidatorType(Protocol):
     def __call__(
         self, request: RequestsOpenAPIRequest, response: RequestsOpenAPIResponse
     ) -> None: ...  # pragma: no cover
-
-
-class GetDtoClassType(Protocol):
-    def __init__(self, mappings_module_name: str) -> None: ...  # pragma: no cover
-
-    def __call__(
-        self, path: str, method: str
-    ) -> Type[dto_base.Dto]: ...  # pragma: no cover
 
 
 class GetIdPropertyNameType(Protocol):

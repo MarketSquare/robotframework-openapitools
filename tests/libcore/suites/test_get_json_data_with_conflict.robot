@@ -13,12 +13,14 @@ ${ORIGIN}       http://localhost:8000
 
 *** Test Cases ***
 Test Get Json Data With Conflict Raises For No UniquePropertyValueConstraint
+    # No mapping for /wagegroups GET will yield a default dto on the request_data
+    ${request_data}=    Get Request Data    path=/wagegroups    method=get
     ${url}=    Get Valid Url    path=/wagegroups
     Run Keyword And Expect Error    ValueError: No UniquePropertyValueConstraint*
     ...    Get Json Data With Conflict
     ...    url=${url}
     ...    method=post
-    ...    dto=${DEFAULT_DTO()}
+    ...    dto=${request_data.dto}
     ...    conflict_status_code=418
 
 Test Get Json Data With Conflict For Post Request

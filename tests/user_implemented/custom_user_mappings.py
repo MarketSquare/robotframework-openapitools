@@ -1,6 +1,4 @@
 # pylint: disable=invalid-name
-from typing import Type
-
 from OpenApiLibCore import (
     IGNORE,
     Dto,
@@ -176,7 +174,7 @@ class MessageDto(Dto):
         return relations
 
 
-DTO_MAPPING: dict[tuple[str, str], Type[Dto]] = {
+DTO_MAPPING: dict[tuple[str, str], type[Dto]] = {
     ("/wagegroups", "post"): WagegroupDto,
     ("/wagegroups/{wagegroup_id}", "delete"): WagegroupDeleteDto,
     ("/wagegroups/{wagegroup_id}", "put"): WagegroupDto,
@@ -196,6 +194,6 @@ ID_MAPPING: dict[str, str] = {
 }
 
 
-PATH_MAPPING: dict[str, Type[Dto]] = {
+PATH_MAPPING: dict[str, type[Dto]] = {
     "/energy_label/{zipcode}/{home_number}": EnergyLabelDto,
 }

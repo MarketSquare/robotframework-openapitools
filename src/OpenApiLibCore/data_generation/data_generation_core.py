@@ -13,7 +13,6 @@ from robot.api import logger
 import OpenApiLibCore.keyword_logic.path_functions as _path_functions
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.data_constraints.dto_base import (
-    DefaultDto,
     Dto,
     PropertyValueConstraint,
     ResourceRelation,
@@ -29,7 +28,7 @@ from OpenApiLibCore.models.oas_models import (
     UnionTypeSchema,
 )
 from OpenApiLibCore.models.request_data import RequestData
-from OpenApiLibCore.protocols import GetDtoClassType
+from OpenApiLibCore.protocols import DtoType
 from OpenApiLibCore.utils.parameter_utils import get_safe_name_for_oas_name
 
 from .body_data_generation import (
@@ -40,7 +39,6 @@ from .body_data_generation import (
 def get_request_data(
     path: str,
     method: str,
-    get_dto_class: GetDtoClassType,
     openapi_spec: OpenApiObject,
 ) -> RequestData:
     method = method.lower()
@@ -50,17 +48,18 @@ def get_request_data(
     spec_path = _path_functions.get_parametrized_path(
         path=path, openapi_spec=openapi_spec
     )
-    dto_class = get_dto_class(path=spec_path, method=method)
     try:
         path_item = openapi_spec.paths[spec_path]
         operation_spec: OperationObject | None = getattr(path_item, method)
         if operation_spec is None:
             raise AttributeError
+        dto_class = operation_spec.dto
     except AttributeError:
         logger.info(
             f"method '{method}' not supported on '{spec_path}, using empty spec."
         )
         operation_spec = OperationObject(operationId="")
+        dto_class = None
 
     parameters, params, headers = get_request_parameters(
         dto_class=dto_class, method_spec=operation_spec
@@ -114,37 +113,38 @@ def get_request_data(
 
 
 def _get_dto_instance_for_empty_body(
-    dto_class: type[Dto],
+    dto_class: type[DtoType] | None,
     dto_cls_name: str,
     method_spec: OperationObject,
 ) -> Dto:
-    if dto_class == DefaultDto:
-        dto_instance: Dto = DefaultDto()
-    else:
-        cls_name = method_spec.operationId if method_spec.operationId else dto_cls_name
-        dto_class = make_dataclass(
-            cls_name=cls_name,
-            fields=[],
-            bases=(dto_class,),
-        )
-        dto_instance = dto_class()
+    cls_name = method_spec.operationId if method_spec.operationId else dto_cls_name
+    base = dto_class if dto_class else Dto
+    dto_class_ = make_dataclass(
+        cls_name=cls_name,
+        fields=[],
+        bases=(base,),
+    )
+    dto_instance = dto_class_()
     return dto_instance
 
 
 def _get_dto_instance_from_dto_data(
     schema: ResolvedSchemaObjectTypes,
-    dto_class: type[Dto],
+    dto_class: type[DtoType] | None,
     dto_data: JSON,
     method_spec: OperationObject,
     dto_cls_name: str,
 ) -> Dto:
     if not isinstance(schema, (ObjectSchema, ArraySchema)):
-        # if not isinstance(dto_data, (dict, list)):
-        return DefaultDto()
+        return _get_dto_instance_for_empty_body(
+            dto_class=dto_class, dto_cls_name=dto_cls_name, method_spec=method_spec
+        )
 
     if isinstance(schema, ArraySchema):
         if not dto_data or not isinstance(dto_data, list):
-            return DefaultDto()
+            return _get_dto_instance_for_empty_body(
+                dto_class=dto_class, dto_cls_name=dto_cls_name, method_spec=method_spec
+            )
         first_item_data = dto_data[0]
         item_object_schema = schema.items
         if isinstance(item_object_schema, UnionTypeSchema):
@@ -164,10 +164,11 @@ def _get_dto_instance_from_dto_data(
     )
     fields = get_fields_from_dto_data(schema, dto_data)
     cls_name = method_spec.operationId if method_spec.operationId else dto_cls_name
+    base = dto_class if dto_class else Dto
     dto_class_ = make_dataclass(
         cls_name=cls_name,
         fields=fields,
-        bases=(dto_class,),
+        bases=(base,),
     )
     dto_data = {
         get_safe_name_for_oas_name(key): value for key, value in dto_data.items()
@@ -204,11 +205,11 @@ def get_dto_cls_name(path: str, method: str) -> str:
 
 
 def get_request_parameters(
-    dto_class: Dto | type[Dto], method_spec: OperationObject
+    dto_class: type[DtoType] | None, method_spec: OperationObject
 ) -> tuple[list[ParameterObject], dict[str, Any], dict[str, str]]:
     """Get the methods parameter spec and params and headers with valid data."""
     parameters = method_spec.parameters if method_spec.parameters else []
-    parameter_relations = dto_class.get_parameter_relations()
+    parameter_relations = dto_class.get_parameter_relations() if dto_class else []
     query_params = [p for p in parameters if p.in_ == "query"]
     header_params = [p for p in parameters if p.in_ == "header"]
     params = get_parameter_data(query_params, parameter_relations)

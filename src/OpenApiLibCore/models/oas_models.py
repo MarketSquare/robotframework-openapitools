@@ -752,7 +752,7 @@ class OperationObject(BaseModel):
     parameters: list[ParameterObject] | None = None
     requestBody: RequestBodyObject | None = None
     responses: dict[str, ResponseObject] = {}
-    dto: DtoType | None = None
+    dto: type[DtoType] | None = None
 
 
 class PathItemObject(BaseModel):
