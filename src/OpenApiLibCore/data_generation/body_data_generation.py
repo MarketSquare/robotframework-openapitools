@@ -21,7 +21,7 @@ from OpenApiLibCore.models.oas_models import (
     SchemaObjectTypes,
     UnionTypeSchema,
 )
-from OpenApiLibCore.protocols import DtoType
+from OpenApiLibCore.protocols import ConstraintMappingType
 from OpenApiLibCore.utils.parameter_utils import get_safe_name_for_oas_name
 
 run_keyword = BuiltIn().run_keyword
@@ -29,7 +29,7 @@ run_keyword = BuiltIn().run_keyword
 
 def get_json_data_for_dto_class(
     schema: SchemaObjectTypes,
-    dto_class: type[DtoType] | None,
+    dto_class: type[ConstraintMappingType] | None,
     operation_id: str | None = None,
 ) -> JSON:
     if isinstance(schema, UnionTypeSchema):
@@ -59,7 +59,7 @@ def get_json_data_for_dto_class(
 
 def get_dict_data_for_dto_class(
     schema: ObjectSchema,
-    dto_class: type[DtoType] | None,
+    dto_class: type[ConstraintMappingType] | None,
     operation_id: str | None = None,
 ) -> dict[str, Any]:
     json_data: dict[str, Any] = {}
@@ -83,7 +83,7 @@ def get_dict_data_for_dto_class(
 
 def get_list_data_for_dto_class(
     schema: ArraySchema,
-    dto_class: type[DtoType] | None,
+    dto_class: type[ConstraintMappingType] | None,
     operation_id: str | None = None,
 ) -> list[JSON]:
     json_data: list[JSON] = []
@@ -104,7 +104,7 @@ def get_list_data_for_dto_class(
 def get_data_for_property(
     property_name: str,
     property_schema: SchemaObjectTypes,
-    dto_class: type[DtoType] | None,
+    dto_class: type[ConstraintMappingType] | None,
     operation_id: str | None,
 ) -> JSON:
     if constrained_values := get_constrained_values(
@@ -138,7 +138,7 @@ def get_data_for_property(
 
 def get_value_constrained_by_nested_dto(
     property_schema: SchemaObjectTypes,
-    nested_dto_class: type[DtoType],
+    nested_dto_class: type[ConstraintMappingType],
     operation_id: str | None,
 ) -> JSON:
     nested_schema = get_schema_for_nested_dto(property_schema=property_schema)
@@ -160,7 +160,7 @@ def get_schema_for_nested_dto(property_schema: SchemaObjectTypes) -> SchemaObjec
 
 def get_property_names_to_process(
     schema: ObjectSchema,
-    dto_class: type[DtoType] | None,
+    dto_class: type[ConstraintMappingType] | None,
 ) -> list[str]:
     property_names = []
 
@@ -191,8 +191,8 @@ def get_property_names_to_process(
 
 
 def get_constrained_values(
-    dto_class: type[DtoType] | None, property_name: str
-) -> list[JSON | type[DtoType]]:
+    dto_class: type[ConstraintMappingType] | None, property_name: str
+) -> list[JSON | type[ConstraintMappingType]]:
     relations = dto_class.get_relations() if dto_class else []
     values_list = [
         c.values
@@ -204,7 +204,7 @@ def get_constrained_values(
 
 
 def get_dependent_id(
-    dto_class: type[DtoType] | None,
+    dto_class: type[ConstraintMappingType] | None,
     property_name: str,
     operation_id: str | None,
 ) -> str | int | float | None:

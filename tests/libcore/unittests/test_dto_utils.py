@@ -4,7 +4,7 @@ import sys
 import unittest
 
 from OpenApiLibCore import Dto
-from OpenApiLibCore.data_constraints.dto_base import get_value_constraints_mapping_dict
+from OpenApiLibCore.data_constraints.dto_base import get_constraint_mapping_dict
 
 unittest_folder = pathlib.Path(__file__).parent.resolve()
 mappings_path = (
@@ -31,18 +31,18 @@ class TestGetDtoClass(unittest.TestCase):
             print(f"removed {sys.path.pop()} from path")
 
     def test_no_mapping(self) -> None:
-        value_constraints_mapping_dict = get_value_constraints_mapping_dict("dummy")
+        value_constraints_mapping_dict = get_constraint_mapping_dict("dummy")
         self.assertDictEqual(value_constraints_mapping_dict, {})
 
     def test_valid_mapping(self) -> None:
-        value_constraints_mapping_dict = get_value_constraints_mapping_dict(
+        value_constraints_mapping_dict = get_constraint_mapping_dict(
             self.mappings_module_name
         )
         self.assertIsInstance(value_constraints_mapping_dict, dict)
         self.assertGreater(len(value_constraints_mapping_dict.keys()), 0)
 
     def test_mapped_returns_dto_instance(self) -> None:
-        value_constraints_mapping_dict = get_value_constraints_mapping_dict(
+        value_constraints_mapping_dict = get_constraint_mapping_dict(
             self.mappings_module_name
         )
         keys = value_constraints_mapping_dict.keys()

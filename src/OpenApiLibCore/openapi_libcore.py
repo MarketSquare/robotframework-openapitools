@@ -29,9 +29,9 @@ from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.data_constraints.dto_base import (
     Dto,
     IdReference,
+    get_constraint_mapping_dict,
     get_id_property_name,
     get_path_mapping_dict,
-    get_value_constraints_mapping_dict,
 )
 from OpenApiLibCore.data_generation.localized_faker import FAKE
 from OpenApiLibCore.models.oas_models import (
@@ -119,7 +119,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             mappings_folder = str(mappings_path.parent)
             sys.path.append(mappings_folder)
             mappings_module_name = mappings_path.stem
-            self.value_constraints_mapping_dict = get_value_constraints_mapping_dict(
+            self.constraint_mapping_dict = get_constraint_mapping_dict(
                 mappings_module_name=mappings_module_name
             )
             self.path_mapping_dict = get_path_mapping_dict(
@@ -131,7 +131,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             )
             sys.path.pop()
         else:
-            self.value_constraints_mapping_dict = get_value_constraints_mapping_dict(
+            self.constraint_mapping_dict = get_constraint_mapping_dict(
                 mappings_module_name="no mapping"
             )
             self.path_mapping_dict = get_path_mapping_dict(
@@ -571,7 +571,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         for (
             path,
             operation,
-        ), data_constraint in self.value_constraints_mapping_dict.items():
+        ), data_constraint in self.constraint_mapping_dict.items():
             try:
                 operation_item = getattr(spec_model.paths[path], operation.lower())
                 operation_item.dto = data_constraint

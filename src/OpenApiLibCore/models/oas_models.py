@@ -28,7 +28,7 @@ from OpenApiLibCore.data_generation.value_utils import (
     python_type_by_json_type_name,
 )
 from OpenApiLibCore.models import Ignore
-from OpenApiLibCore.protocols import DtoType
+from OpenApiLibCore.protocols import ConstraintMappingType
 from OpenApiLibCore.utils.id_mapping import dummy_transformer
 
 EPSILON = float_info.epsilon
@@ -41,7 +41,9 @@ class SchemaBase(BaseModel, Generic[O], frozen=True):
     writeOnly: bool = False
 
     @abstractmethod
-    def get_valid_value(self) -> JSON: ...
+    def get_valid_value(
+        self, constraint_mapping: ConstraintMappingType | None = None
+    ) -> JSON: ...
 
     @abstractmethod
     def get_values_out_of_bounds(self, current_value: O) -> list[O]: ...
@@ -101,7 +103,9 @@ class SchemaBase(BaseModel, Generic[O], frozen=True):
 class NullSchema(SchemaBase[None], frozen=True):
     type: Literal["null"] = "null"
 
-    def get_valid_value(self) -> None:
+    def get_valid_value(
+        self, constraint_mapping: ConstraintMappingType | None = None
+    ) -> None:
         return None
 
     def get_values_out_of_bounds(self, current_value: None) -> list[None]:
@@ -124,7 +128,9 @@ class BooleanSchema(SchemaBase[bool], frozen=True):
     const: bool | None = None
     nullable: bool = False
 
-    def get_valid_value(self) -> bool:
+    def get_valid_value(
+        self, constraint_mapping: ConstraintMappingType | None = None
+    ) -> bool:
         if self.const is not None:
             return self.const
         return choice([True, False])
@@ -156,7 +162,9 @@ class StringSchema(SchemaBase[str], frozen=True):
     enum: list[str] | None = None
     nullable: bool = False
 
-    def get_valid_value(self) -> bytes | str:
+    def get_valid_value(
+        self, constraint_mapping: ConstraintMappingType | None = None
+    ) -> bytes | str:
         """Generate a random string within the min/max length in the schema, if specified."""
         if self.const is not None:
             return self.const
@@ -284,7 +292,9 @@ class IntegerSchema(SchemaBase[int], frozen=True):
 
         return self._min_int
 
-    def get_valid_value(self) -> int:
+    def get_valid_value(
+        self, constraint_mapping: ConstraintMappingType | None = None
+    ) -> int:
         """Generate a random int within the min/max range of the schema, if specified."""
         if self.const is not None:
             return self.const
@@ -383,7 +393,9 @@ class NumberSchema(SchemaBase[float], frozen=True):
 
         return self._min_float
 
-    def get_valid_value(self) -> float:
+    def get_valid_value(
+        self, constraint_mapping: ConstraintMappingType | None = None
+    ) -> float:
         """Generate a random float within the min/max range of the schema, if specified."""
         if self.const is not None:
             return self.const
@@ -441,7 +453,9 @@ class ArraySchema(SchemaBase[list[JSON]], frozen=True):
     enum: list[list[JSON]] | None = None
     nullable: bool = False
 
-    def get_valid_value(self) -> list[JSON]:
+    def get_valid_value(
+        self, constraint_mapping: ConstraintMappingType | None = None
+    ) -> list[JSON]:
         if self.const is not None:
             return self.const
 
@@ -532,7 +546,9 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
     enum: list[dict[str, JSON]] | None = None
     nullable: bool = False
 
-    def get_valid_value(self) -> dict[str, JSON]:
+    def get_valid_value(
+        self, constraint_mapping: ConstraintMappingType | None = None
+    ) -> dict[str, JSON]:
         raise NotImplementedError
 
     def get_values_out_of_bounds(
@@ -752,7 +768,7 @@ class OperationObject(BaseModel):
     parameters: list[ParameterObject] | None = None
     requestBody: RequestBodyObject | None = None
     responses: dict[str, ResponseObject] = {}
-    dto: type[DtoType] | None = None
+    dto: type[ConstraintMappingType] | None = None
 
 
 class PathItemObject(BaseModel):
@@ -764,7 +780,7 @@ class PathItemObject(BaseModel):
     summary: str = ""
     description: str = ""
     parameters: list[ParameterObject] | None = None
-    dto: DtoType | None = None
+    dto: ConstraintMappingType | None = None
     id_mapper: tuple[str, Callable[[str], str] | Callable[[int], int]] = (
         "id",
         dummy_transformer,

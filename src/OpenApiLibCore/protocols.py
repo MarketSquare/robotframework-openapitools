@@ -32,7 +32,7 @@ class GetIdPropertyNameType(Protocol):
     ]: ...  # pragma: no cover
 
 
-class DtoType(Protocol):
+class ConstraintMappingType(Protocol):
     @classmethod
     def __get_pydantic_core_schema__(
         cls, source_type: Any, handler: GetCoreSchemaHandler

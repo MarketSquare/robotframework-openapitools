@@ -15,7 +15,7 @@ from robot.api import logger
 
 from OpenApiLibCore.models.oas_models import NullSchema, ObjectSchema, UnionTypeSchema
 from OpenApiLibCore.protocols import (
-    DtoType,
+    ConstraintMappingType,
     GetIdPropertyNameType,
 )
 from OpenApiLibCore.utils import parameter_utils
@@ -269,9 +269,9 @@ class Dto(ABC):
         return [items] if items else []
 
 
-def get_value_constraints_mapping_dict(
+def get_constraint_mapping_dict(
     mappings_module_name: str,
-) -> dict[tuple[str, str], DtoType]:
+) -> dict[tuple[str, str], ConstraintMappingType]:
     try:
         mappings_module = import_module(mappings_module_name)
         return mappings_module.DTO_MAPPING
@@ -281,7 +281,9 @@ def get_value_constraints_mapping_dict(
         return {}
 
 
-def get_path_mapping_dict(mappings_module_name: str) -> dict[str, DtoType]:
+def get_path_mapping_dict(
+    mappings_module_name: str,
+) -> dict[str, ConstraintMappingType]:
     try:
         mappings_module = import_module(mappings_module_name)
         return mappings_module.PATH_MAPPING

@@ -28,7 +28,7 @@ from OpenApiLibCore.models.oas_models import (
     UnionTypeSchema,
 )
 from OpenApiLibCore.models.request_data import RequestData
-from OpenApiLibCore.protocols import DtoType
+from OpenApiLibCore.protocols import ConstraintMappingType
 from OpenApiLibCore.utils.parameter_utils import get_safe_name_for_oas_name
 
 from .body_data_generation import (
@@ -113,7 +113,7 @@ def get_request_data(
 
 
 def _get_dto_instance_for_empty_body(
-    dto_class: type[DtoType] | None,
+    dto_class: type[ConstraintMappingType] | None,
     dto_cls_name: str,
     method_spec: OperationObject,
 ) -> Dto:
@@ -130,7 +130,7 @@ def _get_dto_instance_for_empty_body(
 
 def _get_dto_instance_from_dto_data(
     schema: ResolvedSchemaObjectTypes,
-    dto_class: type[DtoType] | None,
+    dto_class: type[ConstraintMappingType] | None,
     dto_data: JSON,
     method_spec: OperationObject,
     dto_cls_name: str,
@@ -205,7 +205,7 @@ def get_dto_cls_name(path: str, method: str) -> str:
 
 
 def get_request_parameters(
-    dto_class: type[DtoType] | None, method_spec: OperationObject
+    dto_class: type[ConstraintMappingType] | None, method_spec: OperationObject
 ) -> tuple[list[ParameterObject], dict[str, Any], dict[str, str]]:
     """Get the methods parameter spec and params and headers with valid data."""
     parameters = method_spec.parameters if method_spec.parameters else []
