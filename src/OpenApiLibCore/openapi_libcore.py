@@ -27,7 +27,6 @@ import OpenApiLibCore.keyword_logic.resource_relations as _resource_relations
 import OpenApiLibCore.keyword_logic.validation as _validation
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.data_constraints.dto_base import (
-    DEFAULT_ID_PROPERTY_NAME,
     Dto,
     IdReference,
     get_dto_class,
@@ -35,13 +34,13 @@ from OpenApiLibCore.data_constraints.dto_base import (
     get_path_dto_class,
 )
 from OpenApiLibCore.data_generation.localized_faker import FAKE
-from OpenApiLibCore.models.oas_cache import PARSER_CACHE, CachedParser
 from OpenApiLibCore.models.oas_models import (
     OpenApiObject,
     PathItemObject,
 )
 from OpenApiLibCore.models.request_data import RequestData, RequestValues
 from OpenApiLibCore.protocols import ResponseValidatorType
+from OpenApiLibCore.utils.oas_cache import PARSER_CACHE, CachedParser
 from OpenApiLibCore.utils.parameter_utils import (
     get_oas_name_from_safe_name,
     register_path_parameters,
@@ -106,6 +105,11 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         self.cookies = cookies
         self.proxies = proxies
         self.invalid_property_default_response = invalid_property_default_response
+        if faker_locale:
+            FAKE.set_locale(locale=faker_locale)
+        self.require_body_for_invalid_url = require_body_for_invalid_url
+        self._server_validation_warning_logged = False
+
         if mappings_path and str(mappings_path) != ".":
             mappings_path = Path(mappings_path)
             if not mappings_path.is_file():
@@ -122,7 +126,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
                 mappings_module_name=mappings_module_name
             )
             self.get_id_property_name = get_id_property_name(
-                mappings_module_name=mappings_module_name
+                mappings_module_name=mappings_module_name,
+                default_id_property_name=default_id_property_name,
             )
             sys.path.pop()
         else:
@@ -131,14 +136,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
                 mappings_module_name="no mapping"
             )
             self.get_id_property_name = get_id_property_name(
-                mappings_module_name="no mapping"
+                mappings_module_name="no mapping",
+                default_id_property_name=default_id_property_name,
             )
-        if faker_locale:
-            FAKE.set_locale(locale=faker_locale)
-        self.require_body_for_invalid_url = require_body_for_invalid_url
-        # update the globally available DEFAULT_ID_PROPERTY_NAME to the provided value
-        DEFAULT_ID_PROPERTY_NAME.id_property_name = default_id_property_name
-        self._server_validation_warning_logged = False
 
     # region: library configuration keywords
     @keyword
@@ -246,7 +246,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             path=path,
             method=method,
             get_dto_class=self.get_dto_class,
-            get_id_property_name=self.get_id_property_name,
             openapi_spec=self.openapi_spec,
         )
 
@@ -335,7 +334,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         (by a POST operation) if possible.
         """
         return _path_functions.get_valid_id_for_path(
-            path=path, get_id_property_name=self.get_id_property_name
+            path=path, openapi_spec=self.openapi_spec
         )
 
     @keyword
@@ -358,9 +357,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         Perform a GET request on the `url` and return the list of resource
         `ids` from the response.
         """
-        return _path_functions.get_ids_from_url(
-            url=url, get_id_property_name=self.get_id_property_name
-        )
+        return _path_functions.get_ids_from_url(url=url, openapi_spec=self.openapi_spec)
 
     @keyword
     def get_invalidated_url(
@@ -589,6 +586,10 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
                 logger.warn(
                     f"The PATH_MAPPING contains a path that is not found in the OpenAPI spec: {path}"
                 )
+
+        for path, path_item in spec_model.paths.items():
+            mapper = self.get_id_property_name(path)
+            path_item.id_mapper = mapper
 
         return spec_model
 

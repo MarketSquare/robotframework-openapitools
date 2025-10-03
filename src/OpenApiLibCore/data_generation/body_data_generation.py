@@ -7,8 +7,8 @@ from random import choice, randint, sample
 from typing import Any
 
 from robot.api import logger
+from robot.libraries.BuiltIn import BuiltIn
 
-import OpenApiLibCore.keyword_logic.path_functions as _path_functions
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.data_constraints.dto_base import (
     DefaultDto,
@@ -23,14 +23,14 @@ from OpenApiLibCore.models.oas_models import (
     SchemaObjectTypes,
     UnionTypeSchema,
 )
-from OpenApiLibCore.protocols import GetIdPropertyNameType
 from OpenApiLibCore.utils.parameter_utils import get_safe_name_for_oas_name
+
+run_keyword = BuiltIn().run_keyword
 
 
 def get_json_data_for_dto_class(
     schema: SchemaObjectTypes,
     dto_class: type[Dto],
-    get_id_property_name: GetIdPropertyNameType,
     operation_id: str | None = None,
 ) -> JSON:
     if isinstance(schema, UnionTypeSchema):
@@ -38,7 +38,6 @@ def get_json_data_for_dto_class(
         return get_json_data_for_dto_class(
             schema=chosen_schema,
             dto_class=dto_class,
-            get_id_property_name=get_id_property_name,
             operation_id=operation_id,
         )
 
@@ -47,14 +46,12 @@ def get_json_data_for_dto_class(
             return get_dict_data_for_dto_class(
                 schema=schema,
                 dto_class=dto_class,
-                get_id_property_name=get_id_property_name,
                 operation_id=operation_id,
             )
         case ArraySchema():
             return get_list_data_for_dto_class(
                 schema=schema,
                 dto_class=dto_class,
-                get_id_property_name=get_id_property_name,
                 operation_id=operation_id,
             )
         case _:
@@ -64,7 +61,6 @@ def get_json_data_for_dto_class(
 def get_dict_data_for_dto_class(
     schema: ObjectSchema,
     dto_class: type[Dto],
-    get_id_property_name: GetIdPropertyNameType,
     operation_id: str | None = None,
 ) -> dict[str, Any]:
     json_data: dict[str, Any] = {}
@@ -79,7 +75,6 @@ def get_dict_data_for_dto_class(
         json_data[property_name] = get_data_for_property(
             property_name=property_name,
             property_schema=property_schema,
-            get_id_property_name=get_id_property_name,
             dto_class=dto_class,
             operation_id=operation_id,
         )
@@ -90,7 +85,6 @@ def get_dict_data_for_dto_class(
 def get_list_data_for_dto_class(
     schema: ArraySchema,
     dto_class: type[Dto],
-    get_id_property_name: GetIdPropertyNameType,
     operation_id: str | None = None,
 ) -> list[JSON]:
     json_data: list[JSON] = []
@@ -102,7 +96,6 @@ def get_list_data_for_dto_class(
         list_item_data = get_json_data_for_dto_class(
             schema=list_item_schema,
             dto_class=dto_class,
-            get_id_property_name=get_id_property_name,
             operation_id=operation_id,
         )
         json_data.append(list_item_data)
@@ -112,7 +105,6 @@ def get_list_data_for_dto_class(
 def get_data_for_property(
     property_name: str,
     property_schema: SchemaObjectTypes,
-    get_id_property_name: GetIdPropertyNameType,
     dto_class: type[Dto],
     operation_id: str | None,
 ) -> JSON:
@@ -126,7 +118,6 @@ def get_data_for_property(
             return get_value_constrained_by_nested_dto(
                 property_schema=property_schema,
                 nested_dto_class=constrained_value,
-                get_id_property_name=get_id_property_name,
                 operation_id=operation_id,
             )
         return constrained_value
@@ -136,7 +127,6 @@ def get_data_for_property(
             dto_class=dto_class,
             property_name=property_name,
             operation_id=operation_id,
-            get_id_property_name=get_id_property_name,
         )
     ) is not None:
         return dependent_id
@@ -144,21 +134,18 @@ def get_data_for_property(
     return get_json_data_for_dto_class(
         schema=property_schema,
         dto_class=DefaultDto,
-        get_id_property_name=get_id_property_name,
     )
 
 
 def get_value_constrained_by_nested_dto(
     property_schema: SchemaObjectTypes,
     nested_dto_class: type[Dto],
-    get_id_property_name: GetIdPropertyNameType,
     operation_id: str | None,
 ) -> JSON:
     nested_schema = get_schema_for_nested_dto(property_schema=property_schema)
     nested_value = get_json_data_for_dto_class(
         schema=nested_schema,
         dto_class=nested_dto_class,
-        get_id_property_name=get_id_property_name,
         operation_id=operation_id,
     )
     return nested_value
@@ -221,7 +208,6 @@ def get_dependent_id(
     dto_class: type[Dto],
     property_name: str,
     operation_id: str | None,
-    get_id_property_name: GetIdPropertyNameType,
 ) -> str | int | float | None:
     relations = dto_class.get_relations()
     # multiple get paths are possible based on the operation being performed
@@ -243,8 +229,6 @@ def get_dependent_id(
         except ValueError:
             return None
 
-    valid_id = _path_functions.get_valid_id_for_path(
-        path=id_get_path, get_id_property_name=get_id_property_name
-    )
+    valid_id = run_keyword("get_valid_id_for_path", id_get_path)
     logger.debug(f"get_dependent_id for {id_get_path} returned {valid_id}")
     return valid_id

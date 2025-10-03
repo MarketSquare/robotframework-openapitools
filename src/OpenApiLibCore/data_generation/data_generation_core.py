@@ -29,7 +29,7 @@ from OpenApiLibCore.models.oas_models import (
     UnionTypeSchema,
 )
 from OpenApiLibCore.models.request_data import RequestData
-from OpenApiLibCore.protocols import GetDtoClassType, GetIdPropertyNameType
+from OpenApiLibCore.protocols import GetDtoClassType
 from OpenApiLibCore.utils.parameter_utils import get_safe_name_for_oas_name
 
 from .body_data_generation import (
@@ -41,7 +41,6 @@ def get_request_data(
     path: str,
     method: str,
     get_dto_class: GetDtoClassType,
-    get_id_property_name: GetIdPropertyNameType,
     openapi_spec: OpenApiObject,
 ) -> RequestData:
     method = method.lower()
@@ -96,7 +95,6 @@ def get_request_data(
     dto_data = _get_json_data_for_dto_class(
         schema=body_schema,
         dto_class=dto_class,
-        get_id_property_name=get_id_property_name,
         operation_id=operation_spec.operationId,
     )
     dto_instance = _get_dto_instance_from_dto_data(

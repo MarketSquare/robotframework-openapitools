@@ -7,6 +7,7 @@ from functools import cached_property
 from random import choice, randint, uniform
 from sys import float_info
 from typing import (
+    Callable,
     Generator,
     Generic,
     Iterable,
@@ -28,6 +29,7 @@ from OpenApiLibCore.data_generation.value_utils import (
 )
 from OpenApiLibCore.models import Ignore
 from OpenApiLibCore.protocols import DtoType
+from OpenApiLibCore.utils.id_mapping import dummy_transformer
 
 EPSILON = float_info.epsilon
 
@@ -763,6 +765,10 @@ class PathItemObject(BaseModel):
     description: str = ""
     parameters: list[ParameterObject] | None = None
     dto: DtoType | None = None
+    id_mapper: tuple[str, Callable[[str], str] | Callable[[int], int]] = (
+        "id",
+        dummy_transformer,
+    )
 
     def get_operations(self) -> dict[str, OperationObject]:
         return {

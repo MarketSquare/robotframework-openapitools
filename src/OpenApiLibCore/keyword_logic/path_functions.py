@@ -10,7 +10,6 @@ from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore.models import oas_models
 from OpenApiLibCore.models.request_data import RequestData
-from OpenApiLibCore.protocols import GetIdPropertyNameType
 
 run_keyword = BuiltIn().run_keyword
 
@@ -96,7 +95,7 @@ def get_valid_url(
 
 def get_valid_id_for_path(
     path: str,
-    get_id_property_name: GetIdPropertyNameType,
+    openapi_spec: oas_models.OpenApiObject,
 ) -> str | int:
     url: str = run_keyword("get_valid_url", path)
     # Try to create a new resource to prevent conflicts caused by
@@ -112,7 +111,8 @@ def get_valid_id_for_path(
         request_data.get_required_properties_dict(),
     )
 
-    id_property, id_transformer = get_id_property_name(path=path)
+    path_item = openapi_spec.paths[path]
+    id_property, id_transformer = path_item.id_mapper
 
     if not response.ok:
         # If a new resource cannot be created using POST, try to retrieve a
@@ -172,7 +172,7 @@ def get_valid_id_for_path(
 
 def get_ids_from_url(
     url: str,
-    get_id_property_name: GetIdPropertyNameType,
+    openapi_spec: oas_models.OpenApiObject,
 ) -> list[str]:
     path: str = run_keyword("get_parameterized_path_from_url", url)
     request_data: RequestData = run_keyword("get_request_data", path, "get")
@@ -187,11 +187,8 @@ def get_ids_from_url(
     response_data: dict[str, Any] | list[dict[str, Any]] = response.json()
 
     # determine the property name to use
-    mapping = get_id_property_name(path=path)
-    if isinstance(mapping, str):
-        id_property = mapping
-    else:
-        id_property, _ = mapping
+    path_item = openapi_spec.paths[path]
+    id_property, _ = path_item.id_mapper
 
     if isinstance(response_data, list):
         valid_ids: list[str] = [item[id_property] for item in response_data]
