@@ -40,12 +40,6 @@ class GetIdPropertyNameType(Protocol):
     ]: ...  # pragma: no cover
 
 
-class GetPathDtoClassType(Protocol):
-    def __init__(self, mappings_module_name: str) -> None: ...  # pragma: no cover
-
-    def __call__(self, path: str) -> Type[dto_base.Dto]: ...  # pragma: no cover
-
-
 class DtoType(Protocol):
     @classmethod
     def __get_pydantic_core_schema__(

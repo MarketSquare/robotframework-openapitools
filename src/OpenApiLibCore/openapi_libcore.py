@@ -31,7 +31,7 @@ from OpenApiLibCore.data_constraints.dto_base import (
     IdReference,
     get_dto_class,
     get_id_property_name,
-    get_path_dto_class,
+    get_path_mapping_dict,
 )
 from OpenApiLibCore.data_generation.localized_faker import FAKE
 from OpenApiLibCore.models.oas_models import (
@@ -122,7 +122,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             self.get_dto_class = get_dto_class(
                 mappings_module_name=mappings_module_name
             )
-            self.get_path_dto_class = get_path_dto_class(
+            self.path_mapping_dict = get_path_mapping_dict(
                 mappings_module_name=mappings_module_name
             )
             self.get_id_property_name = get_id_property_name(
@@ -132,7 +132,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             sys.path.pop()
         else:
             self.get_dto_class = get_dto_class(mappings_module_name="no mapping")
-            self.get_path_dto_class = get_path_dto_class(
+            self.path_mapping_dict = get_path_mapping_dict(
                 mappings_module_name="no mapping"
             )
             self.get_id_property_name = get_id_property_name(
@@ -577,8 +577,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
                     f"The DTO_MAPPING contains a path that is not found in the OpenAPI spec: {path}"
                 )
 
-        path_constraints_mapping = self.get_path_dto_class.dto_mapping
-        for path, path_constraint in path_constraints_mapping.items():
+        for path, path_constraint in self.path_mapping_dict.items():
             try:
                 path_item = spec_model.paths[path]
                 path_item.dto = path_constraint

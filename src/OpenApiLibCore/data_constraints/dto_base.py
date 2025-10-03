@@ -15,9 +15,9 @@ from robot.api import logger
 
 from OpenApiLibCore.models.oas_models import NullSchema, ObjectSchema, UnionTypeSchema
 from OpenApiLibCore.protocols import (
+    DtoType,
     GetDtoClassType,
     GetIdPropertyNameType,
-    GetPathDtoClassType,
 )
 from OpenApiLibCore.utils import parameter_utils
 from OpenApiLibCore.utils.id_mapping import dummy_transformer
@@ -301,29 +301,14 @@ class GetDtoClass:
             return DefaultDto
 
 
-def get_path_dto_class(mappings_module_name: str) -> GetPathDtoClassType:
-    return GetPathDtoClass(mappings_module_name=mappings_module_name)
-
-
-class GetPathDtoClass:
-    """Callable class to return Dtos from user-implemented mappings file."""
-
-    def __init__(self, mappings_module_name: str) -> None:
-        try:
-            mappings_module = import_module(mappings_module_name)
-            self.dto_mapping: dict[str, Type[Dto]] = mappings_module.PATH_MAPPING
-        except (ImportError, AttributeError, ValueError) as exception:
-            if mappings_module_name != "no mapping":
-                logger.error(f"PATH_MAPPING was not imported: {exception}")
-            self.dto_mapping = {}
-
-    def __call__(self, path: str) -> Type[Dto]:
-        raise DeprecationWarning
-        try:
-            return self.dto_mapping[path]
-        except KeyError:
-            logger.debug(f"No Dto mapping for {path}.")
-            return DefaultDto
+def get_path_mapping_dict(mappings_module_name: str) -> dict[str, DtoType]:
+    try:
+        mappings_module = import_module(mappings_module_name)
+        return mappings_module.PATH_MAPPING
+    except (ImportError, AttributeError, ValueError) as exception:
+        if mappings_module_name != "no mapping":
+            logger.error(f"PATH_MAPPING was not imported: {exception}")
+        return {}
 
 
 def get_id_property_name(
