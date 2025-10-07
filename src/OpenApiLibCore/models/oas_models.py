@@ -571,9 +571,13 @@ class ArraySchema(SchemaBase[list[JSON]], frozen=True):
                 invalid_values.append(invalid_const_or_enum)
             except ValueError:
                 pass
-            if valid_data and isinstance(self.items, ObjectSchema):
+            if isinstance(self.items, ObjectSchema):
                 data_to_invalidate = deepcopy(valid_data)
-                valid_item = data_to_invalidate.pop()
+                valid_item = (
+                    data_to_invalidate.pop()
+                    if valid_data
+                    else self.items.get_valid_value()
+                )
                 invalid_item = self.items.get_invalidated_data(
                     valid_data=valid_item,
                     constraint_mapping=constraint_mapping,
