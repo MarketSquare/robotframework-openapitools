@@ -24,9 +24,10 @@ class RequestValues:
     method: str
     params: dict[str, JSON] = field(default_factory=dict)
     headers: dict[str, JSON] = field(default_factory=dict)
-    json_data: dict[str, JSON] = field(default_factory=dict)
+    json_data: JSON = None
 
     def override_body_value(self, name: str, value: JSON) -> None:
+        # FIXME: update for non-dict bodies
         if name in self.json_data:
             self.json_data[name] = value
 
@@ -54,7 +55,8 @@ class RequestValues:
 class RequestData:
     """Helper class to manage parameters used when making requests."""
 
-    dto: ConstraintMappingType
+    valid_data: JSON
+    dto: type[ConstraintMappingType]
     body_schema: ResolvedSchemaObjectTypes | None = None
     parameters: list[ParameterObject] = field(default_factory=list)
     params: dict[str, JSON] = field(default_factory=dict)
@@ -73,7 +75,10 @@ class RequestData:
         def is_required_property(property_name: str) -> bool:
             return property_name in self.required_property_names
 
-        properties = (self.dto.as_dict()).keys()
+        if not isinstance(self.valid_data, dict):
+            return False
+
+        properties = (self.valid_data).keys()
         return not all(map(is_required_property, properties))
 
     @property
@@ -176,7 +181,10 @@ class RequestData:
         required_properties.extend(mandatory_properties)
 
         required_properties_dict: dict[str, Any] = {}
-        for key, value in (self.dto.as_dict()).items():
+        if self.valid_data is None:
+            return required_properties_dict
+
+        for key, value in self.valid_data.items():
             if key in required_properties:
                 required_properties_dict[key] = value
         return required_properties_dict
@@ -197,7 +205,7 @@ class RequestData:
 
         optional_properties_dict = {
             k: v
-            for k, v in self.dto.as_dict().items()
+            for k, v in self.valid_data.items()
             if k not in required_properties_dict
         }
         optional_properties_to_keep = sample(

@@ -13,8 +13,11 @@ The following classes and constants are exposed to be used by the library user:
 
 from importlib.metadata import version
 
-from OpenApiLibCore.data_constraints.dto_base import (
-    Dto,
+from OpenApiLibCore.data_constraints.dto_base import Dto
+from OpenApiLibCore.keyword_logic.validation import ValidationLevel
+from OpenApiLibCore.models import IGNORE, UNSET
+from OpenApiLibCore.models.request_data import RequestData, RequestValues
+from OpenApiLibCore.models.resource_relations import (
     IdDependency,
     IdReference,
     PathPropertiesConstraint,
@@ -22,9 +25,6 @@ from OpenApiLibCore.data_constraints.dto_base import (
     ResourceRelation,
     UniquePropertyValueConstraint,
 )
-from OpenApiLibCore.keyword_logic.validation import ValidationLevel
-from OpenApiLibCore.models import IGNORE, UNSET
-from OpenApiLibCore.models.request_data import RequestData, RequestValues
 from OpenApiLibCore.openapi_libcore import OpenApiLibCore
 
 try:

@@ -28,7 +28,6 @@ import OpenApiLibCore.keyword_logic.validation as _validation
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.data_constraints.dto_base import (
     Dto,
-    IdReference,
     get_constraint_mapping_dict,
     get_id_property_name,
     get_path_mapping_dict,
@@ -36,14 +35,16 @@ from OpenApiLibCore.data_constraints.dto_base import (
 from OpenApiLibCore.data_generation.localized_faker import FAKE
 from OpenApiLibCore.models.oas_models import (
     OpenApiObject,
+    ParameterObject,
     PathItemObject,
 )
 from OpenApiLibCore.models.request_data import RequestData, RequestValues
+from OpenApiLibCore.models.resource_relations import IdReference
 from OpenApiLibCore.protocols import ResponseValidatorType
 from OpenApiLibCore.utils.oas_cache import PARSER_CACHE, CachedParser
 from OpenApiLibCore.utils.parameter_utils import (
     get_oas_name_from_safe_name,
-    register_path_parameters,
+    get_safe_name_for_oas_name,
 )
 from openapitools_docs.docstrings import (
     OPENAPILIBCORE_INIT_DOCSTRING,
@@ -215,7 +216,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         params = request_data.params
         headers = request_data.headers
         if request_data.has_body:
-            json_data = request_data.dto.as_dict()
+            json_data = request_data.valid_data
 
         request_values = RequestValues(
             url=url,
@@ -291,7 +292,12 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
 
     @keyword
     def get_json_data_with_conflict(
-        self, url: str, method: str, dto: Dto, conflict_status_code: int
+        self,
+        url: str,
+        method: str,
+        json_data: dict[str, JSON],
+        dto: Dto,
+        conflict_status_code: int,
     ) -> dict[str, JSON]:
         """
         Return `json_data` based on the `UniquePropertyValueConstraint` that must be
@@ -302,6 +308,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             url=url,
             base_url=self.base_url,
             method=method,
+            json_data=json_data,
             dto=dto,
             conflict_status_code=conflict_status_code,
         )
@@ -564,8 +571,24 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         parser, _, _ = self._load_specs_and_validator()
         spec_model = OpenApiObject.model_validate(parser.specification)
         spec_model = self._attach_user_mappings(spec_model=spec_model)
-        register_path_parameters(spec_model.paths)
+        self._register_path_parameters(spec_model.paths)
         return spec_model
+
+    def _register_path_parameters(self, paths_data: dict[str, PathItemObject]) -> None:
+        def _register_path_parameter(parameter_object: ParameterObject) -> None:
+            if parameter_object.in_ == "path":
+                _ = get_safe_name_for_oas_name(parameter_object.name)
+
+        for path_item in paths_data.values():
+            if parameters := path_item.parameters:
+                for parameter in path_item.parameters:
+                    _register_path_parameter(parameter_object=parameter)
+
+            operations = path_item.get_operations()
+            for operation in operations.values():
+                if parameters := operation.parameters:
+                    for parameter in parameters:
+                        _register_path_parameter(parameter_object=parameter)
 
     def _attach_user_mappings(self, spec_model: OpenApiObject) -> OpenApiObject:
         for (

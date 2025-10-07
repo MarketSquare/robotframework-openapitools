@@ -104,7 +104,7 @@ Test Get Invalid Body Data Can Invalidate Missing Optional Parameters
     ...    method=patch
     ...    status_code=422
     ...    request_data=${request_data}
-    Should Not Be Equal    ${invalid_json}    ${request_data.dto.as_dict()}
+    Should Not Be Equal    ${invalid_json}    ${request_data.valid_data}
     ${response}=    Authorized Request
     ...    url=${url}    method=patch    json_data=${invalid_json}
     VAR    @{expected_status_codes}=    ${403}    ${422}    ${451}

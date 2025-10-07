@@ -5,9 +5,9 @@ from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
 import OpenApiLibCore.keyword_logic.path_functions as _path_functions
-from OpenApiLibCore.data_constraints.dto_base import IdReference
 from OpenApiLibCore.models.oas_models import OpenApiObject
 from OpenApiLibCore.models.request_data import RequestData
+from OpenApiLibCore.models.resource_relations import IdReference
 
 run_keyword = BuiltIn().run_keyword
 
@@ -37,7 +37,7 @@ def ensure_in_use(
     request_data: RequestData = run_keyword(
         "get_request_data", resource_relation.post_path, "post"
     )
-    json_data = request_data.dto.as_dict()
+    json_data = request_data.valid_data if request_data.valid_data else {}
     json_data[resource_relation.property_name] = resource_id
     post_url: str = run_keyword("get_valid_url", resource_relation.post_path)
     response: Response = run_keyword(

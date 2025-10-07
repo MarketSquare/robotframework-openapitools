@@ -168,8 +168,7 @@ class OpenApiExecutors(OpenApiLibCore):
             request_data: RequestData = run_keyword("get_request_data", path, method)
             params = request_data.params
             headers = request_data.headers
-            dto = request_data.dto
-            json_data = dto.as_dict()
+            json_data = request_data.valid_data
         response: Response = run_keyword(
             "authorized_request", url, method, params, headers, json_data
         )
@@ -190,18 +189,13 @@ class OpenApiExecutors(OpenApiLibCore):
         The keyword calls other keywords to generate the neccesary data to perform
         the desired operation and validate the response against the openapi document.
         """
-        json_data: dict[str, JSON] = {}
         original_data = {}
 
         url: str = run_keyword("get_valid_url", path)
         request_data: RequestData = run_keyword("get_request_data", path, method)
         params = request_data.params
         headers = request_data.headers
-        if request_data.has_body:
-            if isinstance(request_data.body_schema, ArraySchema):
-                json_data = request_data.dto.as_list()
-            else:
-                json_data = request_data.dto.as_dict()
+        json_data = request_data.valid_data
         # when patching, get the original data to check only patched data has changed
         if method == "PATCH":
             original_data = self.get_original_data(url=url)

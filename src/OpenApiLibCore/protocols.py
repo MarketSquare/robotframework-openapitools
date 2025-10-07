@@ -11,7 +11,10 @@ from openapi_core.contrib.requests import (
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
-from OpenApiLibCore.data_constraints import dto_base
+from OpenApiLibCore.models.resource_relations import (
+    PathPropertiesConstraint,
+    ResourceRelation,
+)
 
 
 class ResponseValidatorType(Protocol):
@@ -40,33 +43,25 @@ class ConstraintMappingType(Protocol):
         return core_schema.no_info_after_validator_function(cls, handler(str))
 
     @staticmethod
-    def get_path_relations() -> list[dto_base.PathPropertiesConstraint]: ...
+    def get_path_relations() -> list[PathPropertiesConstraint]: ...
 
+    @classmethod
     def get_path_relations_for_error_code(
-        self, error_code: int
-    ) -> list[dto_base.PathPropertiesConstraint]: ...
+        cls, error_code: int
+    ) -> list[PathPropertiesConstraint]: ...
 
     @staticmethod
-    def get_parameter_relations() -> list[dto_base.ResourceRelation]: ...
+    def get_parameter_relations() -> list[ResourceRelation]: ...
 
+    @classmethod
     def get_parameter_relations_for_error_code(
-        self, error_code: int
-    ) -> list[dto_base.ResourceRelation]: ...
+        cls, error_code: int
+    ) -> list[ResourceRelation]: ...
 
     @staticmethod
-    def get_relations() -> list[dto_base.ResourceRelation]: ...
+    def get_relations() -> list[ResourceRelation]: ...
 
+    @classmethod
     def get_body_relations_for_error_code(
-        self, error_code: int
-    ) -> list[dto_base.ResourceRelation]: ...
-
-    def get_invalidated_data(
-        self,
-        schema: Any,
-        status_code: int,
-        invalid_property_default_code: int,
-    ) -> dict[str, Any]: ...
-
-    def as_dict(self) -> dict[Any, Any]: ...
-
-    def as_list(self) -> list[Any]: ...
+        cls, error_code: int
+    ) -> list[ResourceRelation]: ...

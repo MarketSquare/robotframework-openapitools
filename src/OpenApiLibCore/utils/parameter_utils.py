@@ -5,8 +5,6 @@ names and the original names in the parsed OpenApi Specification document.
 
 from typing import Generator
 
-from OpenApiLibCore.models.oas_models import ParameterObject, PathItemObject
-
 PARAMETER_REGISTRY: dict[str, str] = {
     "body": "body",
 }
@@ -78,20 +76,3 @@ def convert_string_to_python_identifier(string: str, verbose: bool = False) -> s
     if not _is_python_safe(converted_string):
         raise ValueError(f"Failed to convert '{string}' to Python identifier.")
     return converted_string
-
-
-def register_path_parameters(paths_data: dict[str, PathItemObject]) -> None:
-    def _register_path_parameter(parameter_object: ParameterObject) -> None:
-        if parameter_object.in_ == "path":
-            _ = get_safe_name_for_oas_name(parameter_object.name)
-
-    for path_item in paths_data.values():
-        if parameters := path_item.parameters:
-            for parameter in path_item.parameters:
-                _register_path_parameter(parameter_object=parameter)
-
-        operations = path_item.get_operations()
-        for operation in operations.values():
-            if parameters := operation.parameters:
-                for parameter in parameters:
-                    _register_path_parameter(parameter_object=parameter)

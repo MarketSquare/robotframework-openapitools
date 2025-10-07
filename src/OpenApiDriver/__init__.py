@@ -15,6 +15,10 @@ from importlib.metadata import version
 from OpenApiDriver.openapidriver import OpenApiDriver
 from OpenApiLibCore.data_constraints.dto_base import (
     Dto,
+)
+from OpenApiLibCore.data_generation.value_utils import IGNORE
+from OpenApiLibCore.keyword_logic.validation import ValidationLevel
+from OpenApiLibCore.models.resource_relations import (
     IdDependency,
     IdReference,
     PathPropertiesConstraint,
@@ -22,8 +26,6 @@ from OpenApiLibCore.data_constraints.dto_base import (
     ResourceRelation,
     UniquePropertyValueConstraint,
 )
-from OpenApiLibCore.data_generation.value_utils import IGNORE
-from OpenApiLibCore.keyword_logic.validation import ValidationLevel
 
 try:
     __version__ = version("robotframework-openapidriver")

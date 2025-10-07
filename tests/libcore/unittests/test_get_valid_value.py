@@ -38,12 +38,13 @@ class TestDefaults(unittest.TestCase):
         schema = ArraySchema(items=IntegerSchema())
         value = schema.get_valid_value()
         self.assertIsInstance(value, list)
-        self.assertIsInstance(value[0], int)
+        if value:
+            self.assertIsInstance(value[0], int)
 
     def test_object_schema(self) -> None:
         schema = ObjectSchema()
-        with self.assertRaises(NotImplementedError):
-            schema.get_valid_value()
+        value = schema.get_valid_value()
+        self.assertIsInstance(value, dict)
 
     def test_union_schema(self) -> None:
         schema = UnionTypeSchema(oneOf=[BooleanSchema(), IntegerSchema()])
@@ -79,8 +80,7 @@ class TestGetValidValueFromConst(unittest.TestCase):
     def test_object_schema(self) -> None:
         const = {"foo": 42, "bar": 3.14}
         schema = ObjectSchema(const=const)
-        with self.assertRaises(NotImplementedError):
-            schema.get_valid_value()
+        self.assertEqual(schema.get_valid_value(), const)
 
 
 class TestGetValidValueFromEnum(unittest.TestCase):
@@ -107,8 +107,8 @@ class TestGetValidValueFromEnum(unittest.TestCase):
     def test_object_schema(self) -> None:
         enum: list[dict[str, int | float]] = [{"foo": 42, "bar": 3.14}]
         schema = ObjectSchema(enum=enum)
-        with self.assertRaises(NotImplementedError):
-            schema.get_valid_value()
+        value = schema.get_valid_value()
+        self.assertIn(value, enum)
 
 
 class TestStringSchemaVariations(unittest.TestCase):
@@ -158,7 +158,7 @@ class TestArraySchemaVariations(unittest.TestCase):
     def test_default_min_max(self) -> None:
         schema = ArraySchema(items=StringSchema())
         value = schema.get_valid_value()
-        self.assertEqual(len(value), 1)
+        self.assertIn(len(value), (0, 1))
 
         schema = {"maxItems": 0, "items": {"type": "string"}}
         schema = ArraySchema(items=StringSchema(), maxItems=0)
@@ -166,9 +166,9 @@ class TestArraySchemaVariations(unittest.TestCase):
         self.assertEqual(value, [])
 
     def test_min_max(self) -> None:
-        schema = ArraySchema(items=StringSchema(), maxItems=3)
+        schema = ArraySchema(items=StringSchema(), maxItems=3, minItems=2)
         value = schema.get_valid_value()
-        self.assertEqual(len(value), 3)
+        self.assertIn(len(value), (2, 3))
 
         schema = ArraySchema(items=StringSchema(), minItems=5)
         value = schema.get_valid_value()

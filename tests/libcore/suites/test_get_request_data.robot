@@ -56,15 +56,17 @@ Test Get Request Data For Endpoint With Object RequestBody
 Test Get Request Data For Endpoint With Array Request Body
     VAR    ${empty_array_seen}=    ${FALSE}
     VAR    ${non_empty_array_seen}=    ${FALSE}
-    WHILE    not ($empty_array_seen and $non_empty_array_seen)
+    WHILE    not ($empty_array_seen and $non_empty_array_seen)    limit=10
         ${request_data}=    Get Request Data    path=/events/    method=put
         TRY
-            Dictionary Should Contain Key    ${request_data.dto.message}    message
-            List Should Not Contain Duplicates    ${request_data.dto.details}
+            VAR    ${first_valid_item}=    ${request_data.valid_data[0]}
+            Dictionary Should Contain Key    ${first_valid_item}    message
+            Dictionary Should Contain Key    ${first_valid_item}    details
+            List Should Not Contain Duplicates    ${first_valid_item}[details]
             VAR    ${non_empty_array_seen}=    ${TRUE}
-        EXCEPT    * AttributeError: 'put_events_events__put' object has no attribute 'message'    type=glob
+        EXCEPT    * IndexError: list index out of range    type=glob
             Should Be Equal    ${request_data.body_schema.type}    array
-            Should Be Equal As Strings    ${request_data.dto}    put_events_events__put()
+            Should Be Equal As Strings    ${request_data.dto}    <class 'abc.put_events_events__put'>
             VAR    ${empty_array_seen}=    ${TRUE}
         END
     END
@@ -72,7 +74,9 @@ Test Get Request Data For Endpoint With Array Request Body
 Test Get Request Data For Endpoint Without RequestBody But With DtoClass
     ${request_data}=    Get Request Data    path=/wagegroups/{wagegroup_id}    method=delete
     VAR    &{dict}=    &{EMPTY}
-    Should Be Equal As Strings    ${request_data.dto}    delete_wagegroup_wagegroups__wagegroup_id__delete()
+    Should Be Equal As Strings
+    ...    ${request_data.dto}
+    ...    <class 'abc.delete_wagegroup_wagegroups__wagegroup_id__delete'>
     Should Be Equal    ${request_data.body_schema}    ${NONE}
     Should Not Be Empty    ${request_data.parameters}
     Should Be Equal    ${request_data.params}    ${dict}

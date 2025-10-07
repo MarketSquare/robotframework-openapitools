@@ -20,6 +20,7 @@ Test Get Json Data With Conflict Raises For No UniquePropertyValueConstraint
     ...    Get Json Data With Conflict
     ...    url=${url}
     ...    method=post
+    ...    json_data=&{EMPTY}
     ...    dto=${request_data.dto}
     ...    conflict_status_code=418
 
@@ -29,6 +30,7 @@ Test Get Json Data With Conflict For Post Request
     ${invalid_data}=    Get Json Data With Conflict
     ...    url=${url}
     ...    method=post
+    ...    json_data=${request_data.valid_data}
     ...    dto=${request_data.dto}
     ...    conflict_status_code=418
     Should Not Be Empty    ${invalid_data}
@@ -39,6 +41,7 @@ Test Get Json Data With Conflict For Put Request
     ${invalid_json}=    Get Json Data With Conflict
     ...    url=${url}
     ...    method=put
+    ...    json_data=${request_data.valid_data}
     ...    dto=${request_data.dto}
     ...    conflict_status_code=418
     ${response}=    Authorized Request

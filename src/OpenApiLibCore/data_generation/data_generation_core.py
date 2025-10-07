@@ -12,11 +12,7 @@ from robot.api import logger
 
 import OpenApiLibCore.keyword_logic.path_functions as _path_functions
 from OpenApiLibCore.annotations import JSON
-from OpenApiLibCore.data_constraints.dto_base import (
-    Dto,
-    PropertyValueConstraint,
-    ResourceRelation,
-)
+from OpenApiLibCore.data_constraints.dto_base import Dto
 from OpenApiLibCore.data_generation.value_utils import IGNORE
 from OpenApiLibCore.models.oas_models import (
     ArraySchema,
@@ -26,14 +22,15 @@ from OpenApiLibCore.models.oas_models import (
     ParameterObject,
     ResolvedSchemaObjectTypes,
     UnionTypeSchema,
+    get_valid_json_data,
 )
 from OpenApiLibCore.models.request_data import RequestData
+from OpenApiLibCore.models.resource_relations import (
+    PropertyValueConstraint,
+    ResourceRelation,
+)
 from OpenApiLibCore.protocols import ConstraintMappingType
 from OpenApiLibCore.utils.parameter_utils import get_safe_name_for_oas_name
-
-from .body_data_generation import (
-    get_json_data_for_dto_class as _get_json_data_for_dto_class,
-)
 
 
 def get_request_data(
@@ -71,6 +68,7 @@ def get_request_data(
             method_spec=operation_spec,
         )
         return RequestData(
+            valid_data=None,
             dto=dto_instance,
             parameters=parameters,
             params=params,
@@ -91,7 +89,7 @@ def get_request_data(
         resolved_schemas = body_schema.resolved_schemas
         body_schema = choice(resolved_schemas)
 
-    dto_data = _get_json_data_for_dto_class(
+    valid_data = get_valid_json_data(
         schema=body_schema,
         dto_class=dto_class,
         operation_id=operation_spec.operationId,
@@ -99,11 +97,12 @@ def get_request_data(
     dto_instance = _get_dto_instance_from_dto_data(
         schema=body_schema,
         dto_class=dto_class,
-        dto_data=dto_data,
+        dto_data=valid_data,
         method_spec=operation_spec,
         dto_cls_name=dto_cls_name,
     )
     return RequestData(
+        valid_data=valid_data,
         dto=dto_instance,
         body_schema=body_schema,
         parameters=parameters,
@@ -116,7 +115,7 @@ def _get_dto_instance_for_empty_body(
     dto_class: type[ConstraintMappingType] | None,
     dto_cls_name: str,
     method_spec: OperationObject,
-) -> Dto:
+) -> type[Dto]:
     cls_name = method_spec.operationId if method_spec.operationId else dto_cls_name
     base = dto_class if dto_class else Dto
     dto_class_ = make_dataclass(
@@ -124,8 +123,7 @@ def _get_dto_instance_for_empty_body(
         fields=[],
         bases=(base,),
     )
-    dto_instance = dto_class_()
-    return dto_instance
+    return dto_class_
 
 
 def _get_dto_instance_from_dto_data(
@@ -134,7 +132,7 @@ def _get_dto_instance_from_dto_data(
     dto_data: JSON,
     method_spec: OperationObject,
     dto_cls_name: str,
-) -> Dto:
+) -> type[Dto]:
     if not isinstance(schema, (ObjectSchema, ArraySchema)):
         return _get_dto_instance_for_empty_body(
             dto_class=dto_class, dto_cls_name=dto_cls_name, method_spec=method_spec

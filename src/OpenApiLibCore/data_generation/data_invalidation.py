@@ -13,19 +13,22 @@ from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.data_constraints.dto_base import (
-    NOT_SET,
     Dto,
-    IdReference,
-    PropertyValueConstraint,
-    UniquePropertyValueConstraint,
 )
 from OpenApiLibCore.data_generation.value_utils import IGNORE
 from OpenApiLibCore.models.oas_models import (
     ArraySchema,
+    ObjectSchema,
     ParameterObject,
     UnionTypeSchema,
 )
 from OpenApiLibCore.models.request_data import RequestData
+from OpenApiLibCore.models.resource_relations import (
+    NOT_SET,
+    IdReference,
+    PropertyValueConstraint,
+    UniquePropertyValueConstraint,
+)
 
 run_keyword = BuiltIn().run_keyword
 
@@ -36,7 +39,7 @@ def get_invalid_body_data(
     status_code: int,
     request_data: RequestData,
     invalid_property_default_response: int,
-) -> dict[str, Any] | list[Any]:
+) -> dict[str, JSON] | list[JSON]:
     method = method.lower()
     data_relations = request_data.dto.get_body_relations_for_error_code(status_code)
     if not data_relations:
@@ -44,38 +47,52 @@ def get_invalid_body_data(
             raise ValueError(
                 "Failed to invalidate: request_data does not contain a body_schema."
             )
+
+        if not isinstance(request_data.body_schema, (ArraySchema, ObjectSchema)):
+            raise NotImplementedError("primitive types not supported for body data.")
+
         if isinstance(request_data.body_schema, ArraySchema):
-            invalid_item_data = request_data.dto.get_invalidated_data(
-                schema=request_data.body_schema.items,
+            if not isinstance(request_data.valid_data, list):
+                raise ValueError("Type of valid_data does not match body_schema type.")
+            invalid_item_data = request_data.body_schema.get_invalidated_data(
+                valid_data=request_data.valid_data,
+                constraint_mapping=request_data.dto,
                 status_code=status_code,
                 invalid_property_default_code=invalid_property_default_response,
             )
             return [invalid_item_data]
-        json_data = request_data.dto.get_invalidated_data(
-            schema=request_data.body_schema,
+
+        if not isinstance(request_data.valid_data, dict):
+            raise ValueError("Type of valid_data does not match body_schema type.")
+        json_data = request_data.body_schema.get_invalidated_data(
+            valid_data=request_data.valid_data,
+            constraint_mapping=request_data.dto,
             status_code=status_code,
             invalid_property_default_code=invalid_property_default_response,
         )
         return json_data
+
     resource_relation = choice(data_relations)
     if isinstance(resource_relation, UniquePropertyValueConstraint):
         json_data = run_keyword(
             "get_json_data_with_conflict",
             url,
             method,
+            request_data.valid_data,
             request_data.dto,
             status_code,
         )
     elif isinstance(resource_relation, IdReference):
         run_keyword("ensure_in_use", url, resource_relation)
-        json_data = request_data.dto.as_dict()
+        json_data = request_data.valid_data
     else:
         if request_data.body_schema is None:
             raise ValueError(
                 "Failed to invalidate: request_data does not contain a body_schema."
             )
-        json_data = request_data.dto.get_invalidated_data(
-            schema=request_data.body_schema,
+        json_data = request_data.body_schema.get_invalidated_data(
+            valid_data=request_data.valid_data,
+            constraint_mapping=request_data.dto,
             status_code=status_code,
             invalid_property_default_code=invalid_property_default_response,
         )
@@ -264,10 +281,14 @@ def ensure_parameter_in_parameters(
 
 
 def get_json_data_with_conflict(
-    url: str, base_url: str, method: str, dto: Dto, conflict_status_code: int
+    url: str,
+    base_url: str,
+    method: str,
+    json_data: dict[str, JSON],
+    dto: Dto,
+    conflict_status_code: int,
 ) -> dict[str, Any]:
     method = method.lower()
-    json_data = dto.as_dict()
     unique_property_value_constraints = [
         r for r in dto.get_relations() if isinstance(r, UniquePropertyValueConstraint)
     ]
@@ -281,7 +302,7 @@ def get_json_data_with_conflict(
             # so a valid POST dto must be constructed
             path = post_url.replace(base_url, "")
             request_data: RequestData = run_keyword("get_request_data", path, "post")
-            post_json = request_data.dto.as_dict()
+            post_json = request_data.valid_data
             for key in post_json.keys():
                 if key in json_data:
                     post_json[key] = json_data.get(key)
