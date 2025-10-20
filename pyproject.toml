@@ -1,6 +1,6 @@
 [project]
 name="robotframework-openapitools"
-version = "1.0.2"
+version = "2.0.0b1"
 description = "A set of Robot Framework libraries to test APIs for which the OAS is available."
 authors = [
     {name = "Robin Mackaij", email = "r.a.mackaij@gmail.com"},
@@ -107,7 +107,7 @@ build-backend = "poetry.core.masonry.api"
 branch = true
 parallel = true
 source = ["src/OpenApiDriver", "src/OpenApiLibCore", "src/openapi_libgen"]
-omit = ["src/openapi_libgen/command_line.py"]
+omit = ["src/openapi_libgen/command_line.py", "src/OpenApiLibCore/protocols.py"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -125,6 +125,7 @@ disallow_untyped_defs = true
 strict = true
 show_error_codes = true
 exclude = []
+follow_untyped_imports = true
 
 [[tool.mypy.overrides]]
 module = [
