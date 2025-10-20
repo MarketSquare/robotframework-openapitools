@@ -53,7 +53,7 @@ jobs:
     strategy:
       matrix:
         os: [ 'ubuntu-latest', 'windows-latest']
-        python-version: ['3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
         robot-version: ['6.1.1', '7.3.2']
         exclude:
           - os: 'windows-latest'
@@ -62,6 +62,8 @@ jobs:
             python-version: '3.11'
           - os: 'windows-latest'
             python-version: '3.12'
+          - os: 'windows-latest'
+            python-version: '3.13'
           - os: 'ubuntu-latest'
             python-version: '3.10'
             robot-version: '6.1.1'
@@ -70,6 +72,9 @@ jobs:
             robot-version: '6.1.1'
           - os: 'ubuntu-latest'
             python-version: '3.12'
+            robot-version: '6.1.1'
+          - os: 'ubuntu-latest'
+            python-version: '3.13'
             robot-version: '6.1.1'
       fail-fast: false
     steps:
