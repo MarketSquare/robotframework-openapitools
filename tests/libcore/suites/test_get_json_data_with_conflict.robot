@@ -13,7 +13,7 @@ ${ORIGIN}       http://localhost:8000
 
 *** Test Cases ***
 Test Get Json Data With Conflict Raises For No UniquePropertyValueConstraint
-    # No mapping for /wagegroups GET will yield a default dto on the request_data
+    # No mapping for /wagegroups GET will yield a default constraint_mapping on the request_data
     ${request_data}=    Get Request Data    path=/wagegroups    method=get
     ${url}=    Get Valid Url    path=/wagegroups
     Run Keyword And Expect Error    ValueError: No UniquePropertyValueConstraint*
@@ -21,7 +21,7 @@ Test Get Json Data With Conflict Raises For No UniquePropertyValueConstraint
     ...    url=${url}
     ...    method=post
     ...    json_data=&{EMPTY}
-    ...    dto=${request_data.dto}
+    ...    constraint_mapping=${request_data.constraint_mapping}
     ...    conflict_status_code=418
 
 Test Get Json Data With Conflict For Post Request
@@ -31,7 +31,7 @@ Test Get Json Data With Conflict For Post Request
     ...    url=${url}
     ...    method=post
     ...    json_data=${request_data.valid_data}
-    ...    dto=${request_data.dto}
+    ...    constraint_mapping=${request_data.constraint_mapping}
     ...    conflict_status_code=418
     Should Not Be Empty    ${invalid_data}
 
@@ -42,7 +42,7 @@ Test Get Json Data With Conflict For Put Request
     ...    url=${url}
     ...    method=put
     ...    json_data=${request_data.valid_data}
-    ...    dto=${request_data.dto}
+    ...    constraint_mapping=${request_data.constraint_mapping}
     ...    conflict_status_code=418
     ${response}=    Authorized Request
     ...    url=${url}    method=put    json_data=${invalid_json}
@@ -54,7 +54,7 @@ Test Get Json Data With Conflict For Put Request
 #    ${invalid_json}=    Get Json Data With Conflict
 #    ...    url=${url}
 #    ...    method=put
-#    ...    dto=${request_data.dto}
+#    ...    constraint_mapping=${request_data.constraint_mapping}
 #    ...    conflict_status_code=418
 #    ${response}=    Authorized Request
 #    ...    url=${url}    method=put    json_data=${invalid_json}

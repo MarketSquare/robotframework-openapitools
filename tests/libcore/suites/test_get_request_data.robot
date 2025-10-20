@@ -19,7 +19,7 @@ Test Get Request Data For Invalid Method On Endpoint
     ${request_data}=    Get Request Data    path=/events/    method=delete
     VAR    &{dict}=    &{EMPTY}
     VAR    @{list}=    @{EMPTY}
-    Should Be Equal    ${request_data.dto.__doc__}    DeleteEvents()
+    Should Be Equal    ${request_data.constraint_mapping.__doc__}    DeleteEvents()
     Should Be Equal    ${request_data.body_schema}    ${NONE}
     Should Be Equal    ${request_data.parameters}    ${list}
     Should Be Equal    ${request_data.params}    ${dict}
@@ -32,10 +32,10 @@ Test Get Request Data For Endpoint With Object RequestBody
     VAR    @{list}=    @{EMPTY}
     VAR    @{birthdays}=    1970-07-07    1980-08-08    1990-09-09
     VAR    @{weekdays}=    Monday    Tuesday    Wednesday    Thursday    Friday
-    Length Should Be    ${request_data.dto.name}    36
-    Length Should Be    ${request_data.dto.wagegroup_id}    36
-    Should Contain    ${birthdays}    ${request_data.dto.date_of_birth}
-    VAR    ${generated_parttime_schedule}=    ${request_data.dto.parttime_schedule}
+    Length Should Be    ${request_data.valid_data}[name]    36
+    Length Should Be    ${request_data.valid_data}[wagegroup_id]    36
+    Should Contain    ${birthdays}    ${request_data.valid_data}[date_of_birth]
+    VAR    ${generated_parttime_schedule}=    ${request_data.valid_data}[parttime_schedule]
     IF    $generated_parttime_schedule is not None
         ${parttime_days}=    Get From Dictionary    ${generated_parttime_schedule}    parttime_days
         Should Be True    1 <= len($parttime_days) <= 5
@@ -66,17 +66,13 @@ Test Get Request Data For Endpoint With Array Request Body
             VAR    ${non_empty_array_seen}=    ${TRUE}
         EXCEPT    * IndexError: list index out of range    type=glob
             Should Be Equal    ${request_data.body_schema.type}    array
-            Should Be Equal As Strings    ${request_data.dto}    <class 'abc.put_events_events__put'>
             VAR    ${empty_array_seen}=    ${TRUE}
         END
     END
 
-Test Get Request Data For Endpoint Without RequestBody But With DtoClass
+Test Get Request Data For Endpoint Without RequestBody But With Constraint Mapping
     ${request_data}=    Get Request Data    path=/wagegroups/{wagegroup_id}    method=delete
     VAR    &{dict}=    &{EMPTY}
-    Should Be Equal As Strings
-    ...    ${request_data.dto}
-    ...    <class 'abc.delete_wagegroup_wagegroups__wagegroup_id__delete'>
     Should Be Equal    ${request_data.body_schema}    ${NONE}
     Should Not Be Empty    ${request_data.parameters}
     Should Be Equal    ${request_data.params}    ${dict}

@@ -2,13 +2,15 @@
 """Utility module with functions to handle OpenAPI value types and restrictions."""
 
 from copy import deepcopy
-from typing import Any, cast, overload
+from typing import Any, TypeVar, cast, overload
 
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.models import IGNORE, Ignore
 
+O = TypeVar("O")
 
-def json_type_name_of_python_type(python_type: Any) -> str:
+
+def json_type_name_of_python_type(python_type: type) -> str:
     """Return the JSON type name for supported Python types."""
     if python_type == str:
         return "string"
@@ -47,8 +49,8 @@ def python_type_by_json_type_name(type_name: str) -> type:
 
 
 def get_invalid_value_from_constraint(
-    values_from_constraint: list[JSON | Ignore], value_type: str
-) -> JSON | Ignore:
+    values_from_constraint: list[O | Ignore], value_type: str
+) -> O | Ignore:
     """
     Return a value of the same type as the values in the values_from_constraints that
     is not in the values_from_constraints, if possible. Otherwise returns None.
@@ -78,12 +80,9 @@ def get_invalid_value_from_constraint(
         for key, value in valid_object.items():
             python_type_of_value = type(value)
             json_type_of_value = json_type_name_of_python_type(python_type_of_value)
-            invalid_value = cast(
-                JSON,
-                get_invalid_value_from_constraint(
-                    values_from_constraint=[value],
-                    value_type=json_type_of_value,
-                ),
+            invalid_value = get_invalid_value_from_constraint(
+                values_from_constraint=[value],
+                value_type=json_type_of_value,
             )
             invalid_object[key] = invalid_value
         return invalid_object

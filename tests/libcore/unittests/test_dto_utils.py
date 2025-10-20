@@ -41,7 +41,7 @@ class TestGetDtoClass(unittest.TestCase):
         self.assertIsInstance(value_constraints_mapping_dict, dict)
         self.assertGreater(len(value_constraints_mapping_dict.keys()), 0)
 
-    def test_mapped_returns_dto_instance(self) -> None:
+    def test_mapped_returns_dto_class(self) -> None:
         value_constraints_mapping_dict = get_constraint_mapping_dict(
             self.mappings_module_name
         )
@@ -49,7 +49,7 @@ class TestGetDtoClass(unittest.TestCase):
         for key in keys:
             self.assertIsInstance(key, tuple)
             self.assertEqual(len(key), 2)
-            self.assertIsInstance(value_constraints_mapping_dict[key](), Dto)
+            self.assertTrue(issubclass(value_constraints_mapping_dict[key], Dto))
 
 
 if __name__ == "__main__":

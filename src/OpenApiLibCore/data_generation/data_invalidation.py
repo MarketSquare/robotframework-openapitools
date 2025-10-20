@@ -38,10 +38,12 @@ def get_invalid_body_data(
     method: str,
     status_code: int,
     request_data: RequestData,
-    invalid_property_default_response: int,
+    invalid_data_default_response: int,
 ) -> dict[str, JSON] | list[JSON]:
     method = method.lower()
-    data_relations = request_data.dto.get_body_relations_for_error_code(status_code)
+    data_relations = request_data.constraint_mapping.get_body_relations_for_error_code(
+        status_code
+    )
     if not data_relations:
         if request_data.body_schema is None:
             raise ValueError(
@@ -54,21 +56,21 @@ def get_invalid_body_data(
         if isinstance(request_data.body_schema, ArraySchema):
             if not isinstance(request_data.valid_data, list):
                 raise ValueError("Type of valid_data does not match body_schema type.")
-            invalid_item_data = request_data.body_schema.get_invalidated_data(
+            invalid_item_data = request_data.body_schema.get_invalid_data(
                 valid_data=request_data.valid_data,
-                constraint_mapping=request_data.dto,
+                constraint_mapping=request_data.constraint_mapping,
                 status_code=status_code,
-                invalid_property_default_code=invalid_property_default_response,
+                invalid_property_default_code=invalid_data_default_response,
             )
             return [invalid_item_data]
 
         if not isinstance(request_data.valid_data, dict):
             raise ValueError("Type of valid_data does not match body_schema type.")
-        json_data = request_data.body_schema.get_invalidated_data(
+        json_data = request_data.body_schema.get_invalid_data(
             valid_data=request_data.valid_data,
-            constraint_mapping=request_data.dto,
+            constraint_mapping=request_data.constraint_mapping,
             status_code=status_code,
-            invalid_property_default_code=invalid_property_default_response,
+            invalid_property_default_code=invalid_data_default_response,
         )
         return json_data
 
@@ -79,7 +81,7 @@ def get_invalid_body_data(
             url,
             method,
             request_data.valid_data,
-            request_data.dto,
+            request_data.constraint_mapping,
             status_code,
         )
     elif isinstance(resource_relation, IdReference):
@@ -90,23 +92,25 @@ def get_invalid_body_data(
             raise ValueError(
                 "Failed to invalidate: request_data does not contain a body_schema."
             )
-        json_data = request_data.body_schema.get_invalidated_data(
+        json_data = request_data.body_schema.get_invalid_data(
             valid_data=request_data.valid_data,
-            constraint_mapping=request_data.dto,
+            constraint_mapping=request_data.constraint_mapping,
             status_code=status_code,
-            invalid_property_default_code=invalid_property_default_response,
+            invalid_property_default_code=invalid_data_default_response,
         )
     return json_data
 
 
 def get_invalidated_parameters(
-    status_code: int, request_data: RequestData, invalid_property_default_response: int
+    status_code: int, request_data: RequestData, invalid_data_default_response: int
 ) -> tuple[dict[str, JSON], dict[str, JSON]]:
     if not request_data.parameters:
         raise ValueError("No params or headers to invalidate.")
 
     # ensure the status_code can be triggered
-    relations = request_data.dto.get_parameter_relations_for_error_code(status_code)
+    relations = request_data.constraint_mapping.get_parameter_relations_for_error_code(
+        status_code
+    )
     relations_for_status_code = [
         r
         for r in relations
@@ -120,14 +124,14 @@ def get_invalidated_parameters(
     }
     relation_property_names = {r.property_name for r in relations_for_status_code}
     if not relation_property_names:
-        if status_code != invalid_property_default_response:
+        if status_code != invalid_data_default_response:
             raise ValueError(f"No relations to cause status_code {status_code} found.")
 
     # ensure we're not modifying mutable properties
     params = deepcopy(request_data.params)
     headers = deepcopy(request_data.headers)
 
-    if status_code == invalid_property_default_response:
+    if status_code == invalid_data_default_response:
         # take the params and headers that can be invalidated based on data type
         # and expand the set with properties that can be invalided by relations
         parameter_names = set(request_data.params_that_can_be_invalidated).union(
@@ -142,8 +146,8 @@ def get_invalidated_parameters(
         # non-default status_codes can only be the result of a Relation
         parameter_names = relation_property_names
 
-    # Dto mappings may contain generic mappings for properties that are not present
-    # in this specific schema
+    # Constraint mappings may contain generic mappings for properties that are
+    # not present in this specific schema
     request_data_parameter_names = [p.name for p in request_data.parameters]
     additional_relation_property_names = {
         n for n in relation_property_names if n not in request_data_parameter_names
@@ -225,11 +229,10 @@ def get_invalidated_parameters(
             raise ValueError(f"No schema defined for parameter: {parameter_data}.")
 
         if isinstance(value_schema, UnionTypeSchema):
-            # FIXME: extra handling may be needed in case of values_from_constraint
             value_schema = choice(value_schema.resolved_schemas)
 
         invalid_value = value_schema.get_invalid_value(
-            current_value=valid_value,
+            valid_value=valid_value,
             values_from_constraint=values_from_constraint,
         )
     logger.debug(f"{parameter_to_invalidate} changed to {invalid_value}")
@@ -285,12 +288,14 @@ def get_json_data_with_conflict(
     base_url: str,
     method: str,
     json_data: dict[str, JSON],
-    dto: Dto,
+    constraint_mapping: type[Dto],
     conflict_status_code: int,
 ) -> dict[str, Any]:
     method = method.lower()
     unique_property_value_constraints = [
-        r for r in dto.get_relations() if isinstance(r, UniquePropertyValueConstraint)
+        r
+        for r in constraint_mapping.get_relations()
+        if isinstance(r, UniquePropertyValueConstraint)
     ]
     for relation in unique_property_value_constraints:
         json_data[relation.property_name] = relation.value
@@ -298,8 +303,8 @@ def get_json_data_with_conflict(
         if method in ["patch", "put"]:
             post_url_parts = url.split("/")[:-1]
             post_url = "/".join(post_url_parts)
-            # the PATCH or PUT may use a different dto than required for POST
-            # so a valid POST dto must be constructed
+            # the PATCH or PUT may use a different constraint_mapping than required for
+            # POST so valid POST data must be constructed
             path = post_url.replace(base_url, "")
             request_data: RequestData = run_keyword("get_request_data", path, "post")
             post_json = request_data.valid_data
@@ -326,5 +331,6 @@ def get_json_data_with_conflict(
         )
         return json_data
     raise ValueError(
-        f"No UniquePropertyValueConstraint in the get_relations list on dto {dto}."
+        f"No UniquePropertyValueConstraint in the get_relations list on "
+        f"constraint_mapping {constraint_mapping}."
     )

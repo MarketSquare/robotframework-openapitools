@@ -5,9 +5,9 @@ test and constraints / restrictions on properties of the resources.
 """
 
 from abc import ABC
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 from importlib import import_module
-from typing import Any, Callable
+from typing import Callable
 
 from robot.api import logger
 
@@ -17,10 +17,9 @@ from OpenApiLibCore.models.resource_relations import (
     ResourceRelation,
 )
 from OpenApiLibCore.protocols import (
-    ConstraintMappingType,
-    GetIdPropertyNameType,
+    IConstraintMapping,
+    IGetIdPropertyName,
 )
-from OpenApiLibCore.utils import parameter_utils
 from OpenApiLibCore.utils.id_mapping import dummy_transformer
 
 
@@ -94,28 +93,10 @@ class Dto(ABC):
         ]
         return relations
 
-    def as_dict(self) -> dict[Any, Any]:
-        """Return the dict representation of the Dto."""
-        result = {}
-
-        for field in fields(self):
-            field_name = field.name
-            if field_name not in self.__dict__:
-                continue
-            original_name = parameter_utils.get_oas_name_from_safe_name(field_name)
-            result[original_name] = getattr(self, field_name)
-
-        return result
-
-    def as_list(self) -> list[Any]:
-        """Return the list representation of the Dto."""
-        items = self.as_dict()
-        return [items] if items else []
-
 
 def get_constraint_mapping_dict(
     mappings_module_name: str,
-) -> dict[tuple[str, str], ConstraintMappingType]:
+) -> dict[tuple[str, str], IConstraintMapping]:
     try:
         mappings_module = import_module(mappings_module_name)
         return mappings_module.DTO_MAPPING
@@ -127,7 +108,7 @@ def get_constraint_mapping_dict(
 
 def get_path_mapping_dict(
     mappings_module_name: str,
-) -> dict[str, ConstraintMappingType]:
+) -> dict[str, IConstraintMapping]:
     try:
         mappings_module = import_module(mappings_module_name)
         return mappings_module.PATH_MAPPING
@@ -139,7 +120,7 @@ def get_path_mapping_dict(
 
 def get_id_property_name(
     mappings_module_name: str, default_id_property_name: str
-) -> GetIdPropertyNameType:
+) -> IGetIdPropertyName:
     return GetIdPropertyName(
         mappings_module_name=mappings_module_name,
         default_id_property_name=default_id_property_name,

@@ -29,7 +29,7 @@ from OpenApiLibCore.models.resource_relations import (
     PropertyValueConstraint,
     ResourceRelation,
 )
-from OpenApiLibCore.protocols import ConstraintMappingType
+from OpenApiLibCore.protocols import IConstraintMapping
 from OpenApiLibCore.utils.parameter_utils import get_safe_name_for_oas_name
 
 
@@ -39,7 +39,7 @@ def get_request_data(
     openapi_spec: OpenApiObject,
 ) -> RequestData:
     method = method.lower()
-    dto_cls_name = get_dto_cls_name(path=path, method=method)
+    mapping_cls_name = get_mapping_cls_name(path=path, method=method)
     # The path can contain already resolved Ids that have to be matched
     # against the parametrized paths in the paths section.
     spec_path = _path_functions.get_parametrized_path(
@@ -50,26 +50,26 @@ def get_request_data(
         operation_spec: OperationObject | None = getattr(path_item, method)
         if operation_spec is None:
             raise AttributeError
-        dto_class = operation_spec.dto
+        constraint_mapping = operation_spec.constraint_mapping
     except AttributeError:
         logger.info(
             f"method '{method}' not supported on '{spec_path}, using empty spec."
         )
         operation_spec = OperationObject(operationId="")
-        dto_class = None
+        constraint_mapping = None
 
     parameters, params, headers = get_request_parameters(
-        dto_class=dto_class, method_spec=operation_spec
+        constraint_mapping=constraint_mapping, method_spec=operation_spec
     )
     if operation_spec.requestBody is None:
-        dto_instance = _get_dto_instance_for_empty_body(
-            dto_class=dto_class,
-            dto_cls_name=dto_cls_name,
+        constraint_mapping = _get_mapping_dataclass_for_empty_body(
+            constraint_mapping=constraint_mapping,
+            mapping_cls_name=mapping_cls_name,
             method_spec=operation_spec,
         )
         return RequestData(
             valid_data=None,
-            dto=dto_instance,
+            constraint_mapping=constraint_mapping,
             parameters=parameters,
             params=params,
             headers=headers,
@@ -85,25 +85,21 @@ def get_request_data(
 
     headers.update({"content-type": operation_spec.requestBody.mime_type})
 
-    if isinstance(body_schema, UnionTypeSchema):
-        resolved_schemas = body_schema.resolved_schemas
-        body_schema = choice(resolved_schemas)
-
     valid_data = get_valid_json_data(
         schema=body_schema,
-        dto_class=dto_class,
+        constraint_mapping=constraint_mapping,
         operation_id=operation_spec.operationId,
     )
-    dto_instance = _get_dto_instance_from_dto_data(
+    constraint_mapping = _get_mapping_dataclass_from_valid_data(
         schema=body_schema,
-        dto_class=dto_class,
-        dto_data=valid_data,
+        constraint_mapping=constraint_mapping,
+        valid_data=valid_data,
         method_spec=operation_spec,
-        dto_cls_name=dto_cls_name,
+        mapping_cls_name=mapping_cls_name,
     )
     return RequestData(
         valid_data=valid_data,
-        dto=dto_instance,
+        constraint_mapping=constraint_mapping,
         body_schema=body_schema,
         parameters=parameters,
         params=params,
@@ -111,76 +107,77 @@ def get_request_data(
     )
 
 
-def _get_dto_instance_for_empty_body(
-    dto_class: type[ConstraintMappingType] | None,
-    dto_cls_name: str,
+def _get_mapping_dataclass_for_empty_body(
+    constraint_mapping: type[IConstraintMapping] | None,
+    mapping_cls_name: str,
     method_spec: OperationObject,
-) -> type[Dto]:
-    cls_name = method_spec.operationId if method_spec.operationId else dto_cls_name
-    base = dto_class if dto_class else Dto
-    dto_class_ = make_dataclass(
+) -> type[IConstraintMapping]:
+    cls_name = method_spec.operationId if method_spec.operationId else mapping_cls_name
+    base = constraint_mapping if constraint_mapping else Dto
+    mapping_class = make_dataclass(
         cls_name=cls_name,
         fields=[],
         bases=(base,),
     )
-    return dto_class_
+    return mapping_class
 
 
-def _get_dto_instance_from_dto_data(
+def _get_mapping_dataclass_from_valid_data(
     schema: ResolvedSchemaObjectTypes,
-    dto_class: type[ConstraintMappingType] | None,
-    dto_data: JSON,
+    constraint_mapping: type[IConstraintMapping] | None,
+    valid_data: JSON,
     method_spec: OperationObject,
-    dto_cls_name: str,
-) -> type[Dto]:
+    mapping_cls_name: str,
+) -> type[IConstraintMapping]:
     if not isinstance(schema, (ObjectSchema, ArraySchema)):
-        return _get_dto_instance_for_empty_body(
-            dto_class=dto_class, dto_cls_name=dto_cls_name, method_spec=method_spec
+        return _get_mapping_dataclass_for_empty_body(
+            constraint_mapping=constraint_mapping,
+            mapping_cls_name=mapping_cls_name,
+            method_spec=method_spec,
         )
 
     if isinstance(schema, ArraySchema):
-        if not dto_data or not isinstance(dto_data, list):
-            return _get_dto_instance_for_empty_body(
-                dto_class=dto_class, dto_cls_name=dto_cls_name, method_spec=method_spec
+        if not valid_data or not isinstance(valid_data, list):
+            return _get_mapping_dataclass_for_empty_body(
+                constraint_mapping=constraint_mapping,
+                mapping_cls_name=mapping_cls_name,
+                method_spec=method_spec,
             )
-        first_item_data = dto_data[0]
+        first_item_data = valid_data[0]
         item_object_schema = schema.items
         if isinstance(item_object_schema, UnionTypeSchema):
             resolved_schemas = item_object_schema.resolved_schemas
             item_object_schema = choice(resolved_schemas)
-        item_dto = _get_dto_instance_from_dto_data(
+        mapping_dataclass = _get_mapping_dataclass_from_valid_data(
             schema=item_object_schema,
-            dto_class=dto_class,
-            dto_data=first_item_data,
+            constraint_mapping=constraint_mapping,
+            valid_data=first_item_data,
             method_spec=method_spec,
-            dto_cls_name=dto_cls_name,
+            mapping_cls_name=mapping_cls_name,
         )
-        return item_dto
+        return mapping_dataclass
 
-    assert isinstance(dto_data, dict), (
-        "Data consistency error: schema is of type ObjectSchema but dto_data is not a dict."
+    assert isinstance(valid_data, dict), (
+        "Data consistency error: schema is of type ObjectSchema but valid_data is not a dict."
     )
-    fields = get_fields_from_dto_data(schema, dto_data)
-    cls_name = method_spec.operationId if method_spec.operationId else dto_cls_name
-    base = dto_class if dto_class else Dto
-    dto_class_ = make_dataclass(
+    fields = get_dataclass_fields(object_schema=schema, valid_data=valid_data)
+    cls_name = method_spec.operationId if method_spec.operationId else mapping_cls_name
+    base = constraint_mapping if constraint_mapping else Dto
+    mapping_dataclass = make_dataclass(
         cls_name=cls_name,
         fields=fields,
         bases=(base,),
     )
-    dto_data = {
-        get_safe_name_for_oas_name(key): value for key, value in dto_data.items()
-    }
-    return cast(Dto, dto_class_(**dto_data))
+    return mapping_dataclass
 
 
-def get_fields_from_dto_data(
-    object_schema: ObjectSchema, dto_data: dict[str, JSON]
+def get_dataclass_fields(
+    object_schema: ObjectSchema, valid_data: dict[str, JSON]
 ) -> list[tuple[str, type[object], Field[object]]]:
-    """Get a dataclasses fields list based on the content_schema and dto_data."""
+    """Get a dataclasses fields list based on the object_schema and valid_data."""
     fields: list[tuple[str, type[object], Field[object]]] = []
 
-    for key, value in dto_data.items():
+    for key, value in valid_data.items():
         safe_key = get_safe_name_for_oas_name(key)
         if key in object_schema.required:
             # The fields list is used to create a dataclass, so non-default fields
@@ -193,7 +190,7 @@ def get_fields_from_dto_data(
     return fields
 
 
-def get_dto_cls_name(path: str, method: str) -> str:
+def get_mapping_cls_name(path: str, method: str) -> str:
     method = method.capitalize()
     path = path.translate({ord(i): None for i in "{}"})
     path_parts = path.split("/")
@@ -203,11 +200,13 @@ def get_dto_cls_name(path: str, method: str) -> str:
 
 
 def get_request_parameters(
-    dto_class: type[ConstraintMappingType] | None, method_spec: OperationObject
+    constraint_mapping: type[IConstraintMapping] | None, method_spec: OperationObject
 ) -> tuple[list[ParameterObject], dict[str, Any], dict[str, str]]:
     """Get the methods parameter spec and params and headers with valid data."""
     parameters = method_spec.parameters if method_spec.parameters else []
-    parameter_relations = dto_class.get_parameter_relations() if dto_class else []
+    parameter_relations = (
+        constraint_mapping.get_parameter_relations() if constraint_mapping else []
+    )
     query_params = [p for p in parameters if p.in_ == "query"]
     header_params = [p for p in parameters if p.in_ == "header"]
     params = get_parameter_data(query_params, parameter_relations)

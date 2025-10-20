@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import builtins
 from abc import abstractmethod
 from collections import ChainMap
 from copy import deepcopy
@@ -23,22 +24,21 @@ from uuid import uuid4
 import rstr
 from pydantic import BaseModel, Field, RootModel
 from robot.api import logger
-from robot.libraries.BuiltIn import BuiltIn
+from robot.libraries.BuiltIn import BuiltIn  # type: ignore[import-untyped]
 
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.data_generation.localized_faker import FAKE, fake_string
 from OpenApiLibCore.data_generation.value_utils import (
-    IGNORE,
     get_invalid_value_from_constraint,
     python_type_by_json_type_name,
 )
-from OpenApiLibCore.models import Ignore
+from OpenApiLibCore.models import IGNORE, Ignore
 from OpenApiLibCore.models.resource_relations import (
     NOT_SET,
     IdDependency,
     PropertyValueConstraint,
 )
-from OpenApiLibCore.protocols import ConstraintMappingType
+from OpenApiLibCore.protocols import IConstraintMapping
 from OpenApiLibCore.utils.id_mapping import dummy_transformer
 from OpenApiLibCore.utils.parameter_utils import get_safe_name_for_oas_name
 
@@ -49,6 +49,7 @@ EPSILON = float_info.epsilon
 SENTINEL = object()
 
 O = TypeVar("O")
+ConstraintMappingType = builtins.type[IConstraintMapping]
 
 
 class SchemaBase(BaseModel, Generic[O], frozen=True):
@@ -58,9 +59,9 @@ class SchemaBase(BaseModel, Generic[O], frozen=True):
     @abstractmethod
     def get_valid_value(
         self,
-        constraint_mapping: type[ConstraintMappingType] | None = None,
+        constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
-    ) -> JSON: ...
+    ) -> O: ...
 
     @abstractmethod
     def get_values_out_of_bounds(self, current_value: O) -> list[O]: ...
@@ -70,15 +71,15 @@ class SchemaBase(BaseModel, Generic[O], frozen=True):
 
     def get_invalid_value(
         self,
-        current_value: JSON,
-        values_from_constraint: Iterable[JSON] = tuple(),
-    ) -> JSON | Ignore:
+        valid_value: O,
+        values_from_constraint: Iterable[O] = tuple(),
+    ) -> O | str | list[JSON] | Ignore:
         """Return a random value that violates the provided value_schema."""
-        invalid_values: list[JSON | Ignore] = []
+        invalid_values: list[O | str | list[JSON] | Ignore] = []
         value_type = getattr(self, "type")
 
-        if not isinstance(current_value, python_type_by_json_type_name(value_type)):
-            current_value = self.get_valid_value()
+        if not isinstance(valid_value, python_type_by_json_type_name(value_type)):
+            valid_value = self.get_valid_value()
 
         if values_from_constraint:
             try:
@@ -99,7 +100,7 @@ class SchemaBase(BaseModel, Generic[O], frozen=True):
         # Violate min / max values or length if possible
         try:
             values_out_of_bounds = self.get_values_out_of_bounds(
-                current_value=current_value  # type: ignore[arg-type]
+                current_value=valid_value
             )
             invalid_values += values_out_of_bounds
         except ValueError:
@@ -122,7 +123,7 @@ class NullSchema(SchemaBase[None], frozen=True):
 
     def get_valid_value(
         self,
-        constraint_mapping: type[ConstraintMappingType] | None = None,
+        constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
     ) -> None:
         return None
@@ -149,7 +150,7 @@ class BooleanSchema(SchemaBase[bool], frozen=True):
 
     def get_valid_value(
         self,
-        constraint_mapping: type[ConstraintMappingType] | None = None,
+        constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
     ) -> bool:
         if self.const is not None:
@@ -185,7 +186,7 @@ class StringSchema(SchemaBase[str], frozen=True):
 
     def get_valid_value(
         self,
-        constraint_mapping: type[ConstraintMappingType] | None = None,
+        constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
     ) -> bytes | str:
         """Generate a random string within the min/max length in the schema, if specified."""
@@ -317,7 +318,7 @@ class IntegerSchema(SchemaBase[int], frozen=True):
 
     def get_valid_value(
         self,
-        constraint_mapping: type[ConstraintMappingType] | None = None,
+        constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
     ) -> int:
         """Generate a random int within the min/max range of the schema, if specified."""
@@ -420,7 +421,7 @@ class NumberSchema(SchemaBase[float], frozen=True):
 
     def get_valid_value(
         self,
-        constraint_mapping: type[ConstraintMappingType] | None = None,
+        constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
     ) -> float:
         """Generate a random float within the min/max range of the schema, if specified."""
@@ -482,7 +483,7 @@ class ArraySchema(SchemaBase[list[JSON]], frozen=True):
 
     def get_valid_value(
         self,
-        constraint_mapping: type[ConstraintMappingType] | None = None,
+        constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
     ) -> list[JSON]:
         if self.const is not None:
@@ -543,7 +544,7 @@ class ArraySchema(SchemaBase[list[JSON]], frozen=True):
 
         return invalid_value
 
-    def get_invalidated_data(
+    def get_invalid_data(
         self,
         valid_data: list[JSON],
         constraint_mapping: ConstraintMappingType,
@@ -578,7 +579,7 @@ class ArraySchema(SchemaBase[list[JSON]], frozen=True):
                     if valid_data
                     else self.items.get_valid_value()
                 )
-                invalid_item = self.items.get_invalidated_data(
+                invalid_item = self.items.get_invalid_data(
                     valid_data=valid_item,
                     constraint_mapping=constraint_mapping,
                     status_code=status_code,
@@ -628,7 +629,7 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
 
     def get_valid_value(
         self,
-        constraint_mapping: type[ConstraintMappingType] | None = None,
+        constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
     ) -> dict[str, JSON]:
         if self.const is not None:
@@ -640,7 +641,7 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
         json_data: dict[str, Any] = {}
 
         property_names = self._get_property_names_to_process(
-            dto_class=constraint_mapping
+            constraint_mapping=constraint_mapping
         )
 
         for property_name in property_names:
@@ -651,7 +652,7 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
             json_data[property_name] = get_data_for_property(
                 property_name=property_name,
                 property_schema=property_schema,
-                dto_class=constraint_mapping,
+                constraint_mapping=constraint_mapping,
                 operation_id=operation_id,
             )
 
@@ -659,16 +660,16 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
 
     def _get_property_names_to_process(
         self,
-        dto_class: type[ConstraintMappingType] | None,
+        constraint_mapping: ConstraintMappingType | None,
     ) -> list[str]:
         property_names = []
 
         properties = {} if self.properties is None else self.properties.root
-        for property_name in properties:  # type: ignore[union-attr]
+        for property_name in properties:
             # register the oas_name
             _ = get_safe_name_for_oas_name(property_name)
             if constrained_values := get_constrained_values(
-                dto_class=dto_class, property_name=property_name
+                constraint_mapping=constraint_mapping, property_name=property_name
             ):
                 # do not add properties that are configured to be ignored
                 if IGNORE in constrained_values:  # type: ignore[comparison-overlap]
@@ -715,7 +716,7 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
 
         raise ValueError
 
-    def get_invalidated_data(
+    def get_invalid_data(
         self,
         valid_data: dict[str, JSON],
         constraint_mapping: ConstraintMappingType,
@@ -723,7 +724,6 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
         invalid_property_default_code: int,
     ) -> dict[str, JSON]:
         """Return a data set with one of the properties set to an invalid value or type."""
-        # FIXME: data should be sperated from constraints_mapping
         properties: dict[str, JSON] = deepcopy(valid_data)
 
         relations = constraint_mapping.get_body_relations_for_error_code(
@@ -737,8 +737,8 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
             raise ValueError(
                 f"No property can be invalidated to cause status_code {status_code}"
             )
-        # Remove duplicates, then shuffle the property_names so different properties on
-        # the Dto are invalidated when rerunning the test.
+        # Remove duplicates, then shuffle the property_names so different properties in
+        # the data dict are invalidated when rerunning the test.
         shuffle(list(set(property_names)))
         for property_name in property_names:
             # if possible, invalidate a constraint but send otherwise valid data
@@ -807,13 +807,13 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
             ]
 
             invalid_value = value_schema.get_invalid_value(
-                current_value=current_value,
+                valid_value=current_value,
                 values_from_constraint=values_from_constraint,
             )
             properties[property_name] = invalid_value
             logger.debug(
-                f"Property {property_name} changed to {invalid_value!r} (received from "
-                f"get_invalid_value)"
+                f"Property {property_name} changed to {invalid_value!r} "
+                f"(received from get_invalid_value)"
             )
             return properties
         logger.warn("get_invalidated_data returned unchanged properties")
@@ -854,7 +854,7 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
 
     def get_valid_value(
         self,
-        constraint_mapping: type[ConstraintMappingType] | None = None,
+        constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
     ) -> JSON:
         chosen_schema = choice(self.resolved_schemas)
@@ -1014,7 +1014,7 @@ class OperationObject(BaseModel):
     parameters: list[ParameterObject] | None = None
     requestBody: RequestBodyObject | None = None
     responses: dict[str, ResponseObject] = {}
-    dto: type[ConstraintMappingType] | None = None
+    constraint_mapping: type[IConstraintMapping] | None = None
 
 
 class PathItemObject(BaseModel):
@@ -1026,7 +1026,7 @@ class PathItemObject(BaseModel):
     summary: str = ""
     description: str = ""
     parameters: list[ParameterObject] | None = None
-    dto: ConstraintMappingType | None = None
+    constraint_mapping: IConstraintMapping | None = None
     id_mapper: tuple[str, Callable[[str], str] | Callable[[int], int]] = (
         "id",
         dummy_transformer,
@@ -1053,19 +1053,19 @@ class OpenApiObject(BaseModel):
 # TODO: can this be refactored away?
 def get_valid_json_data(
     schema: SchemaObjectTypes,
-    dto_class: type[ConstraintMappingType] | None,
+    constraint_mapping: type[IConstraintMapping] | None,
     operation_id: str | None = None,
 ) -> JSON:
     if isinstance(schema, UnionTypeSchema):
         chosen_schema = choice(schema.resolved_schemas)
         return get_valid_json_data(
             schema=chosen_schema,
-            dto_class=dto_class,
+            constraint_mapping=constraint_mapping,
             operation_id=operation_id,
         )
 
     return schema.get_valid_value(
-        constraint_mapping=dto_class, operation_id=operation_id
+        constraint_mapping=constraint_mapping, operation_id=operation_id
     )
 
 
@@ -1073,26 +1073,26 @@ def get_valid_json_data(
 def get_data_for_property(
     property_name: str,
     property_schema: SchemaObjectTypes,
-    dto_class: type[ConstraintMappingType] | None,
+    constraint_mapping: ConstraintMappingType | None,
     operation_id: str | None,
 ) -> JSON:
     if constrained_values := get_constrained_values(
-        dto_class=dto_class, property_name=property_name
+        constraint_mapping=constraint_mapping, property_name=property_name
     ):
         constrained_value = choice(constrained_values)
-        # Check if the chosen value is a nested Dto; since a Dto is never
-        # instantiated, we can use isinstance(..., type) for this.
+        # Check if the chosen value is a nested constraint_mapping; since a
+        # mapping is never instantiated, we can use isinstance(..., type) for this.
         if isinstance(constrained_value, type):
-            return get_value_constrained_by_nested_dto(
+            return get_value_constrained_by_nested_constraint_mapping(
                 property_schema=property_schema,
-                nested_dto_class=constrained_value,
+                nested_constraint_mapping=constrained_value,
                 operation_id=operation_id,
             )
         return constrained_value
 
     if (
         dependent_id := get_dependent_id(
-            dto_class=dto_class,
+            constraint_mapping=constraint_mapping,
             property_name=property_name,
             operation_id=operation_id,
         )
@@ -1101,17 +1101,17 @@ def get_data_for_property(
 
     return get_valid_json_data(
         schema=property_schema,
-        dto_class=None,
+        constraint_mapping=None,
     )
 
 
 # TODO: move to keyword_logic?
 def get_dependent_id(
-    dto_class: type[ConstraintMappingType] | None,
+    constraint_mapping: ConstraintMappingType | None,
     property_name: str,
     operation_id: str | None,
 ) -> str | int | float | None:
-    relations = dto_class.get_relations() if dto_class else []
+    relations = constraint_mapping.get_relations() if constraint_mapping else []
     # multiple get paths are possible based on the operation being performed
     id_get_paths = [
         (d.get_path, d.operation_id)
@@ -1136,32 +1136,36 @@ def get_dependent_id(
     return valid_id
 
 
-def get_value_constrained_by_nested_dto(
+def get_value_constrained_by_nested_constraint_mapping(
     property_schema: SchemaObjectTypes,
-    nested_dto_class: type[ConstraintMappingType],
+    nested_constraint_mapping: ConstraintMappingType,
     operation_id: str | None,
 ) -> JSON:
-    nested_schema = get_schema_for_nested_dto(property_schema=property_schema)
+    nested_schema = get_schema_for_nested_constraint_mapping(
+        property_schema=property_schema
+    )
     nested_value = get_valid_json_data(
         schema=nested_schema,
-        dto_class=nested_dto_class,
+        constraint_mapping=nested_constraint_mapping,
         operation_id=operation_id,
     )
     return nested_value
 
 
-def get_schema_for_nested_dto(property_schema: SchemaObjectTypes) -> SchemaObjectTypes:
+def get_schema_for_nested_constraint_mapping(
+    property_schema: SchemaObjectTypes,
+) -> SchemaObjectTypes:
     if isinstance(property_schema, UnionTypeSchema):
         chosen_schema = choice(property_schema.resolved_schemas)
-        return get_schema_for_nested_dto(chosen_schema)
+        return get_schema_for_nested_constraint_mapping(chosen_schema)
 
     return property_schema
 
 
 def get_constrained_values(
-    dto_class: type[ConstraintMappingType] | None, property_name: str
-) -> list[JSON | type[ConstraintMappingType]]:
-    relations = dto_class.get_relations() if dto_class else []
+    constraint_mapping: ConstraintMappingType | None, property_name: str
+) -> list[JSON | ConstraintMappingType]:
+    relations = constraint_mapping.get_relations() if constraint_mapping else []
     values_list = [
         c.values
         for c in relations

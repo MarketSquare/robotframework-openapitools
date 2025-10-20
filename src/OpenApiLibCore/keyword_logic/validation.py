@@ -24,7 +24,7 @@ from OpenApiLibCore.models.oas_models import (
     UnionTypeSchema,
 )
 from OpenApiLibCore.models.request_data import RequestData, RequestValues
-from OpenApiLibCore.protocols import ResponseValidatorType
+from OpenApiLibCore.protocols import IResponseValidator
 
 run_keyword = BuiltIn().run_keyword
 
@@ -109,10 +109,10 @@ def perform_validated_request(
 def validate_response(
     path: str,
     response: Response,
-    response_validator: ResponseValidatorType,
+    response_validator: IResponseValidator,
     server_validation_warning_logged: bool,
     disable_server_validation: bool,
-    invalid_property_default_response: int,
+    invalid_data_default_response: int,
     response_validation: str,
     openapi_spec: OpenApiObject,
     original_data: Mapping[str, Any],
@@ -127,7 +127,7 @@ def validate_response(
             response_validator=response_validator,
             server_validation_warning_logged=server_validation_warning_logged,
             disable_server_validation=disable_server_validation,
-            invalid_property_default_response=invalid_property_default_response,
+            invalid_data_default_response=invalid_data_default_response,
             response_validation=response_validation,
         )
     except OpenAPIError as exception:
@@ -310,7 +310,7 @@ def validate_send_response(
 
 def validate_response_using_validator(
     response: Response,
-    response_validator: ResponseValidatorType,
+    response_validator: IResponseValidator,
 ) -> None:
     openapi_request = RequestsOpenAPIRequest(response.request)
     openapi_response = RequestsOpenAPIResponse(response)
@@ -319,10 +319,10 @@ def validate_response_using_validator(
 
 def _validate_response(
     response: Response,
-    response_validator: ResponseValidatorType,
+    response_validator: IResponseValidator,
     server_validation_warning_logged: bool,
     disable_server_validation: bool,
-    invalid_property_default_response: int,
+    invalid_data_default_response: int,
     response_validation: str,
 ) -> None:
     try:
@@ -354,7 +354,7 @@ def _validate_response(
             if disable_server_validation:
                 return
 
-        if response.status_code == invalid_property_default_response:
+        if response.status_code == invalid_data_default_response:
             logger.debug(error_message)
             return
         if response_validation == ValidationLevel.STRICT:

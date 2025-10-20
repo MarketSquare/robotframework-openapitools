@@ -17,25 +17,23 @@ from OpenApiLibCore.models.resource_relations import (
 )
 
 
-class ResponseValidatorType(Protocol):
+class IResponseValidator(Protocol):
     def __call__(
         self, request: RequestsOpenAPIRequest, response: RequestsOpenAPIResponse
-    ) -> None: ...  # pragma: no cover
+    ) -> None: ...
 
 
-class GetIdPropertyNameType(Protocol):
+class IGetIdPropertyName(Protocol):
     def __init__(
         self, mappings_module_name: str, default_id_property_name: str
-    ) -> None: ...  # pragma: no cover
+    ) -> None: ...
 
     def __call__(
         self, path: str
-    ) -> tuple[
-        str, Callable[[str], str] | Callable[[int], int]
-    ]: ...  # pragma: no cover
+    ) -> tuple[str, Callable[[str], str] | Callable[[int], int]]: ...
 
 
-class ConstraintMappingType(Protocol):
+class IConstraintMapping(Protocol):
     @classmethod
     def __get_pydantic_core_schema__(
         cls, source_type: Any, handler: GetCoreSchemaHandler

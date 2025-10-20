@@ -193,7 +193,8 @@ ID_MAPPING: dict[str, str] = {
     "/wagegroups/{wagegroup_id}/employees": "identification",
 }
 
-
+# NOTE: WagegroupDeleteDto does not have path mappings for testing purposes
 PATH_MAPPING: dict[str, type[Dto]] = {
     "/energy_label/{zipcode}/{home_number}": EnergyLabelDto,
+    "/wagegroups/{wagegroup_id}": WagegroupDeleteDto,
 }

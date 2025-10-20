@@ -25,7 +25,7 @@ from OpenApiLibCore import (
     ValidationLevel,
 )
 from OpenApiLibCore.annotations import JSON
-from OpenApiLibCore.models.oas_models import ArraySchema, ObjectSchema
+from OpenApiLibCore.models.oas_models import ObjectSchema
 
 run_keyword = BuiltIn().run_keyword
 default_str_mapping: Mapping[str, str] = MappingProxyType({})
@@ -51,7 +51,7 @@ class OpenApiExecutors(OpenApiLibCore):
         response_validation: ValidationLevel = ValidationLevel.WARN,
         disable_server_validation: bool = True,
         mappings_path: str | Path = "",
-        invalid_property_default_response: int = 422,
+        invalid_data_default_response: int = 422,
         default_id_property_name: str = "id",
         faker_locale: str | list[str] = "",
         require_body_for_invalid_url: bool = False,
@@ -75,7 +75,7 @@ class OpenApiExecutors(OpenApiLibCore):
             disable_server_validation=disable_server_validation,
             mappings_path=mappings_path,
             default_id_property_name=default_id_property_name,
-            invalid_property_default_response=invalid_property_default_response,
+            invalid_data_default_response=invalid_data_default_response,
             faker_locale=faker_locale,
             require_body_for_invalid_url=require_body_for_invalid_url,
             recursion_limit=recursion_limit,
@@ -217,9 +217,13 @@ class OpenApiExecutors(OpenApiLibCore):
             }
             invalidation_keywords = []
 
-            if request_data.dto.get_body_relations_for_error_code(status_code):
+            if request_data.constraint_mapping.get_body_relations_for_error_code(
+                status_code
+            ):
                 invalidation_keywords.append("get_invalid_body_data")
-            if request_data.dto.get_parameter_relations_for_error_code(status_code):
+            if request_data.constraint_mapping.get_parameter_relations_for_error_code(
+                status_code
+            ):
                 invalidation_keywords.append("get_invalidated_parameters")
             if invalidation_keywords:
                 if (
@@ -234,7 +238,7 @@ class OpenApiExecutors(OpenApiLibCore):
                     )
             # if there are no relations to invalide and the status_code is the default
             # response_code for invalid properties, invalidate properties instead
-            elif status_code == self.invalid_property_default_response:
+            elif status_code == self.invalid_data_default_response:
                 if (
                     request_data.params_that_can_be_invalidated
                     or request_data.headers_that_can_be_invalidated
@@ -256,7 +260,7 @@ class OpenApiExecutors(OpenApiLibCore):
                     )
             else:
                 raise AssertionError(
-                    f"No Dto mapping found to cause status_code {status_code}."
+                    f"No constraint mapping found to cause status_code {status_code}."
                 )
         run_keyword(
             "perform_validated_request",
@@ -325,6 +329,6 @@ class OpenApiExecutors(OpenApiLibCore):
     @staticmethod
     def get_keyword_names() -> list[str]:
         """Curated keywords for libdoc and libspec."""
-        if getenv("HIDE_INHERITED_KEYWORDS") == "true":
+        if getenv("HIDE_INHERITED_KEYWORDS") == "true":  # pragma: no cover
             return KEYWORD_NAMES
         return KEYWORD_NAMES + LIBCORE_KEYWORD_NAMES

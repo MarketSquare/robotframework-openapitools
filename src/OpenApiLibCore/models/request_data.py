@@ -4,7 +4,6 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from functools import cached_property
 from random import sample
-from typing import Any
 
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.models.oas_models import (
@@ -13,7 +12,7 @@ from OpenApiLibCore.models.oas_models import (
     ResolvedSchemaObjectTypes,
     UnionTypeSchema,
 )
-from OpenApiLibCore.protocols import ConstraintMappingType
+from OpenApiLibCore.protocols import IConstraintMapping
 
 
 @dataclass
@@ -27,8 +26,8 @@ class RequestValues:
     json_data: JSON = None
 
     def override_body_value(self, name: str, value: JSON) -> None:
-        # FIXME: update for non-dict bodies
-        if name in self.json_data:
+        # TODO: add support for overriding list body items
+        if isinstance(self.json_data, dict) and name in self.json_data:
             self.json_data[name] = value
 
     def override_header_value(self, name: str, value: JSON) -> None:
@@ -48,7 +47,8 @@ class RequestValues:
         for parameter in parameters:
             _ = self.params.pop(parameter, None)
             _ = self.headers.pop(parameter, None)
-            _ = self.json_data.pop(parameter, None)
+            if isinstance(self.json_data, dict):
+                _ = self.json_data.pop(parameter, None)
 
 
 @dataclass
@@ -56,7 +56,7 @@ class RequestData:
     """Helper class to manage parameters used when making requests."""
 
     valid_data: JSON
-    dto: type[ConstraintMappingType]
+    constraint_mapping: type[IConstraintMapping]
     body_schema: ResolvedSchemaObjectTypes | None = None
     parameters: list[ParameterObject] = field(default_factory=list)
     params: dict[str, JSON] = field(default_factory=dict)
@@ -70,7 +70,7 @@ class RequestData:
 
     @property
     def has_optional_properties(self) -> bool:
-        """Whether or not the dto data (json data) contains optional properties."""
+        """Whether or not the json data contains optional properties."""
 
         def is_required_property(property_name: str) -> bool:
             return property_name in self.required_property_names
@@ -169,9 +169,9 @@ class RequestData:
 
         return result
 
-    def get_required_properties_dict(self) -> dict[str, Any]:
-        """Get the json-compatible dto data containing only the required properties."""
-        relations = self.dto.get_relations()
+    def get_required_properties_dict(self) -> dict[str, JSON]:
+        """Get the json data containing only the required properties."""
+        relations = self.constraint_mapping.get_relations()
         mandatory_properties = [
             relation.property_name
             for relation in relations
@@ -180,7 +180,7 @@ class RequestData:
         required_properties = self.body_schema.required if self.body_schema else []
         required_properties.extend(mandatory_properties)
 
-        required_properties_dict: dict[str, Any] = {}
+        required_properties_dict: dict[str, JSON] = {}
         if self.valid_data is None:
             return required_properties_dict
 
@@ -189,7 +189,7 @@ class RequestData:
                 required_properties_dict[key] = value
         return required_properties_dict
 
-    def get_minimal_body_dict(self) -> dict[str, Any]:
+    def get_minimal_body_dict(self) -> dict[str, JSON]:
         required_properties_dict = self.get_required_properties_dict()
 
         min_properties = 0
@@ -237,7 +237,7 @@ class RequestData:
         The names of the mandatory parameters, including the parameters configured to be
         treated as mandatory using a PropertyValueConstraint.
         """
-        relations = self.dto.get_parameter_relations()
+        relations = self.constraint_mapping.get_parameter_relations()
         mandatory_property_names = [
             relation.property_name
             for relation in relations

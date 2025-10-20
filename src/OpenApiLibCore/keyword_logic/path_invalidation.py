@@ -24,8 +24,8 @@ def get_invalidated_url(
             f"{path} not found in paths section of the OpenAPI document."
         ) from None
 
-    dto_class = path_item.dto
-    relations = dto_class.get_path_relations() if dto_class else []
+    constraint_mapping = path_item.constraint_mapping
+    relations = constraint_mapping.get_path_relations() if constraint_mapping else []
     paths = [
         p.invalid_value
         for p in relations

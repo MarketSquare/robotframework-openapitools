@@ -40,7 +40,7 @@ from OpenApiLibCore.models.oas_models import (
 )
 from OpenApiLibCore.models.request_data import RequestData, RequestValues
 from OpenApiLibCore.models.resource_relations import IdReference
-from OpenApiLibCore.protocols import ResponseValidatorType
+from OpenApiLibCore.protocols import IResponseValidator
 from OpenApiLibCore.utils.oas_cache import PARSER_CACHE, CachedParser
 from OpenApiLibCore.utils.parameter_utils import (
     get_oas_name_from_safe_name,
@@ -66,7 +66,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         response_validation: _validation.ValidationLevel = _validation.ValidationLevel.WARN,
         disable_server_validation: bool = True,
         mappings_path: str | Path = "",
-        invalid_property_default_response: int = 422,
+        invalid_data_default_response: int = 422,
         default_id_property_name: str = "id",
         faker_locale: str | list[str] = "",
         require_body_for_invalid_url: bool = False,
@@ -105,7 +105,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         self.extra_headers = extra_headers
         self.cookies = cookies
         self.proxies = proxies
-        self.invalid_property_default_response = invalid_property_default_response
+        self.invalid_data_default_response = invalid_data_default_response
         if faker_locale:
             FAKE.set_locale(locale=faker_locale)
         self.require_body_for_invalid_url = require_body_for_invalid_url
@@ -260,8 +260,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         request_data: RequestData,
     ) -> dict[str, JSON]:
         """
-        Return `json_data` based on the `dto` on the `request_data` that will cause
-        the provided `status_code` for the `method` operation on the `url`.
+        Return `json_data` based on the `constraint_mapping` on the `request_data` that
+        will cause the provided `status_code` for the `method` operation on the `url`.
 
         > Note: applicable UniquePropertyValueConstraint and IdReference Relations are
             considered before changes to `json_data` are made.
@@ -271,7 +271,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             method=method,
             status_code=status_code,
             request_data=request_data,
-            invalid_property_default_response=self.invalid_property_default_response,
+            invalid_data_default_response=self.invalid_data_default_response,
         )
 
     @keyword
@@ -287,7 +287,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         return _data_invalidation.get_invalidated_parameters(
             status_code=status_code,
             request_data=request_data,
-            invalid_property_default_response=self.invalid_property_default_response,
+            invalid_data_default_response=self.invalid_data_default_response,
         )
 
     @keyword
@@ -296,20 +296,20 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         url: str,
         method: str,
         json_data: dict[str, JSON],
-        dto: Dto,
+        constraint_mapping: type[Dto],
         conflict_status_code: int,
     ) -> dict[str, JSON]:
         """
         Return `json_data` based on the `UniquePropertyValueConstraint` that must be
-        returned by the `get_relations` implementation on the `dto` for the given
-        `conflict_status_code`.
+        returned by the `get_relations` implementation on the `constraint_mapping` for
+        the given `conflict_status_code`.
         """
         return _data_invalidation.get_json_data_with_conflict(
             url=url,
             base_url=self.base_url,
             method=method,
             json_data=json_data,
-            dto=dto,
+            constraint_mapping=constraint_mapping,
             conflict_status_code=conflict_status_code,
         )
 
@@ -523,7 +523,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             response_validator=self.response_validator,
             server_validation_warning_logged=self._server_validation_warning_logged,
             disable_server_validation=self.disable_server_validation,
-            invalid_property_default_response=self.invalid_property_default_response,
+            invalid_data_default_response=self.invalid_data_default_response,
             response_validation=self.response_validation,
             openapi_spec=self.openapi_spec,
             original_data=original_data,
@@ -597,7 +597,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         ), data_constraint in self.constraint_mapping_dict.items():
             try:
                 operation_item = getattr(spec_model.paths[path], operation.lower())
-                operation_item.dto = data_constraint
+                operation_item.constraint_mapping = data_constraint
             except KeyError:
                 logger.warn(
                     f"The DTO_MAPPING contains a path that is not found in the OpenAPI spec: {path}"
@@ -606,7 +606,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         for path, path_constraint in self.path_mapping_dict.items():
             try:
                 path_item = spec_model.paths[path]
-                path_item.dto = path_constraint
+                path_item.constraint_mapping = path_constraint
             except KeyError:
                 logger.warn(
                     f"The PATH_MAPPING contains a path that is not found in the OpenAPI spec: {path}"
@@ -621,7 +621,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
     @cached_property
     def response_validator(
         self,
-    ) -> ResponseValidatorType:
+    ) -> IResponseValidator:
         _, _, response_validator = self._load_specs_and_validator()
         return response_validator
 
@@ -651,7 +651,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
     ) -> tuple[
         ResolvingParser,
         Spec,
-        ResponseValidatorType,
+        IResponseValidator,
     ]:
         def recursion_limit_handler(
             limit: int,  # pylint: disable=unused-argument
@@ -696,7 +696,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             }
             config = Config(extra_media_type_deserializers=extra_deserializers)  # type: ignore[arg-type]
             openapi = OpenAPI(spec=validation_spec, config=config)
-            response_validator: ResponseValidatorType = openapi.validate_response  # type: ignore[assignment]
+            response_validator: IResponseValidator = openapi.validate_response  # type: ignore[assignment]
 
             PARSER_CACHE[self._source] = CachedParser(
                 parser=parser,
