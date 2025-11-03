@@ -1,16 +1,45 @@
-# OpenApiTools v1.0.0
+# Release notes
 
-## Major changes and new features
+## OpenApiTools v1.0.3
+
+### Bugfixes
+- Fix runtime exception on ObjectSchemas without `properties` defined in the OAS.
+
+### Additional changes
+- Python 3.14 compatibility tested and lock file updated.
+
+<br><br><br>
+
+## Previous versions
+
+### OpenApiTools v1.0.2
+
+#### Bugfixes
+- Multiple `PropertyValueConstraint` instances for the same `property_name` caused an exception.
+- `Get Invalidated Parameters` now properly handles situations where `invalid_value` is set to `IGNORE`.
+
+---
+
+### OpenApiTools v1.0.1
+
+#### Bugfixes
+- `openapitools_docs` was missing from package distribution
+
+---
+
+### OpenApiTools v1.0.0 (yanked)
+
+#### Major changes and new features
 - Added a CLI tool for library generation. See the `OpenApiLibGen` documentation for all the details.
 - Support for nested `Dtos` in `Relation` constraints [(issue #49)](https://github.com/MarketSquare/robotframework-openapitools/issues/49).
 - The core logic has been rewritten to use Pydantic models under the hood.
 This rewrite has made the addition of the library generator possible and allows feature implementations in future releases that were previously (too) hard to implement.
 - The documentation has been restructured / rewritten and should now be much more coherent and accessible.
 
-## Bugfixes
+#### Bugfixes
 - No specific bugfixes have been made, but the core refactor of the application has solved a number of undocumented issues.
 
-## Breaking changes
+#### Breaking changes
 - `PathPropertiesConstraint` is now a separate type of `Relation`. See the `Advanced Use` documentation for details.
 - In a number of places, the terms `url`, `path` and `endpoint` were not correctly and / or consistently used. This has been corrected.
     - A `url` is a complete url which can be use e.g. in a browser or http request.

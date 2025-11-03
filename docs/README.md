@@ -12,4 +12,4 @@ If you're testing an API for which an OpenAPI specification is available (if you
 
 To read everything about it, see the [html documentation](https://marketsquare.github.io/robotframework-openapitools).
 
-The latest release notes can be found [here](./release_notes/1.0.1.md).
+The latest release notes can be found [here](./releases.md).
