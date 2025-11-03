@@ -459,12 +459,16 @@ class ArraySchema(SchemaBase[list[JSON]], frozen=True):
         return f"list[{self.items.annotation_string}]"
 
 
-class PropertiesMapping(RootModel[dict[str, "SchemaObjectTypes"]], frozen=True): ...
+# NOTE: Workaround for cyclic PropertiesMapping / SchemaObjectTypes annotations
+def _get_properties_mapping_default() -> "PropertiesMapping":
+    return _get_empty_properties_mapping()
 
 
 class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
     type: Literal["object"] = "object"
-    properties: PropertiesMapping | None = None
+    properties: "PropertiesMapping" = Field(
+        default_factory=_get_properties_mapping_default
+    )
     additionalProperties: "bool | SchemaObjectTypes" = True
     required: list[str] = []
     maxProperties: int | None = None
@@ -624,6 +628,13 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
 
 
 SchemaObjectTypes: TypeAlias = ResolvedSchemaObjectTypes | UnionTypeSchema
+
+
+class PropertiesMapping(RootModel[dict[str, "SchemaObjectTypes"]], frozen=True): ...
+
+
+def _get_empty_properties_mapping() -> PropertiesMapping:
+    return PropertiesMapping(root={})
 
 
 class ParameterObject(BaseModel):
