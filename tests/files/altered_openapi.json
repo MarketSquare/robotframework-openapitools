@@ -363,20 +363,20 @@
             }
         },
         "/wagegroups/{wagegroup_id}": {
+            "parameters": [
+                {
+                    "name": "wagegroup_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                        "type": "string",
+                        "title": "Wagegroup Id"
+                    }
+                }
+            ],
             "get": {
                 "summary": "Get Wagegroup",
                 "operationId": "get_wagegroup_wagegroups__wagegroup_id__get",
-                "parameters": [
-                    {
-                        "name": "wagegroup_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "title": "Wagegroup Id"
-                        }
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Successful Response",
@@ -413,17 +413,6 @@
             "put": {
                 "summary": "Put Wagegroup",
                 "operationId": "put_wagegroup_wagegroups__wagegroup_id__put",
-                "parameters": [
-                    {
-                        "name": "wagegroup_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "title": "Wagegroup Id"
-                        }
-                    }
-                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -480,17 +469,6 @@
             "delete": {
                 "summary": "Delete Wagegroup",
                 "operationId": "delete_wagegroup_wagegroups__wagegroup_id__delete",
-                "parameters": [
-                    {
-                        "name": "wagegroup_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "title": "Wagegroup Id"
-                        }
-                    }
-                ],
                 "responses": {
                     "204": {
                         "description": "Successful Response"
