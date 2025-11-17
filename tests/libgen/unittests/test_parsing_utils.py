@@ -38,6 +38,16 @@ class TestRemoveUnsafeCharactersFromString(unittest.TestCase):
         result = remove_unsafe_characters_from_string(path)
         self.assertEqual(result, "my_Path_Part_2a")
 
+    def test_whitespace_is_stripped(self) -> None:
+        description = "\tAdd a new user\n\r"
+        result = remove_unsafe_characters_from_string(description)
+        self.assertEqual(result, "Add_A_New_User")
+
+    def test_trailing_underscore_is_stripped(self) -> None:
+        description = "Add a new user."
+        result = remove_unsafe_characters_from_string(description)
+        self.assertEqual(result, "Add_A_New_User")
+
 
 if __name__ == "__main__":
     unittest.main()
