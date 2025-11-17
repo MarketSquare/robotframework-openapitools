@@ -1,11 +1,11 @@
 from typing import Generator
 
 
-def remove_unsafe_characters_from_string(string: str) -> str:
+def remove_unsafe_characters_from_string(unsafe_string: str) -> str:
     def _remove_unsafe_characters_from_string(
-        string: str,
+        string_: str,
     ) -> Generator[str, None, None]:
-        string_iterator = iter(string)
+        string_iterator = iter(string_)
         capitalize_next_character = False
 
         # The first character must be A-z or _
@@ -27,4 +27,7 @@ def remove_unsafe_characters_from_string(string: str) -> str:
                 capitalize_next_character = True
                 yield "_"
 
-    return "".join(_remove_unsafe_characters_from_string(string=string))
+    unsafe_string = unsafe_string.strip()
+    safe_string = "".join(_remove_unsafe_characters_from_string(string_=unsafe_string))
+    without_trailing_underscore = safe_string.rstrip("_")
+    return without_trailing_underscore or "_"
