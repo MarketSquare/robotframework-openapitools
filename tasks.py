@@ -41,6 +41,8 @@ def libgen(context: Context) -> None:
         f"{ROOT}/tests/generated",
         "MyGeneratedLibrary",
         "my_generated_library",
+        "no",
+        "0",
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
 
@@ -74,6 +76,8 @@ def libgen_edge_cases(context: Context) -> None:
         f"{ROOT}/tests/generated",
         "MyGeneratedEdgeCaseLibrary",
         "my_generated_edge_case_library",
+        "No",
+        "OFF",
     ]
     subprocess.run(" ".join(cmd), shell=True, check=False)
 
@@ -293,3 +297,4 @@ def update_coverage_badge(context: Context) -> None:
 @task(format_code, libspec, generate_docs, update_coverage_badge)
 def build(context: Context) -> None:
     subprocess.run("poetry build", shell=True, check=False)
+    subprocess.run(f"git tag -f v{VERSION}", shell=True, check=False)

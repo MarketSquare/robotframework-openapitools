@@ -1,8 +1,10 @@
 import sys
+from os import getenv
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
 from prance import ResolvingParser
+from robot.utils import is_truthy
 
 from openapi_libgen.spec_parser import get_keyword_data
 from OpenApiLibCore.models import OpenApiObject
@@ -36,8 +38,12 @@ def generate(
     output_folder: Path,
     library_name: str,
     module_name: str,
+    use_summary: bool = False,
+    expand_body: bool = False,
 ) -> str:
-    keyword_data = get_keyword_data(openapi_object=openapi_object)
+    keyword_data = get_keyword_data(
+        openapi_object=openapi_object, use_summary=use_summary, expand_body=expand_body
+    )
 
     library_folder = output_folder / library_name
     library_folder.mkdir(parents=True, exist_ok=True)
@@ -72,6 +78,15 @@ if __name__ == "__main__":  # pragma: no cover
     destination = Path(sys.argv[2])
     library_name = sys.argv[3]
     module_name = sys.argv[4]
+
+    use_summary = getenv("USE_SUMMARY_AS_KEYWORD_NAME")
+    use_summary = use_summary if use_summary is not None else sys.argv[5]
+    use_summary = is_truthy(use_summary)
+
+    expand_body = getenv("EXPAND_BODY_ARGUMENTS")
+    expand_body = expand_body if expand_body is not None else sys.argv[6]
+    expand_body = is_truthy(expand_body)
+
     spec = load_openapi_spec(source=source, recursion_limit=1, recursion_default={})
 
     result_string = generate(
@@ -79,4 +94,6 @@ if __name__ == "__main__":  # pragma: no cover
         output_folder=destination,
         library_name=library_name,
         module_name=module_name,
+        use_summary=use_summary,
+        expand_body=expand_body,
     )

@@ -1,5 +1,8 @@
 import argparse
+from os import getenv
 from pathlib import Path
+
+from robot.utils import is_truthy
 
 from openapi_libgen import generator
 from openapi_libgen.parsing_utils import remove_unsafe_characters_from_string
@@ -12,6 +15,8 @@ parser = argparse.ArgumentParser(
 parser.add_argument("-s", "--source")
 parser.add_argument("-d", "--destination")
 parser.add_argument("-n", "--name")
+parser.add_argument("--use-summary-as-keyword-name", default=None)
+parser.add_argument("--expand-body-arguments", default=None)
 parser.add_argument("--recursion-limit", default=1, type=int)
 parser.add_argument("--recursion-default", default={})
 args = parser.parse_args()
@@ -67,9 +72,27 @@ def main() -> None:
                 default_module_name,
             )
 
+    use_summary = getenv("USE_SUMMARY_AS_KEYWORD_NAME")
+    if use_summary is None:
+        if args.use_summary_as_keyword_name is None:
+            use_summary = input(
+                "Do you want to use the summary of the operation as keyword name? (y/N) "
+            )
+            use_summary = True if use_summary.lower().startswith("y") else False
+
+    expand_body = getenv("EXPAND_BODY_ARGUMENTS")
+    if expand_body is None:
+        if args.expand_body_arguments is None:
+            expand_body = input(
+                "Do you want to expand the body parameters as keyword arguments? (y/N) "
+            )
+            expand_body = True if expand_body.lower().startswith("y") else False
+
     generator.generate(
         openapi_object=spec,
         output_folder=path,
         library_name=safe_library_name,
         module_name=safe_module_name,
+        use_summary=is_truthy(use_summary),
+        expand_body=is_truthy(expand_body),
     )
