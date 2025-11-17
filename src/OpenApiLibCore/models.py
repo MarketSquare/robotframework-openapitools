@@ -711,9 +711,12 @@ class OperationObject(BaseModel):
     summary: str = ""
     description: str = ""
     tags: list[str] = []
-    parameters: list[ParameterObject] | None = None
+    parameters: list[ParameterObject] = []
     requestBody: RequestBodyObject | None = None
     responses: dict[str, ResponseObject] = {}
+
+    def update_parameters(self, parameters: list[ParameterObject]) -> None:
+        self.parameters.extend(parameters)
 
 
 class PathItemObject(BaseModel):
@@ -724,12 +727,20 @@ class PathItemObject(BaseModel):
     delete: OperationObject | None = None
     summary: str = ""
     description: str = ""
-    parameters: list[ParameterObject] | None = None
+    parameters: list[ParameterObject] = []
 
     def get_operations(self) -> dict[str, OperationObject]:
         return {
             k: v for k, v in self.__dict__.items() if isinstance(v, OperationObject)
         }
+
+    def update_operation_parameters(self) -> None:
+        if not self.parameters:
+            return
+
+        operations_to_update = self.get_operations()
+        for operation_object in operations_to_update.values():
+            operation_object.update_parameters(self.parameters)
 
 
 class InfoObject(BaseModel):
@@ -742,3 +753,7 @@ class InfoObject(BaseModel):
 class OpenApiObject(BaseModel):
     info: InfoObject
     paths: dict[str, PathItemObject]
+
+    def model_post_init(self, context: object) -> None:
+        for path_object in self.paths.values():
+            path_object.update_operation_parameters()

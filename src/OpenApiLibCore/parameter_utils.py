@@ -86,10 +86,6 @@ def register_path_parameters(paths_data: dict[str, PathItemObject]) -> None:
             _ = get_safe_name_for_oas_name(parameter_object.name)
 
     for path_item in paths_data.values():
-        if parameters := path_item.parameters:
-            for parameter in path_item.parameters:
-                _register_path_parameter(parameter_object=parameter)
-
         operations = path_item.get_operations()
         for operation in operations.values():
             if parameters := operation.parameters:
