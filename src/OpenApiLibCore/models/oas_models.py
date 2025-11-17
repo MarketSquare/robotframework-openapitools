@@ -196,7 +196,17 @@ class StringSchema(SchemaBase[str], frozen=True):
             return choice(self.enum)
         # if a pattern is provided, format and min/max length can be ignored
         if pattern := self.pattern:
-            return rstr.xeger(pattern)
+            try:
+                return rstr.xeger(pattern)
+            except Exception as exception:
+                logger.warn(
+                    f"An error occured trying to generate a string matching the "
+                    f"pattern defined in the specification. To ensure a valid value "
+                    f"is generated for this property, a PropertyValueConstraint can be "
+                    f"configured. See the Advanced Use section of the OpenApiTools "
+                    f"documentation for more details."
+                    f"\nThe exception was: {exception}\nThe pattern was: {pattern}"
+                )
         minimum = self.minLength if self.minLength is not None else 0
         maximum = self.maxLength if self.maxLength is not None else 36
         maximum = max(minimum, maximum)

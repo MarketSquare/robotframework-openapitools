@@ -148,6 +148,24 @@ class TestStringSchemaVariations(unittest.TestCase):
         value = schema.get_valid_value()
         self.assertRegex(value, pattern)
 
+        pattern = r"^(?:[\p{L}\p{Mn}\p{Nd}.,()'-]+(?:['.’ ]|\s?[&\/\p{Pd}]\s?)?)+[\p{L}\p{Mn}\p{Nd}]\.?$"
+        schema = StringSchema(pattern=pattern)
+        with self.assertLogs(level="WARN") as logs:
+            value = schema.get_valid_value()
+
+        self.assertTrue(len(logs.output) > 0)
+        last_log_entry = logs.output[-1]
+        self.assertTrue(
+            last_log_entry.startswith(
+                "WARNING:RobotFramework:An error occured trying to generate a string "
+                "matching the pattern defined in the specification."
+            ),
+            last_log_entry,
+        )
+        self.assertTrue(
+            last_log_entry.endswith(f"The pattern was: {pattern}"), last_log_entry
+        )
+
     def test_byte(self) -> None:
         schema = StringSchema(format="byte")
         value = schema.get_valid_value()

@@ -1,8 +1,5 @@
-from os import getenv
 from string import Template
 from typing import Generator
-
-from robot.utils import is_truthy
 
 from openapi_libgen.parsing_utils import remove_unsafe_characters_from_string
 from OpenApiLibCore.models.oas_models import (
@@ -64,11 +61,12 @@ def get_path_items(
             yield operation_details
 
 
-def get_keyword_signature(operation_details: OperationDetails) -> str:
-    USE_SUMMARY_AS_KEYWORD_NAME = getenv("USE_SUMMARY_AS_KEYWORD_NAME")
-    EXPAND_BODY_ARGUMENTS = getenv("EXPAND_BODY_ARGUMENTS")
-
-    if is_truthy(USE_SUMMARY_AS_KEYWORD_NAME):
+def get_keyword_signature(
+    operation_details: OperationDetails,
+    use_summary: bool = False,
+    expand_body: bool = False,
+) -> str:
+    if use_summary:
         keyword_name = remove_unsafe_characters_from_string(
             operation_details.summary
         ).lower()
@@ -102,7 +100,7 @@ def get_keyword_signature(operation_details: OperationDetails) -> str:
 
     if operation_details.requestBody and operation_details.requestBody.schema_:
         schema = operation_details.requestBody.schema_
-        if isinstance(schema, ObjectSchema) and is_truthy(EXPAND_BODY_ARGUMENTS):
+        if isinstance(schema, ObjectSchema) and expand_body:
             body_properties: dict[str, SchemaObjectTypes] = getattr(
                 schema.properties, "root", {}
             )
@@ -147,8 +145,14 @@ def get_keyword_body(data: OperationDetails) -> str:
     return BODY_TEMPLATE.safe_substitute(path_value=data.path, method_value=data.method)
 
 
-def get_keyword_data(openapi_object: OpenApiObject) -> Generator[str, None, None]:
+def get_keyword_data(
+    openapi_object: OpenApiObject, use_summary: bool = False, expand_body: bool = False
+) -> Generator[str, None, None]:
     for path_item in get_path_items(openapi_object.paths):
-        signature = get_keyword_signature(path_item)
+        signature = get_keyword_signature(
+            operation_details=path_item,
+            use_summary=use_summary,
+            expand_body=expand_body,
+        )
         body = get_keyword_body(path_item)
         yield KEYWORD_TEMPLATE.format(signature=signature, body=body)
