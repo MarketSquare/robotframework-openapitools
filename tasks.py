@@ -297,4 +297,9 @@ def update_coverage_badge(context: Context) -> None:
 @task(format_code, libspec, generate_docs, update_coverage_badge)
 def build(context: Context) -> None:
     subprocess.run("poetry build", shell=True, check=False)
+
+
+@task
+def release(context: Context) -> None:
     subprocess.run(f"git tag -f v{VERSION}", shell=True, check=False)
+    subprocess.run("poetry publish", shell=True, check=False)

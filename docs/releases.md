@@ -1,16 +1,27 @@
 # Release notes
 
-## OpenApiTools v1.0.3
+## OpenApiTools v1.0.4
 
 ### Bugfixes
-- Fix runtime exception on ObjectSchemas without `properties` defined in the OAS.
+- Prevent runtime exception for unsupported regex patterns in OAS.
+- Prevent trailing underscores in generated keyword method names.
 
 ### Additional changes
-- Python 3.14 compatibility tested and lock file updated.
+- `generate-library` CLI interaction now prompts for behavior that was previously only available by setting the environment variables `USE_SUMMARY_AS_KEYWORD_NAME` and `EXPAND_BODY_ARGUMENTS`.
 
 <br><br><br>
 
 ## Previous versions
+
+### OpenApiTools v1.0.3
+
+#### Bugfixes
+- Fix runtime exception on ObjectSchemas without `properties` defined in the OAS.
+
+#### Additional changes
+- Python 3.14 compatibility tested and lock file updated.
+
+---
 
 ### OpenApiTools v1.0.2
 
