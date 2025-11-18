@@ -1,17 +1,24 @@
 # Release notes
 
-## OpenApiTools v1.0.4
+## OpenApiTools v1.0.5
 
 ### Bugfixes
-- Prevent runtime exception for unsupported regex patterns in OAS.
-- Prevent trailing underscores in generated keyword method names.
-
-### Additional changes
-- `generate-library` CLI interaction now prompts for behavior that was previously only available by setting the environment variables `USE_SUMMARY_AS_KEYWORD_NAME` and `EXPAND_BODY_ARGUMENTS`.
+- `parameters` at path level are not taken into account at operation level
 
 <br><br><br>
 
 ## Previous versions
+
+### OpenApiTools v1.0.4
+
+#### Bugfixes
+- Prevent runtime exception for unsupported regex patterns in OAS.
+- Prevent trailing underscores in generated keyword method names.
+
+#### Additional changes
+- `generate-library` CLI interaction now prompts for behavior that was previously only available by setting the environment variables `USE_SUMMARY_AS_KEYWORD_NAME` and `EXPAND_BODY_ARGUMENTS`.
+
+---
 
 ### OpenApiTools v1.0.3
 
