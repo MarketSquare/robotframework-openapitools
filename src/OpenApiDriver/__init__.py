@@ -16,8 +16,8 @@ from OpenApiDriver.openapidriver import OpenApiDriver
 from OpenApiLibCore.data_constraints.dto_base import (
     Dto,
 )
-from OpenApiLibCore.data_generation.value_utils import IGNORE
 from OpenApiLibCore.keyword_logic.validation import ValidationLevel
+from OpenApiLibCore.models import IGNORE
 from OpenApiLibCore.models.resource_relations import (
     IdDependency,
     IdReference,

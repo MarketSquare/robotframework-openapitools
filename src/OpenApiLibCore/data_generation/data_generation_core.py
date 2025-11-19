@@ -13,7 +13,7 @@ from robot.api import logger
 import OpenApiLibCore.keyword_logic.path_functions as _path_functions
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.data_constraints.dto_base import Dto
-from OpenApiLibCore.data_generation.value_utils import IGNORE
+from OpenApiLibCore.models import IGNORE
 from OpenApiLibCore.models.oas_models import (
     ArraySchema,
     ObjectSchema,

@@ -17,19 +17,21 @@ from typing import (
     Literal,
     Mapping,
     TypeAlias,
+    TypeGuard,
     TypeVar,
+    cast,
 )
 from uuid import uuid4
 
 import rstr
 from pydantic import BaseModel, Field, RootModel
 from robot.api import logger
-from robot.libraries.BuiltIn import BuiltIn  # type: ignore[import-untyped]
+from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.data_generation.localized_faker import FAKE, fake_string
 from OpenApiLibCore.data_generation.value_utils import (
-    get_invalid_value_from_constraint,
+    json_type_name_of_python_type,
     python_type_by_json_type_name,
 )
 from OpenApiLibCore.models import IGNORE, Ignore
@@ -49,7 +51,17 @@ EPSILON = float_info.epsilon
 SENTINEL = object()
 
 O = TypeVar("O")
+AI = TypeVar("AI", bound=JSON)
+S = TypeVar("S", str, bytes)
 ConstraintMappingType = builtins.type[IConstraintMapping]
+
+
+def is_object_schema(schema: SchemaObjectTypes) -> TypeGuard[ObjectSchema]:
+    return isinstance(schema, ObjectSchema)
+
+
+def data_is_bytes(data: str | bytes, format: str) -> TypeGuard[bytes]:
+    return format == "byte"
 
 
 class SchemaBase(BaseModel, Generic[O], frozen=True):
@@ -69,6 +81,13 @@ class SchemaBase(BaseModel, Generic[O], frozen=True):
     @abstractmethod
     def get_invalid_value_from_const_or_enum(self) -> O: ...
 
+    @abstractmethod
+    def get_invalid_value_from_constraint(self, values_from_constraint: list[O]) -> O:
+        """
+        Return a value of the same type as the values in the values_from_constraints that
+        is not in the values_from_constraints, if possible. Otherwise raise ValueError.
+        """
+
     def get_invalid_value(
         self,
         valid_value: O,
@@ -82,10 +101,14 @@ class SchemaBase(BaseModel, Generic[O], frozen=True):
             valid_value = self.get_valid_value()
 
         if values_from_constraint:
+            # if IGNORE is in the values_from_constraints, the parameter needs to be
+            # ignored for an OK response so leaving the value at it's original value
+            # should result in the specified error response
+            if any(map(lambda x: isinstance(x, Ignore), values_from_constraint)):
+                return IGNORE
             try:
-                return get_invalid_value_from_constraint(
+                return self.get_invalid_value_from_constraint(
                     values_from_constraint=list(values_from_constraint),
-                    value_type=value_type,
                 )
             except ValueError:
                 pass
@@ -134,6 +157,11 @@ class NullSchema(SchemaBase[None], frozen=True):
     def get_invalid_value_from_const_or_enum(self) -> None:
         raise ValueError
 
+    def get_invalid_value_from_constraint(
+        self, values_from_constraint: list[None]
+    ) -> None:
+        raise ValueError
+
     @property
     def can_be_invalidated(self) -> bool:
         return False
@@ -165,6 +193,13 @@ class BooleanSchema(SchemaBase[bool], frozen=True):
             return not self.const
         raise ValueError
 
+    def get_invalid_value_from_constraint(
+        self, values_from_constraint: list[bool]
+    ) -> bool:
+        if len(values_from_constraint) == 1:
+            return not values_from_constraint[0]
+        raise ValueError
+
     @property
     def can_be_invalidated(self) -> bool:
         return True
@@ -174,21 +209,21 @@ class BooleanSchema(SchemaBase[bool], frozen=True):
         return "bool"
 
 
-class StringSchema(SchemaBase[str], frozen=True):
+class StringSchema(SchemaBase[S], frozen=True):
     type: Literal["string"] = "string"
     format: str = ""
     pattern: str = ""
     maxLength: int | None = None
     minLength: int | None = None
-    const: str | None = None
-    enum: list[str] | None = None
+    const: S | None = None
+    enum: list[S] | None = None
     nullable: bool = False
 
-    def get_valid_value(
+    def get_valid_value(  # type: ignore
         self,
         constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
-    ) -> bytes | str:
+    ) -> S:
         """Generate a random string within the min/max length in the schema, if specified."""
         if self.const is not None:
             return self.const
@@ -212,9 +247,10 @@ class StringSchema(SchemaBase[str], frozen=True):
         maximum = max(minimum, maximum)
         format_ = self.format if self.format else "uuid"
         # byte is a special case due to the required encoding
-        if format_ == "byte":
-            data = FAKE.uuid()
+        data = FAKE.uuid()
+        if data_is_bytes(data=data, format=format_):
             return base64.b64encode(data.encode("utf-8"))
+
         value = fake_string(string_format=format_)
         while len(value) < minimum:
             # use fake.name() to ensure the returned string uses the provided locale
@@ -223,8 +259,8 @@ class StringSchema(SchemaBase[str], frozen=True):
             value = value[:maximum]
         return value
 
-    def get_values_out_of_bounds(self, current_value: str) -> list[str]:
-        invalid_values: list[str] = []
+    def get_values_out_of_bounds(self, current_value: S) -> list[S]:
+        invalid_values: list[S] = []
         if self.minLength:
             invalid_values.append(current_value[0 : self.minLength - 1])
         # if there is a maximum length, send 1 character more
@@ -238,7 +274,7 @@ class StringSchema(SchemaBase[str], frozen=True):
             return invalid_values
         raise ValueError
 
-    def get_invalid_value_from_const_or_enum(self) -> str:
+    def get_invalid_value_from_const_or_enum(self) -> S:
         valid_values = []
         if self.const is not None:
             valid_values = [self.const]
@@ -252,6 +288,16 @@ class StringSchema(SchemaBase[str], frozen=True):
         for value in valid_values:
             invalid_value += value + value
 
+        return invalid_value
+
+    def get_invalid_value_from_constraint(self, values_from_constraint: list[S]) -> S:
+        invalid_values = 2 * values_from_constraint
+        invalid_value = invalid_values.pop()
+        for value in invalid_values:
+            invalid_value = invalid_value + value
+
+        if not invalid_value:
+            raise ValueError("Value invalidation yielded an empty string.")
         return invalid_value
 
     @property
@@ -369,6 +415,17 @@ class IntegerSchema(SchemaBase[int], frozen=True):
 
         return invalid_value
 
+    def get_invalid_value_from_constraint(
+        self, values_from_constraint: list[int]
+    ) -> int:
+        invalid_values = 2 * values_from_constraint
+        invalid_value = invalid_values.pop()
+        for value in invalid_values:
+            invalid_value = abs(invalid_value) + abs(value)
+        if not invalid_value:
+            invalid_value += 1
+        return invalid_value
+
     @property
     def can_be_invalidated(self) -> bool:
         return True
@@ -472,6 +529,17 @@ class NumberSchema(SchemaBase[float], frozen=True):
 
         return invalid_value
 
+    def get_invalid_value_from_constraint(
+        self, values_from_constraint: list[float]
+    ) -> float:
+        invalid_values = 2 * values_from_constraint
+        invalid_value = invalid_values.pop()
+        for value in invalid_values:
+            invalid_value = abs(invalid_value) + abs(value)
+        if not invalid_value:
+            invalid_value += 1
+        return invalid_value
+
     @property
     def can_be_invalidated(self) -> bool:
         return True
@@ -481,21 +549,21 @@ class NumberSchema(SchemaBase[float], frozen=True):
         return "float"
 
 
-class ArraySchema(SchemaBase[list[JSON]], frozen=True):
+class ArraySchema(SchemaBase[list[AI]], frozen=True):
     type: Literal["array"] = "array"
     items: SchemaObjectTypes
     maxItems: int | None = None
     minItems: int | None = None
     uniqueItems: bool = False
-    const: list[JSON] | None = None
-    enum: list[list[JSON]] | None = None
+    const: list[AI] | None = None
+    enum: list[list[AI]] | None = None
     nullable: bool = False
 
     def get_valid_value(
         self,
         constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
-    ) -> list[JSON]:
+    ) -> list[AI]:
         if self.const is not None:
             return self.const
 
@@ -506,15 +574,15 @@ class ArraySchema(SchemaBase[list[JSON]], frozen=True):
         maximum = self.maxItems if self.maxItems is not None else 1
         maximum = max(minimum, maximum)
 
-        value: list[JSON] = []
+        value: list[AI] = []
         number_of_items_to_generate = randint(minimum, maximum)
         for _ in range(number_of_items_to_generate):
-            item_value = self.items.get_valid_value()
+            item_value = cast("AI", self.items.get_valid_value())
             value.append(item_value)
         return value
 
-    def get_values_out_of_bounds(self, current_value: list[JSON]) -> list[list[JSON]]:
-        invalid_values: list[list[JSON]] = []
+    def get_values_out_of_bounds(self, current_value: list[AI]) -> list[list[AI]]:
+        invalid_values: list[list[AI]] = []
 
         if self.minItems:
             invalid_value = current_value[0 : self.minItems - 1]
@@ -526,7 +594,7 @@ class ArraySchema(SchemaBase[list[JSON]], frozen=True):
                 current_value = self.get_valid_value()
 
             if not current_value:
-                current_value = [self.items.get_valid_value()]
+                current_value = [self.items.get_valid_value()]  # type: ignore
 
             while len(invalid_value) <= self.maxItems:
                 invalid_value.append(choice(current_value))
@@ -537,7 +605,7 @@ class ArraySchema(SchemaBase[list[JSON]], frozen=True):
 
         raise ValueError
 
-    def get_invalid_value_from_const_or_enum(self) -> list[JSON]:
+    def get_invalid_value_from_const_or_enum(self) -> list[AI]:
         valid_values = []
         if self.const is not None:
             valid_values = [self.const]
@@ -554,15 +622,29 @@ class ArraySchema(SchemaBase[list[JSON]], frozen=True):
 
         return invalid_value
 
+    def get_invalid_value_from_constraint(
+        self, values_from_constraint: list[list[AI]]
+    ) -> list[AI]:
+        values_from_constraint = deepcopy(values_from_constraint)
+
+        valid_array = values_from_constraint.pop()
+        invalid_array: list[AI] = []
+        for value in valid_array:
+            invalid_value = self.items.get_invalid_value_from_constraint(
+                values_from_constraint=[value],
+            )
+            invalid_array.append(invalid_value)
+        return invalid_array
+
     def get_invalid_data(
         self,
-        valid_data: list[JSON],
+        valid_data: list[AI],
         constraint_mapping: ConstraintMappingType,
         status_code: int,
         invalid_property_default_code: int,
-    ) -> list[JSON]:
+    ) -> list[AI]:
         """Return a data set with one of the properties set to an invalid value or type."""
-        invalid_values: list[list[JSON]] = []
+        invalid_values: list[list[AI]] = []
 
         relations = constraint_mapping.get_body_relations_for_error_code(
             error_code=status_code
@@ -582,7 +664,7 @@ class ArraySchema(SchemaBase[list[JSON]], frozen=True):
                 invalid_values.append(invalid_const_or_enum)
             except ValueError:
                 pass
-            if isinstance(self.items, ObjectSchema):
+            if is_object_schema(self.items):
                 data_to_invalidate = deepcopy(valid_data)
                 valid_item = (
                     data_to_invalidate.pop()
@@ -590,7 +672,7 @@ class ArraySchema(SchemaBase[list[JSON]], frozen=True):
                     else self.items.get_valid_value()
                 )
                 invalid_item = self.items.get_invalid_data(
-                    valid_data=valid_item,
+                    valid_data=valid_item,  # type: ignore
                     constraint_mapping=constraint_mapping,
                     status_code=status_code,
                     invalid_property_default_code=invalid_property_default_code,
@@ -659,7 +741,7 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
         )
 
         for property_name in property_names:
-            property_schema = self.properties.root[property_name]  # type: ignore[union-attr]
+            property_schema = self.properties.root[property_name]
             if property_schema.readOnly:
                 continue
 
@@ -730,15 +812,32 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
 
         raise ValueError
 
+    def get_invalid_value_from_constraint(
+        self, values_from_constraint: list[dict[str, JSON]]
+    ) -> dict[str, JSON]:
+        values_from_constraint = deepcopy(values_from_constraint)
+
+        valid_object = values_from_constraint.pop()
+        invalid_object: dict[str, JSON] = {}
+        for key, value in valid_object.items():
+            python_type_of_value = type(value)
+            json_type_of_value = json_type_name_of_python_type(python_type_of_value)
+            schema = MediaTypeObject(schema={"type": json_type_of_value}).schema_
+            invalid_value = schema.get_invalid_value_from_constraint(
+                values_from_constraint=[value],
+            )
+            invalid_object[key] = invalid_value
+        return invalid_object
+
     def get_invalid_data(
         self,
         valid_data: dict[str, JSON],
         constraint_mapping: ConstraintMappingType,
         status_code: int,
         invalid_property_default_code: int,
-    ) -> dict[str, JSON]:
+    ) -> Mapping[str, JSON | Ignore]:
         """Return a data set with one of the properties set to an invalid value or type."""
-        properties: dict[str, JSON] = deepcopy(valid_data)
+        properties: Mapping[str, JSON | Ignore] = deepcopy(valid_data)
 
         relations = constraint_mapping.get_body_relations_for_error_code(
             error_code=status_code
@@ -746,7 +845,7 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
         property_names = [r.property_name for r in relations]
         if status_code == invalid_property_default_code:
             # add all properties defined in the schema, including optional properties
-            property_names.extend((self.properties.root.keys()))  # type: ignore[union-attr]
+            property_names.extend((self.properties.root.keys()))
         if not property_names:
             raise ValueError(
                 f"No property can be invalidated to cause status_code {status_code}"
@@ -788,7 +887,7 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
                 )
                 return properties
 
-            value_schema = self.properties.root[property_name]  # type: ignore[union-attr]
+            value_schema = self.properties.root[property_name]
             if isinstance(value_schema, UnionTypeSchema):
                 # Filter "type": "null" from the possible types since this indicates an
                 # optional / nullable property that can only be invalidated by sending
@@ -821,10 +920,10 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
             ]
 
             invalid_value = value_schema.get_invalid_value(
-                valid_value=current_value,
+                valid_value=current_value,  # type: ignore
                 values_from_constraint=values_from_constraint,
             )
-            properties[property_name] = invalid_value
+            properties[property_name] = invalid_value  # type: ignore
             logger.debug(
                 f"Property {property_name} changed to {invalid_value!r} "
                 f"(received from get_invalid_value)"
@@ -934,7 +1033,7 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
 
             merged_schema = ObjectSchema(
                 type="object",
-                properties=properties,
+                properties=PropertiesMapping(root=properties),
                 additionalProperties=additional_properties_value,
                 required=required_list,
                 maxProperties=max_propeties_value,
@@ -950,6 +1049,11 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
                     yield from schema.resolved_schemas
 
     def get_invalid_value_from_const_or_enum(self) -> JSON:
+        raise ValueError
+
+    def get_invalid_value_from_constraint(
+        self, values_from_constraint: list[JSON]
+    ) -> JSON:
         raise ValueError
 
     @property

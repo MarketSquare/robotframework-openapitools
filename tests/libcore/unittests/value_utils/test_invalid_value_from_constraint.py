@@ -3,145 +3,145 @@ import unittest
 from typing import Any
 
 from OpenApiLibCore import IGNORE
-from OpenApiLibCore.data_generation import value_utils
+from OpenApiLibCore.models.oas_models import (
+    ArraySchema,
+    BooleanSchema,
+    IntegerSchema,
+    NullSchema,
+    NumberSchema,
+    ObjectSchema,
+    StringSchema,
+    UnionTypeSchema,
+)
 
 
 class TestInvalidValueFromConstraint(unittest.TestCase):
-    def test_ignore(self) -> None:
-        values = [42, IGNORE]
-        value = value_utils.get_invalid_value_from_constraint(
-            values_from_constraint=values,
-            value_type="irrelevant",
-        )
-        self.assertEqual(value, IGNORE)
-
-    def test_unsupported(self) -> None:
-        values = [{"red": 255, "green": 255, "blue": 255}]
-        with self.assertRaises(ValueError):
-            _ = value_utils.get_invalid_value_from_constraint(
-                values_from_constraint=values,
-                value_type="dummy",
-            )
-
     def test_bool(self) -> None:
+        schema = BooleanSchema()
         values = [True]
-        value = value_utils.get_invalid_value_from_constraint(
+        value = schema.get_invalid_value_from_constraint(
             values_from_constraint=values,
-            value_type="boolean",
         )
         self.assertNotIn(value, values)
         self.assertIsInstance(value, bool)
 
         values = [False]
-        value = value_utils.get_invalid_value_from_constraint(
+        value = schema.get_invalid_value_from_constraint(
             values_from_constraint=values,
-            value_type="boolean",
         )
         self.assertNotIn(value, values)
         self.assertIsInstance(value, bool)
 
         values = [True, False]
         with self.assertRaises(ValueError):
-            _ = value_utils.get_invalid_value_from_constraint(
+            _ = schema.get_invalid_value_from_constraint(
                 values_from_constraint=values,
-                value_type="boolean",
             )
 
     def test_string(self) -> None:
+        schema = StringSchema()
         values = ["foo"]
-        value = value_utils.get_invalid_value_from_constraint(
+        value = schema.get_invalid_value_from_constraint(
             values_from_constraint=values,
-            value_type="string",
         )
         self.assertNotIn(value, values)
         self.assertIsInstance(value, str)
 
         values = ["foo", "bar", "baz"]
-        value = value_utils.get_invalid_value_from_constraint(
+        value = schema.get_invalid_value_from_constraint(
             values_from_constraint=values,
-            value_type="string",
         )
         self.assertNotIn(value, values)
         self.assertIsInstance(value, str)
 
         values = [""]
         with self.assertRaises(ValueError):
-            _ = value_utils.get_invalid_value_from_constraint(
+            _ = schema.get_invalid_value_from_constraint(
                 values_from_constraint=values,
-                value_type="string",
             )
 
     def test_integer(self) -> None:
+        schema = IntegerSchema()
         values = [0]
-        value = value_utils.get_invalid_value_from_constraint(
+        value = schema.get_invalid_value_from_constraint(
             values_from_constraint=values,
-            value_type="integer",
         )
         self.assertNotIn(value, values)
         self.assertIsInstance(value, int)
 
         values = [-3, 0, 3]
-        value = value_utils.get_invalid_value_from_constraint(
+        value = schema.get_invalid_value_from_constraint(
             values_from_constraint=values,
-            value_type="integer",
         )
         self.assertNotIn(value, values)
         self.assertIsInstance(value, int)
 
     def test_number(self) -> None:
+        schema = NumberSchema()
         values = [0.0]
-        value = value_utils.get_invalid_value_from_constraint(
+        value = schema.get_invalid_value_from_constraint(
             values_from_constraint=values,
-            value_type="number",
         )
         self.assertNotIn(value, values)
         self.assertIsInstance(value, float)
 
         values = [-0.1, 0.0, 0.1]
-        value = value_utils.get_invalid_value_from_constraint(
+        value = schema.get_invalid_value_from_constraint(
             values_from_constraint=values,
-            value_type="number",
         )
         self.assertNotIn(value, values)
         self.assertIsInstance(value, float)
 
     def test_array(self) -> None:
-        values: list[Any] = [[42]]
-        value = value_utils.get_invalid_value_from_constraint(
+        schema = ArraySchema(items=IntegerSchema())
+        values = [[42]]
+        value = schema.get_invalid_value_from_constraint(
             values_from_constraint=values,
-            value_type="array",
         )
         self.assertNotIn(value, values)
+        for item in value:
+            self.assertIsInstance(item, int)
 
+        schema = ArraySchema(items=StringSchema())
         values = [["spam"], ["ham", "eggs"]]
-        value = value_utils.get_invalid_value_from_constraint(
+        value = schema.get_invalid_value_from_constraint(
             values_from_constraint=values,
-            value_type="array",
         )
         self.assertNotIn(value, values)
+        for item in value:
+            self.assertIsInstance(item, str)
 
-        values = []
-        with self.assertRaises(ValueError):
-            _ = value_utils.get_invalid_value_from_constraint(
-                values_from_constraint=values,
-                value_type="array",
-            )
-
+        schema = ArraySchema(items=ArraySchema(items=StringSchema()))
         values = [[], []]
-        value = value_utils.get_invalid_value_from_constraint(
+        value = schema.get_invalid_value_from_constraint(
             values_from_constraint=values,
-            value_type="array",
         )
         self.assertEqual(value, [])
 
     def test_object(self) -> None:
+        schema = ObjectSchema()
         values = [{"red": 255, "green": 255, "blue": 255}]
-        value = value_utils.get_invalid_value_from_constraint(
+        value = schema.get_invalid_value_from_constraint(
             values_from_constraint=values,
-            value_type="object",
         )
         self.assertNotEqual(value, values[0])
         self.assertIsInstance(value, dict)
+
+    def test_union(self) -> None:
+        schema = UnionTypeSchema()
+        values = [None]
+        with self.assertRaises(ValueError):
+            _ = schema.get_invalid_value_from_constraint(
+                values_from_constraint=values,
+            )
+
+    def test_null(self) -> None:
+        schema = NullSchema()
+        values = [None]
+        with self.assertRaises(ValueError):
+            _ = schema.get_invalid_value_from_constraint(
+                values_from_constraint=values,
+            )
 
 
 if __name__ == "__main__":
