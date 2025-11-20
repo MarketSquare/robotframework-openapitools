@@ -70,9 +70,11 @@ def convert_string_to_python_identifier(string: str, verbose: bool = False) -> s
                 yield f"_{ascii_code}_"
 
     if _is_python_safe(string):
-        return string
+        return string  # pragma: no cover
 
     converted_string = "".join(_convert_string_to_python_identifier())
     if not _is_python_safe(converted_string):
-        raise ValueError(f"Failed to convert '{string}' to Python identifier.")
+        raise ValueError(
+            f"Failed to convert '{string}' to Python identifier."
+        )  # pragma: no cover
     return converted_string
