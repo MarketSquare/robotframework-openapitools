@@ -1,4 +1,6 @@
 # pylint: disable=invalid-name
+from typing import Callable
+
 from OpenApiLibCore import (
     IGNORE,
     Dto,
@@ -184,12 +186,17 @@ DTO_MAPPING: dict[tuple[str, str], type[Dto]] = {
     ("/secret_message", "get"): MessageDto,
 }
 
+
+def my_transformer(identifier_name: str) -> str:
+    return identifier_name.replace("/", "_")
+
+
 # NOTE: "/available_employees": "identification" is not mapped for testing purposes
-ID_MAPPING: dict[str, str] = {
+ID_MAPPING: dict[str, str | tuple[str, Callable[[str], str] | Callable[[int], int]]] = {
     "/employees": "identification",
     "/employees/{employee_id}": "identification",
     "/wagegroups": "wagegroup_id",
-    "/wagegroups/{wagegroup_id}": "wagegroup_id",
+    "/wagegroups/{wagegroup_id}": ("wagegroup_id", my_transformer),
     "/wagegroups/{wagegroup_id}/employees": "identification",
 }
 
