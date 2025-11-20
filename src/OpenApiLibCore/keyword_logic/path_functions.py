@@ -30,7 +30,7 @@ def get_parametrized_path(path: str, openapi_spec: oas_models.OpenApiObject) -> 
     if path_parts[-1] == "":
         _ = path_parts.pop(-1)
 
-    spec_paths: list[str] = list(openapi_spec.paths.keys())
+    spec_paths = list(openapi_spec.paths.keys())
 
     candidates: list[str] = []
 
