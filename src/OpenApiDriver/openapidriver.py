@@ -84,7 +84,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         read_paths_method = self.read_paths
         DataDriver.__init__(
             self,
-            reader_class=OpenApiReader,
+            reader_class=OpenApiReader,  # type: ignore[arg-type]
             read_paths_method=read_paths_method,
             included_paths=included_paths,
             ignored_paths=ignored_paths,

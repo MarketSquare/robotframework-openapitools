@@ -22,7 +22,7 @@ class RequestValues:
     url: str
     method: str
     params: dict[str, JSON] = field(default_factory=dict)
-    headers: dict[str, JSON] = field(default_factory=dict)
+    headers: dict[str, str] = field(default_factory=dict)
     json_data: JSON = None
 
     def override_body_value(self, name: str, value: JSON) -> None:
@@ -30,7 +30,7 @@ class RequestValues:
         if isinstance(self.json_data, dict) and name in self.json_data:
             self.json_data[name] = value
 
-    def override_header_value(self, name: str, value: JSON) -> None:
+    def override_header_value(self, name: str, value: str) -> None:
         if name in self.headers:
             self.headers[name] = value
 
@@ -40,7 +40,7 @@ class RequestValues:
 
     def override_request_value(self, name: str, value: JSON) -> None:
         self.override_body_value(name=name, value=value)
-        self.override_header_value(name=name, value=value)
+        self.override_header_value(name=name, value=str(value))
         self.override_param_value(name=name, value=value)
 
     def remove_parameters(self, parameters: list[str]) -> None:
@@ -57,10 +57,10 @@ class RequestData:
 
     valid_data: JSON
     constraint_mapping: type[IConstraintMapping]
-    body_schema: ResolvedSchemaObjectTypes | None = None
+    body_schema: ResolvedSchemaObjectTypes | None = None  # type: ignore[type-arg]
     parameters: list[ParameterObject] = field(default_factory=list)
     params: dict[str, JSON] = field(default_factory=dict)
-    headers: dict[str, JSON] = field(default_factory=dict)
+    headers: dict[str, str] = field(default_factory=dict)
     has_body: bool = True
 
     def __post_init__(self) -> None:
@@ -116,7 +116,7 @@ class RequestData:
             if param.schema_ is None:
                 continue
 
-            possible_schemas: list[ResolvedSchemaObjectTypes] = []
+            possible_schemas: list[ResolvedSchemaObjectTypes] = []  # type: ignore[type-arg]
             if isinstance(param.schema_, UnionTypeSchema):
                 possible_schemas = param.schema_.resolved_schemas
             else:
@@ -157,7 +157,7 @@ class RequestData:
             if header.schema_ is None:
                 continue
 
-            possible_schemas: list[ResolvedSchemaObjectTypes] = []
+            possible_schemas: list[ResolvedSchemaObjectTypes] = []  # type: ignore[type-arg]
             if isinstance(header.schema_, UnionTypeSchema):
                 possible_schemas = header.schema_.resolved_schemas
             else:
@@ -177,11 +177,15 @@ class RequestData:
             for relation in relations
             if getattr(relation, "treat_as_mandatory", False)
         ]
-        required_properties = self.body_schema.required if self.body_schema else []
+        required_properties = (
+            self.body_schema.required
+            if isinstance(self.body_schema, ObjectSchema)
+            else []
+        )
         required_properties.extend(mandatory_properties)
 
         required_properties_dict: dict[str, JSON] = {}
-        if self.valid_data is None:
+        if not isinstance(self.valid_data, dict):
             return required_properties_dict
 
         for key, value in self.valid_data.items():
@@ -193,7 +197,10 @@ class RequestData:
         required_properties_dict = self.get_required_properties_dict()
 
         min_properties = 0
-        if self.body_schema and self.body_schema.minProperties is not None:
+        if (
+            isinstance(self.body_schema, ObjectSchema)
+            and self.body_schema.minProperties is not None
+        ):
             min_properties = self.body_schema.minProperties
 
         number_of_optional_properties_to_add = min_properties - len(
@@ -201,6 +208,9 @@ class RequestData:
         )
 
         if number_of_optional_properties_to_add < 1:
+            return required_properties_dict
+
+        if not isinstance(self.valid_data, dict):
             return required_properties_dict
 
         optional_properties_dict = {
@@ -225,7 +235,7 @@ class RequestData:
             k: v for k, v in self.params.items() if k in self.required_parameter_names
         }
 
-    def get_required_headers(self) -> dict[str, JSON]:
+    def get_required_headers(self) -> dict[str, str]:
         """Get the headers dict containing only the required headers."""
         return {
             k: v for k, v in self.headers.items() if k in self.required_parameter_names

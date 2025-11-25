@@ -5,7 +5,7 @@ to make 2xx requests) to support testing for 4xx responses.
 
 from copy import deepcopy
 from random import choice
-from typing import Any
+from typing import Any, Literal, overload
 
 from requests import Response
 from robot.api import logger
@@ -15,7 +15,7 @@ from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.data_constraints.dto_base import (
     Dto,
 )
-from OpenApiLibCore.models import IGNORE
+from OpenApiLibCore.models import IGNORE, Ignore
 from OpenApiLibCore.models.oas_models import (
     ArraySchema,
     ObjectSchema,
@@ -33,13 +33,41 @@ from OpenApiLibCore.models.resource_relations import (
 run_keyword = BuiltIn().run_keyword
 
 
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_json_data_with_conflict"], *args: object
+) -> dict[str, JSON]: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["ensure_in_use"], *args: object
+) -> None: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_request_data"], *args: str
+) -> RequestData: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["authorized_request"], *args: object
+) -> Response: ...  # pragma: no cover
+
+
+def _run_keyword(keyword_name: str, *args: object) -> object:
+    return run_keyword(keyword_name, *args)
+
+
 def get_invalid_body_data(
     url: str,
     method: str,
     status_code: int,
     request_data: RequestData,
     invalid_data_default_response: int,
-) -> dict[str, JSON] | list[JSON]:
+) -> JSON:
     method = method.lower()
     data_relations = request_data.constraint_mapping.get_body_relations_for_error_code(
         status_code
@@ -56,7 +84,7 @@ def get_invalid_body_data(
         if isinstance(request_data.body_schema, ArraySchema):
             if not isinstance(request_data.valid_data, list):
                 raise ValueError("Type of valid_data does not match body_schema type.")
-            invalid_item_data = request_data.body_schema.get_invalid_data(
+            invalid_item_data: list[JSON] = request_data.body_schema.get_invalid_data(
                 valid_data=request_data.valid_data,
                 constraint_mapping=request_data.constraint_mapping,
                 status_code=status_code,
@@ -76,7 +104,7 @@ def get_invalid_body_data(
 
     resource_relation = choice(data_relations)
     if isinstance(resource_relation, UniquePropertyValueConstraint):
-        json_data = run_keyword(
+        return _run_keyword(
             "get_json_data_with_conflict",
             url,
             method,
@@ -84,26 +112,41 @@ def get_invalid_body_data(
             request_data.constraint_mapping,
             status_code,
         )
-    elif isinstance(resource_relation, IdReference):
-        run_keyword("ensure_in_use", url, resource_relation)
-        json_data = request_data.valid_data
-    else:
-        if request_data.body_schema is None:
-            raise ValueError(
-                "Failed to invalidate: request_data does not contain a body_schema."
-            )
-        json_data = request_data.body_schema.get_invalid_data(
+    if isinstance(resource_relation, IdReference):
+        _run_keyword("ensure_in_use", url, resource_relation)
+        return request_data.valid_data
+
+    if request_data.body_schema is None:
+        raise ValueError(
+            "Failed to invalidate: request_data does not contain a body_schema."
+        )
+    if not isinstance(request_data.body_schema, (ArraySchema, ObjectSchema)):
+        raise NotImplementedError("primitive types not supported for body data.")
+
+    if isinstance(request_data.body_schema, ArraySchema):
+        if not isinstance(request_data.valid_data, list):
+            raise ValueError("Type of valid_data does not match body_schema type.")
+        invalid_item_data = request_data.body_schema.get_invalid_data(
             valid_data=request_data.valid_data,
             constraint_mapping=request_data.constraint_mapping,
             status_code=status_code,
             invalid_property_default_code=invalid_data_default_response,
         )
-    return json_data
+        return [invalid_item_data]
+
+    if not isinstance(request_data.valid_data, dict):
+        raise ValueError("Type of valid_data does not match body_schema type.")
+    return request_data.body_schema.get_invalid_data(
+        valid_data=request_data.valid_data,
+        constraint_mapping=request_data.constraint_mapping,
+        status_code=status_code,
+        invalid_property_default_code=invalid_data_default_response,
+    )
 
 
 def get_invalidated_parameters(
     status_code: int, request_data: RequestData, invalid_data_default_response: int
-) -> tuple[dict[str, JSON], dict[str, JSON]]:
+) -> tuple[dict[str, JSON], dict[str, str]]:
     if not request_data.parameters:
         raise ValueError("No params or headers to invalidate.")
 
@@ -232,14 +275,14 @@ def get_invalidated_parameters(
             value_schema = choice(value_schema.resolved_schemas)
 
         invalid_value = value_schema.get_invalid_value(
-            valid_value=valid_value,
+            valid_value=valid_value,  # type: ignore[arg-type]
             values_from_constraint=values_from_constraint,
         )
     logger.debug(f"{parameter_to_invalidate} changed to {invalid_value}")
 
     # update the params / headers and return
     if parameter_to_invalidate in params.keys():
-        params[parameter_to_invalidate] = invalid_value
+        params[parameter_to_invalidate] = invalid_value  # pyright: ignore[reportArgumentType]
     else:
         headers[parameter_to_invalidate] = str(invalid_value)
     return params, headers
@@ -248,10 +291,10 @@ def get_invalidated_parameters(
 def ensure_parameter_in_parameters(
     parameter_to_invalidate: str,
     params: dict[str, JSON],
-    headers: dict[str, JSON],
+    headers: dict[str, str],
     parameter_data: ParameterObject,
     values_from_constraint: list[JSON],
-) -> tuple[dict[str, JSON], dict[str, JSON]]:
+) -> tuple[dict[str, JSON], dict[str, str]]:
     """
     Returns the params, headers tuple with parameter_to_invalidate with a valid
     value to params or headers if not originally present.
@@ -306,18 +349,19 @@ def get_json_data_with_conflict(
             # the PATCH or PUT may use a different constraint_mapping than required for
             # POST so valid POST data must be constructed
             path = post_url.replace(base_url, "")
-            request_data: RequestData = run_keyword("get_request_data", path, "post")
+            request_data = _run_keyword("get_request_data", path, "post")
             post_json = request_data.valid_data
-            for key in post_json.keys():
-                if key in json_data:
-                    post_json[key] = json_data.get(key)
+            if isinstance(post_json, dict):
+                for key in post_json.keys():
+                    if key in json_data:
+                        post_json[key] = json_data.get(key)
         else:
             post_url = url
             post_json = json_data
             path = post_url.replace(base_url, "")
-            request_data = run_keyword("get_request_data", path, "post")
+            request_data = _run_keyword("get_request_data", path, "post")
 
-        response: Response = run_keyword(
+        response = _run_keyword(
             "authorized_request",
             post_url,
             "post",

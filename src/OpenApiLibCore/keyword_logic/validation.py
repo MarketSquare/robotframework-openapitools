@@ -3,7 +3,7 @@
 import json as _json
 from enum import Enum
 from http import HTTPStatus
-from typing import Any, Mapping
+from typing import Any, Literal, Mapping, overload
 
 from openapi_core.contrib.requests import (
     RequestsOpenAPIRequest,
@@ -18,6 +18,7 @@ from robot.api import logger
 from robot.api.exceptions import Failure
 from robot.libraries.BuiltIn import BuiltIn
 
+from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.models.oas_models import (
     OpenApiObject,
     ResponseObject,
@@ -27,6 +28,40 @@ from OpenApiLibCore.models.request_data import RequestData, RequestValues
 from OpenApiLibCore.protocols import IResponseValidator
 
 run_keyword = BuiltIn().run_keyword
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["validate_response"], *args: object
+) -> None: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["authorized_request"], *args: object
+) -> Response: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_request_data"], *args: str
+) -> RequestData: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["validate_send_response"], *args: Response | JSON
+) -> None: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["assert_href_to_resource_is_valid"], *args: str | JSON
+) -> None: ...  # pragma: no cover
+
+
+def _run_keyword(keyword_name: str, *args: object) -> object:
+    return run_keyword(keyword_name, *args)
 
 
 class ValidationLevel(str, Enum):
@@ -44,7 +79,7 @@ def perform_validated_request(
     request_values: RequestValues,
     original_data: Mapping[str, Any],
 ) -> None:
-    response = run_keyword(
+    response = _run_keyword(
         "authorized_request",
         request_values.url,
         request_values.method,
@@ -78,13 +113,13 @@ def perform_validated_request(
             f"Response status_code {response.status_code} was not {status_code}."
         )
 
-    run_keyword("validate_response", path, response, original_data)
+    _run_keyword("validate_response", path, response, original_data)
 
     if request_values.method == "DELETE":
-        request_data: RequestData = run_keyword("get_request_data", path, "GET")
+        request_data = _run_keyword("get_request_data", path, "GET")
         get_params = request_data.params
         get_headers = request_data.headers
-        get_response = run_keyword(
+        get_response = _run_keyword(
             "authorized_request", request_values.url, "GET", get_params, get_headers
         )
         if response.ok:
@@ -115,7 +150,7 @@ def validate_response(
     invalid_data_default_response: int,
     response_validation: str,
     openapi_spec: OpenApiObject,
-    original_data: Mapping[str, Any],
+    original_data: JSON,
 ) -> None:
     if response.status_code == int(HTTPStatus.NO_CONTENT):
         assert not response.content
@@ -188,26 +223,26 @@ def validate_response(
     # ensure the href is valid if the response is an object that contains a href
     if isinstance(json_response, dict):
         if href := json_response.get("href"):
-            run_keyword("assert_href_to_resource_is_valid", href, json_response)
+            _run_keyword("assert_href_to_resource_is_valid", href, json_response)
 
     # every property that was sucessfully send and that is in the response
     # schema must have the value that was send
     if response.ok and response.request.method in ["POST", "PUT", "PATCH"]:
-        run_keyword("validate_send_response", response, original_data)
+        _run_keyword("validate_send_response", response, original_data)
     return None
 
 
 def assert_href_to_resource_is_valid(
-    href: str, origin: str, base_url: str, referenced_resource: dict[str, Any]
+    href: str, origin: str, base_url: str, referenced_resource: JSON
 ) -> None:
     url = f"{origin}{href}"
     path = url.replace(base_url, "")
-    request_data: RequestData = run_keyword("get_request_data", path, "GET")
+    request_data = _run_keyword("get_request_data", path, "GET")
     params = request_data.params
     headers = request_data.headers
-    get_response = run_keyword("authorized_request", url, "GET", params, headers)
+    get_response = _run_keyword("authorized_request", url, "GET", params, headers)
     assert get_response.json() == referenced_resource, (
-        f"{get_response.json()} not equal to original {referenced_resource}"
+        f"{get_response.json()!r} not equal to original {referenced_resource!r}"
     )
 
 

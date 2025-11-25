@@ -72,7 +72,7 @@ def main() -> None:
                 default_module_name,
             )
 
-    use_summary = getenv("USE_SUMMARY_AS_KEYWORD_NAME")
+    use_summary: str | bool | None = getenv("USE_SUMMARY_AS_KEYWORD_NAME")
     if use_summary is None:
         if args.use_summary_as_keyword_name is None:
             use_summary = input(
@@ -80,7 +80,7 @@ def main() -> None:
             )
             use_summary = True if use_summary.lower().startswith("y") else False
 
-    expand_body = getenv("EXPAND_BODY_ARGUMENTS")
+    expand_body: str | bool | None = getenv("EXPAND_BODY_ARGUMENTS")
     if expand_body is None:
         if args.expand_body_arguments is None:
             expand_body = input(
@@ -93,6 +93,6 @@ def main() -> None:
         output_folder=path,
         library_name=safe_library_name,
         module_name=safe_module_name,
-        use_summary=is_truthy(use_summary),
-        expand_body=is_truthy(expand_body),
+        use_summary=is_truthy(use_summary),  # type: ignore[no-untyped-call]
+        expand_body=is_truthy(expand_body),  # type: ignore[no-untyped-call]
     )

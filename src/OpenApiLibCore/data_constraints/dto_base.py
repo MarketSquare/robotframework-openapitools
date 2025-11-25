@@ -83,7 +83,7 @@ def get_constraint_mapping_dict(
 ) -> dict[tuple[str, str], IConstraintMapping]:
     try:
         mappings_module = import_module(mappings_module_name)
-        return mappings_module.DTO_MAPPING
+        return mappings_module.DTO_MAPPING  # type: ignore[no-any-return]
     except (ImportError, AttributeError, ValueError) as exception:
         if mappings_module_name != "no mapping":
             logger.error(f"DTO_MAPPING was not imported: {exception}")
@@ -95,7 +95,7 @@ def get_path_mapping_dict(
 ) -> dict[str, IConstraintMapping]:
     try:
         mappings_module = import_module(mappings_module_name)
-        return mappings_module.PATH_MAPPING
+        return mappings_module.PATH_MAPPING  # type: ignore[no-any-return]
     except (ImportError, AttributeError, ValueError) as exception:
         if mappings_module_name != "no mapping":
             logger.error(f"PATH_MAPPING was not imported: {exception}")
@@ -125,16 +125,14 @@ class GetIdPropertyName:
             mappings_module = import_module(mappings_module_name)
             self.id_mapping: dict[
                 str,
-                str | tuple[str, Callable[[str], str] | Callable[[int], int]],
+                str | tuple[str, Callable[[str], str]],
             ] = mappings_module.ID_MAPPING
         except (ImportError, AttributeError, ValueError) as exception:
             if mappings_module_name != "no mapping":
                 logger.error(f"ID_MAPPING was not imported: {exception}")
             self.id_mapping = {}
 
-    def __call__(
-        self, path: str
-    ) -> tuple[str, Callable[[str], str] | Callable[[int], int]]:
+    def __call__(self, path: str) -> tuple[str, Callable[[str], str]]:
         try:
             value_or_mapping = self.id_mapping[path]
             if isinstance(value_or_mapping, str):

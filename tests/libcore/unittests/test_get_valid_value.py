@@ -4,6 +4,7 @@ import unittest
 from OpenApiLibCore.models.oas_models import (
     ArraySchema,
     BooleanSchema,
+    BytesSchema,
     IntegerSchema,
     NullSchema,
     NumberSchema,
@@ -25,6 +26,10 @@ class TestDefaults(unittest.TestCase):
     def test_string_schema(self) -> None:
         schema = StringSchema()
         self.assertIsInstance(schema.get_valid_value(), str)
+
+    def test_bytes_schema(self) -> None:
+        schema = BytesSchema()
+        self.assertIsInstance(schema.get_valid_value(), bytes)
 
     def test_integer_schema(self) -> None:
         schema = IntegerSchema()
@@ -62,6 +67,11 @@ class TestGetValidValueFromConst(unittest.TestCase):
         schema = StringSchema(const=const)
         self.assertEqual(schema.get_valid_value(), const)
 
+    def test_bytes_schema(self) -> None:
+        const = b"Hello world!"
+        schema = BytesSchema(const=const)
+        self.assertEqual(schema.get_valid_value(), const)
+
     def test_integer_schema(self) -> None:
         const = 42
         schema = IntegerSchema(const=const)
@@ -87,6 +97,11 @@ class TestGetValidValueFromEnum(unittest.TestCase):
     def test_string_schema(self) -> None:
         enum = ["eggs", "bacon", "spam"]
         schema = StringSchema(enum=enum)
+        self.assertIn(schema.get_valid_value(), enum)
+
+    def test_bytes_schema(self) -> None:
+        enum = [b"eggs", b"bacon", b"spam"]
+        schema = BytesSchema(enum=enum)
         self.assertIn(schema.get_valid_value(), enum)
 
     def test_integer_schema(self) -> None:
@@ -121,12 +136,28 @@ class TestStringSchemaVariations(unittest.TestCase):
         value = schema.get_valid_value()
         self.assertEqual(len(value), 36)
 
+        schema = BytesSchema(maxLength=0)
+        value = schema.get_valid_value()
+        self.assertEqual(value, b"")
+
+        schema = BytesSchema(minLength=36)
+        value = schema.get_valid_value()
+        self.assertEqual(len(value), 36)
+
     def test_min_max(self) -> None:
         schema = StringSchema(minLength=42, maxLength=42)
         value = schema.get_valid_value()
         self.assertEqual(len(value), 42)
 
         schema = StringSchema(minLength=42)
+        value = schema.get_valid_value()
+        self.assertEqual(len(value), 42)
+
+        schema = BytesSchema(minLength=42, maxLength=42)
+        value = schema.get_valid_value()
+        self.assertEqual(len(value), 42)
+
+        schema = BytesSchema(minLength=42)
         value = schema.get_valid_value()
         self.assertEqual(len(value), 42)
 
@@ -167,7 +198,7 @@ class TestStringSchemaVariations(unittest.TestCase):
         )
 
     def test_byte(self) -> None:
-        schema = StringSchema(format="byte")
+        schema = BytesSchema(format="byte")
         value = schema.get_valid_value()
         self.assertIsInstance(value, bytes)
 

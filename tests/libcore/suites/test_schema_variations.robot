@@ -21,7 +21,7 @@ Test Get Request Data For Schema With allOf
     Length Should Be    ${request_data.valid_data}[isan]    36
     Length Should Be    ${request_data.valid_data}[tags]    1
     Length Should Be    ${request_data.valid_data}[tags][0]    36
-    VAR    ${resolved_schema}=    ${request_data.body_schema.resolved_schemas}[0]
+    VAR    ${resolved_schema}=    ${request_data.body_schema}
     Length Should Be    ${resolved_schema.properties.root}    4
     Should Be Equal    ${request_data.parameters}    ${list}
     Should Be Equal    ${request_data.params}    ${dict}

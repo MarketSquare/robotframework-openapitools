@@ -52,16 +52,11 @@ SENTINEL = object()
 
 O = TypeVar("O")
 AI = TypeVar("AI", bound=JSON)
-S = TypeVar("S", str, bytes)
 ConstraintMappingType = builtins.type[IConstraintMapping]
 
 
 def is_object_schema(schema: SchemaObjectTypes) -> TypeGuard[ObjectSchema]:
     return isinstance(schema, ObjectSchema)
-
-
-def data_is_bytes(data: str | bytes, format: str) -> TypeGuard[bytes]:
-    return format == "byte"
 
 
 class SchemaBase(BaseModel, Generic[O], frozen=True):
@@ -209,21 +204,21 @@ class BooleanSchema(SchemaBase[bool], frozen=True):
         return "bool"
 
 
-class StringSchema(SchemaBase[S], frozen=True):
+class StringSchema(SchemaBase[str], frozen=True):
     type: Literal["string"] = "string"
     format: str = ""
     pattern: str = ""
     maxLength: int | None = None
     minLength: int | None = None
-    const: S | None = None
-    enum: list[S] | None = None
+    const: str | None = None
+    enum: list[str] | None = None
     nullable: bool = False
 
-    def get_valid_value(  # type: ignore
+    def get_valid_value(
         self,
         constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
-    ) -> S:
+    ) -> str:
         """Generate a random string within the min/max length in the schema, if specified."""
         if self.const is not None:
             return self.const
@@ -245,36 +240,31 @@ class StringSchema(SchemaBase[S], frozen=True):
         minimum = self.minLength if self.minLength is not None else 0
         maximum = self.maxLength if self.maxLength is not None else 36
         maximum = max(minimum, maximum)
-        format_ = self.format if self.format else "uuid"
-        # byte is a special case due to the required encoding
-        data = FAKE.uuid()
-        if data_is_bytes(data=data, format=format_):
-            return base64.b64encode(data.encode("utf-8"))
 
+        format_ = self.format if self.format else "uuid"
         value = fake_string(string_format=format_)
         while len(value) < minimum:
-            # use fake.name() to ensure the returned string uses the provided locale
-            value = value + FAKE.name()
+            value = value + fake_string(string_format=format_)
         if len(value) > maximum:
             value = value[:maximum]
         return value
 
-    def get_values_out_of_bounds(self, current_value: S) -> list[S]:
-        invalid_values: list[S] = []
+    def get_values_out_of_bounds(self, current_value: str) -> list[str]:
+        invalid_values: list[str] = []
         if self.minLength:
             invalid_values.append(current_value[0 : self.minLength - 1])
         # if there is a maximum length, send 1 character more
         if self.maxLength:
-            invalid_string_value = current_value if current_value else "x"
+            invalid_value = current_value if current_value else "x"
             # add random characters from the current value to prevent adding new characters
-            while len(invalid_string_value) <= self.maxLength:
-                invalid_string_value += choice(invalid_string_value)
-            invalid_values.append(invalid_string_value)
+            while len(invalid_value) <= self.maxLength:
+                invalid_value += choice(invalid_value)
+            invalid_values.append(invalid_value)
         if invalid_values:
             return invalid_values
         raise ValueError
 
-    def get_invalid_value_from_const_or_enum(self) -> S:
+    def get_invalid_value_from_const_or_enum(self) -> str:
         valid_values = []
         if self.const is not None:
             valid_values = [self.const]
@@ -290,7 +280,110 @@ class StringSchema(SchemaBase[S], frozen=True):
 
         return invalid_value
 
-    def get_invalid_value_from_constraint(self, values_from_constraint: list[S]) -> S:
+    def get_invalid_value_from_constraint(
+        self, values_from_constraint: list[str]
+    ) -> str:
+        invalid_values = 2 * values_from_constraint
+        invalid_value = invalid_values.pop()
+        for value in invalid_values:
+            invalid_value = invalid_value + value
+
+        if not invalid_value:
+            raise ValueError("Value invalidation yielded an empty string.")
+        return invalid_value
+
+    @property
+    def can_be_invalidated(self) -> bool:
+        if (
+            self.maxLength is not None
+            or self.minLength is not None
+            or self.const is not None
+            or self.enum is not None
+        ):
+            return True
+        return False
+
+    @property
+    def annotation_string(self) -> str:
+        return "str"
+
+
+class BytesSchema(SchemaBase[bytes], frozen=True):
+    type: Literal["string"] = "string"
+    format: Literal["byte"] = "byte"
+    pattern: str = ""
+    maxLength: int | None = None
+    minLength: int | None = None
+    const: bytes | None = None
+    enum: list[bytes] | None = None
+    nullable: bool = False
+
+    def get_valid_value(
+        self,
+        constraint_mapping: ConstraintMappingType | None = None,
+        operation_id: str | None = None,
+    ) -> bytes:
+        """Generate a random string within the min/max length in the schema, if specified."""
+        if self.const is not None:
+            return self.const
+        if self.enum is not None:
+            return choice(self.enum)
+        if self.pattern:
+            logger.warn(
+                "'pattern' is currently not supported for 'byte' format strings."
+                "To ensure a valid value is generated for this property, a "
+                "PropertyValueConstraint can be configured. See the Advanced Use "
+                "section of the OpenApiTools documentation for more details."
+            )
+        minimum = self.minLength if self.minLength is not None else 0
+        maximum = self.maxLength if self.maxLength is not None else 36
+        maximum = max(minimum, maximum)
+
+        # use "uuid" for generated strings to prevent whitespace characters
+        value = fake_string(string_format="uuid")
+        while len(value) < minimum:
+            value = value + fake_string(string_format="uuid")
+        bytes_value = base64.b64encode(value.encode("utf-8"))
+        if len(bytes_value) > maximum:
+            bytes_value = bytes_value[:maximum]
+        return bytes_value
+
+    def get_values_out_of_bounds(self, current_value: bytes) -> list[bytes]:
+        invalid_values: list[bytes] = []
+        if self.minLength:
+            invalid_values.append(current_value[0 : self.minLength - 1])
+        # if there is a maximum length, send 1 character more
+        if self.maxLength:
+            current_str_value = current_value.decode(encoding="utf-8")
+            invalid_string_value = current_str_value if current_str_value else "x"
+            # add random characters from the current value to prevent adding new characters
+            while len(invalid_string_value) <= self.maxLength:
+                invalid_string_value += choice(current_str_value)
+            invalid_value = base64.b64encode(invalid_string_value.encode("utf-8"))
+            invalid_values.append(invalid_value)
+        if invalid_values:
+            return invalid_values
+        raise ValueError
+
+    def get_invalid_value_from_const_or_enum(self) -> bytes:
+        valid_values = []
+        if self.const is not None:
+            valid_values = [self.const]
+        if self.enum is not None:
+            valid_values = self.enum
+
+        if not valid_values:
+            raise ValueError
+
+        invalid_value = b""
+        for value in valid_values:
+            invalid_value += value + value
+
+        return invalid_value
+
+    def get_invalid_value_from_constraint(
+        self, values_from_constraint: list[bytes]
+    ) -> bytes:
         invalid_values = 2 * values_from_constraint
         invalid_value = invalid_values.pop()
         for value in invalid_values:
@@ -594,7 +687,7 @@ class ArraySchema(SchemaBase[list[AI]], frozen=True):
                 current_value = self.get_valid_value()
 
             if not current_value:
-                current_value = [self.items.get_valid_value()]  # type: ignore
+                current_value = [self.items.get_valid_value()]  # type: ignore[list-item]
 
             while len(invalid_value) <= self.maxItems:
                 invalid_value.append(choice(current_value))
@@ -631,9 +724,9 @@ class ArraySchema(SchemaBase[list[AI]], frozen=True):
         invalid_array: list[AI] = []
         for value in valid_array:
             invalid_value = self.items.get_invalid_value_from_constraint(
-                values_from_constraint=[value],
+                values_from_constraint=[value],  # type: ignore[list-item]
             )
-            invalid_array.append(invalid_value)
+            invalid_array.append(invalid_value)  # type: ignore[arg-type]
         return invalid_array
 
     def get_invalid_data(
@@ -672,7 +765,7 @@ class ArraySchema(SchemaBase[list[AI]], frozen=True):
                     else self.items.get_valid_value()
                 )
                 invalid_item = self.items.get_invalid_data(
-                    valid_data=valid_item,  # type: ignore
+                    valid_data=valid_item,  # type: ignore[arg-type]
                     constraint_mapping=constraint_mapping,
                     status_code=status_code,
                     invalid_property_default_code=invalid_property_default_code,
@@ -822,9 +915,9 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
         for key, value in valid_object.items():
             python_type_of_value = type(value)
             json_type_of_value = json_type_name_of_python_type(python_type_of_value)
-            schema = MediaTypeObject(schema={"type": json_type_of_value}).schema_
-            invalid_value = schema.get_invalid_value_from_constraint(
-                values_from_constraint=[value],
+            schema = MediaTypeObject(schema={"type": json_type_of_value}).schema_  # pyright: ignore[reportArgumentType]
+            invalid_value = schema.get_invalid_value_from_constraint(  # type: ignore[union-attr]
+                values_from_constraint=[value],  # type: ignore[list-item]
             )
             invalid_object[key] = invalid_value
         return invalid_object
@@ -835,9 +928,9 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
         constraint_mapping: ConstraintMappingType,
         status_code: int,
         invalid_property_default_code: int,
-    ) -> Mapping[str, JSON | Ignore]:
+    ) -> dict[str, JSON]:
         """Return a data set with one of the properties set to an invalid value or type."""
-        properties: Mapping[str, JSON | Ignore] = deepcopy(valid_data)
+        properties: dict[str, JSON] = deepcopy(valid_data)
 
         relations = constraint_mapping.get_body_relations_for_error_code(
             error_code=status_code
@@ -920,10 +1013,11 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
             ]
 
             invalid_value = value_schema.get_invalid_value(
-                valid_value=current_value,  # type: ignore
+                valid_value=current_value,  # type: ignore[arg-type]
                 values_from_constraint=values_from_constraint,
             )
-            properties[property_name] = invalid_value  # type: ignore
+            if not isinstance(invalid_value, Ignore):
+                properties[property_name] = invalid_value
             logger.debug(
                 f"Property {property_name} changed to {invalid_value!r} "
                 f"(received from get_invalid_value)"
@@ -953,10 +1047,21 @@ ResolvedSchemaObjectTypes: TypeAlias = (
     NullSchema
     | BooleanSchema
     | StringSchema
+    | BytesSchema
     | IntegerSchema
     | NumberSchema
-    | ArraySchema
+    | ArraySchema[AI]
     | ObjectSchema
+)
+RESOLVED_SCHEMA_INSTANCES = (
+    NullSchema,
+    BooleanSchema,
+    StringSchema,
+    BytesSchema,
+    IntegerSchema,
+    NumberSchema,
+    ArraySchema,
+    ObjectSchema,
 )
 
 
@@ -977,10 +1082,10 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
         raise ValueError
 
     @property
-    def resolved_schemas(self) -> list[ResolvedSchemaObjectTypes]:
+    def resolved_schemas(self) -> list[ResolvedSchemaObjectTypes]:  # type: ignore[type-arg]
         return list(self._get_resolved_schemas())
 
-    def _get_resolved_schemas(self) -> Generator[ResolvedSchemaObjectTypes, None, None]:
+    def _get_resolved_schemas(self) -> Generator[ResolvedSchemaObjectTypes, None, None]:  # type: ignore[type-arg]
         if self.allOf:
             properties_list: list[PropertiesMapping] = []
             additional_properties_list = []
@@ -1016,7 +1121,7 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
                 additional_properties_types = []
                 for additional_properties_item in additional_properties_list:
                     if isinstance(
-                        additional_properties_item, ResolvedSchemaObjectTypes
+                        additional_properties_item, RESOLVED_SCHEMA_INSTANCES
                     ):
                         additional_properties_types.append(additional_properties_item)
                 if not additional_properties_types:
@@ -1043,7 +1148,7 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
             yield merged_schema
         else:
             for schema in self.anyOf + self.oneOf:
-                if isinstance(schema, ResolvedSchemaObjectTypes):
+                if isinstance(schema, RESOLVED_SCHEMA_INSTANCES):
                     yield schema
                 else:
                     yield from schema.resolved_schemas
@@ -1062,7 +1167,7 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
         return " | ".join(unique_annotations)
 
 
-SchemaObjectTypes: TypeAlias = ResolvedSchemaObjectTypes | UnionTypeSchema
+SchemaObjectTypes: TypeAlias = ResolvedSchemaObjectTypes | UnionTypeSchema  # type: ignore[type-arg]
 
 
 class PropertiesMapping(RootModel[dict[str, "SchemaObjectTypes"]], frozen=True): ...
@@ -1155,7 +1260,7 @@ class PathItemObject(BaseModel):
     description: str = ""
     parameters: list[ParameterObject] = []
     constraint_mapping: IConstraintMapping | None = None
-    id_mapper: tuple[str, Callable[[str], str] | Callable[[int], int]] = (
+    id_mapper: tuple[str, Callable[[str], str]] = (
         "id",
         dummy_transformer,
     )
@@ -1271,7 +1376,9 @@ def get_dependent_id(
         except ValueError:
             return None
 
-    valid_id = run_keyword("get_valid_id_for_path", id_get_path)
+    valid_id = cast(
+        str | int | float, run_keyword("get_valid_id_for_path", id_get_path)
+    )
     logger.debug(f"get_dependent_id for {id_get_path} returned {valid_id}")
     return valid_id
 

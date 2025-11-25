@@ -83,7 +83,11 @@ def get_request_data(
             f"No supported content schema found: {operation_spec.requestBody.content}"
         )
 
-    headers.update({"content-type": operation_spec.requestBody.mime_type})
+    if operation_spec.requestBody.mime_type:
+        headers.update({"content-type": operation_spec.requestBody.mime_type})
+
+    if isinstance(body_schema, UnionTypeSchema):
+        body_schema = choice(body_schema.resolved_schemas)
 
     valid_data = get_valid_json_data(
         schema=body_schema,
@@ -123,7 +127,7 @@ def _get_mapping_dataclass_for_empty_body(
 
 
 def _get_mapping_dataclass_from_valid_data(
-    schema: ResolvedSchemaObjectTypes,
+    schema: ResolvedSchemaObjectTypes,  # type: ignore[type-arg]
     constraint_mapping: type[IConstraintMapping] | None,
     valid_data: JSON,
     method_spec: OperationObject,

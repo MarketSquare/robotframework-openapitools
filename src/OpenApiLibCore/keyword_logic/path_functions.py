@@ -3,7 +3,7 @@
 import json as _json
 from itertools import zip_longest
 from random import choice
-from typing import Any
+from typing import Any, Literal, overload
 
 from requests import Response
 from robot.libraries.BuiltIn import BuiltIn
@@ -12,6 +12,46 @@ from OpenApiLibCore.models import oas_models
 from OpenApiLibCore.models.request_data import RequestData
 
 run_keyword = BuiltIn().run_keyword
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_valid_id_for_path"], *args: str
+) -> str: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_ids_from_url"], *args: str
+) -> list[str]: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_valid_url"], *args: str
+) -> str: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_parameterized_path_from_url"], *args: str
+) -> str: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_request_data"], *args: str
+) -> RequestData: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["authorized_request"], *args: object
+) -> Response: ...  # pragma: no cover
+
+
+def _run_keyword(keyword_name: str, *args: object) -> object:
+    return run_keyword(keyword_name, *args)
 
 
 def match_parts(parts: list[str], spec_parts: list[str]) -> bool:
@@ -84,9 +124,7 @@ def get_valid_url(
         if part.startswith("{") and part.endswith("}"):
             type_path_parts = path_parts[slice(index)]
             type_path = "/".join(type_path_parts)
-            existing_id: str | int | float = run_keyword(
-                "get_valid_id_for_path", type_path
-            )
+            existing_id = _run_keyword("get_valid_id_for_path", type_path)
             path_parts[index] = str(existing_id)
     resolved_path = "/".join(path_parts)
     url = f"{base_url}{resolved_path}"
@@ -96,13 +134,13 @@ def get_valid_url(
 def get_valid_id_for_path(
     path: str,
     openapi_spec: oas_models.OpenApiObject,
-) -> str | int:
-    url: str = run_keyword("get_valid_url", path)
+) -> str:
+    url = _run_keyword("get_valid_url", path)
     # Try to create a new resource to prevent conflicts caused by
     # operations performed on the same resource by other test cases
-    request_data: RequestData = run_keyword("get_request_data", path, "post")
+    request_data = _run_keyword("get_request_data", path, "post")
 
-    response: Response = run_keyword(
+    response = _run_keyword(
         "authorized_request",
         url,
         "post",
@@ -118,7 +156,7 @@ def get_valid_id_for_path(
         # If a new resource cannot be created using POST, try to retrieve a
         # valid id using a GET request.
         try:
-            valid_id = choice(run_keyword("get_ids_from_url", url))
+            valid_id = choice(_run_keyword("get_ids_from_url", url))
             return id_transformer(valid_id)
         except Exception as exception:
             raise AssertionError(
@@ -174,9 +212,9 @@ def get_ids_from_url(
     url: str,
     openapi_spec: oas_models.OpenApiObject,
 ) -> list[str]:
-    path: str = run_keyword("get_parameterized_path_from_url", url)
-    request_data: RequestData = run_keyword("get_request_data", path, "get")
-    response = run_keyword(
+    path = _run_keyword("get_parameterized_path_from_url", url)
+    request_data = _run_keyword("get_request_data", path, "get")
+    response = _run_keyword(
         "authorized_request",
         url,
         "get",

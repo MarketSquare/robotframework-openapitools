@@ -28,9 +28,7 @@ class IGetIdPropertyName(Protocol):
         self, mappings_module_name: str, default_id_property_name: str
     ) -> None: ...
 
-    def __call__(
-        self, path: str
-    ) -> tuple[str, Callable[[str], str] | Callable[[int], int]]: ...
+    def __call__(self, path: str) -> tuple[str, Callable[[str], str]]: ...
 
     @property
     def default_id_property_name(self) -> str: ...
@@ -38,7 +36,7 @@ class IGetIdPropertyName(Protocol):
     @property
     def id_mapping(
         self,
-    ) -> dict[str, str | tuple[str, Callable[[str], str] | Callable[[int], int]]]: ...
+    ) -> dict[str, str | tuple[str, Callable[[str], str]]]: ...
 
 
 class IConstraintMapping(Protocol):
