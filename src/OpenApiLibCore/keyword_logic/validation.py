@@ -361,6 +361,10 @@ def _validate_response(
     response_validation: str,
 ) -> None:
     try:
+        content_type = response.headers.get("Content-Type", "")
+        if "json" in content_type:
+            content_type, _, _ = content_type.partition(";")
+            response.headers.update({"Content-Type": content_type})
         validate_response_using_validator(
             response=response,
             response_validator=response_validator,
