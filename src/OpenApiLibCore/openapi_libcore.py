@@ -7,7 +7,8 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Generator, Literal, overload
 
-from openapi_core import Config, OpenAPI, Spec
+from jsonschema_path import SchemaPath
+from openapi_core import Config, OpenAPI
 from openapi_core.validation.exceptions import ValidationError
 from prance import ResolvingParser
 from prance.util.url import ResolutionError
@@ -495,7 +496,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
     @keyword
     def validate_response_using_validator(self, response: Response) -> None:
         """
-        Validate the `response` against the OpenAPI Spec that is
+        Validate the `response` against the OpenAPI spec that is
         loaded during library initialization.
         """
         _validation.validate_response_using_validator(
@@ -573,11 +574,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
     def base_url(self) -> str:
         return f"{self.origin}{self._base_path}"
 
-    @cached_property
-    def validation_spec(self) -> Spec:
-        _, validation_spec, _ = self._load_specs_and_validator()
-        return validation_spec
-
     @property
     def openapi_spec(self) -> OpenApiObject:
         """Return a deepcopy of the parsed openapi document."""
@@ -586,7 +582,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
 
     @cached_property
     def _openapi_spec(self) -> OpenApiObject:
-        parser, _, _ = self._load_specs_and_validator()
+        parser, _ = self._load_specs_and_validator()
         spec_model = OpenApiObject.model_validate(parser.specification)
         spec_model = self._attach_user_mappings(spec_model=spec_model)
         self._register_path_parameters(spec_model.paths)
@@ -636,7 +632,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
     def response_validator(
         self,
     ) -> IResponseValidator:
-        _, _, response_validator = self._load_specs_and_validator()
+        _, response_validator = self._load_specs_and_validator()
         return response_validator
 
     def _get_json_types_from_spec(self, spec: dict[str, JSON]) -> set[str]:
@@ -664,7 +660,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         self,
     ) -> tuple[
         ResolvingParser,
-        Spec,
         IResponseValidator,
     ]:
         def recursion_limit_handler(
@@ -684,7 +679,6 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             if cached_parser:
                 return (
                     cached_parser.parser,
-                    cached_parser.validation_spec,
                     cached_parser.response_validator,
                 )
 
@@ -700,7 +694,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
                     "Source was loaded, but no specification was present after parsing."
                 )
 
-            validation_spec = Spec.from_dict(parser.specification)  # pyright: ignore[reportArgumentType]
+            validation_spec = SchemaPath.from_dict(parser.specification)  # pyright: ignore[reportArgumentType]
 
             json_types_from_spec: set[str] = self._get_json_types_from_spec(
                 parser.specification
@@ -714,11 +708,10 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
 
             PARSER_CACHE[self._source] = CachedParser(
                 parser=parser,
-                validation_spec=validation_spec,
                 response_validator=response_validator,
             )
 
-            return parser, validation_spec, response_validator
+            return parser, response_validator
 
         except ResolutionError as exception:  # pragma: no cover
             raise FatalError(

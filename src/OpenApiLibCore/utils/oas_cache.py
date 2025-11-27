@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 
-from openapi_core import Spec
 from prance import ResolvingParser
 
 from OpenApiLibCore.protocols import IResponseValidator
@@ -11,7 +10,6 @@ from OpenApiLibCore.protocols import IResponseValidator
 @dataclass
 class CachedParser:
     parser: ResolvingParser
-    validation_spec: Spec
     response_validator: IResponseValidator
 
 
