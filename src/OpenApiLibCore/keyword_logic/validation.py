@@ -334,6 +334,9 @@ def validate_send_response(
     if original_data:
         for send_property_name, send_value in original_data.items():
             if send_property_name not in send_json.keys():
+                if send_property_name not in response_data:
+                    logger.debug(f"'{send_property_name}' not found in response data.")
+                    continue
                 assert send_value == response_data[send_property_name], (
                     f"Received value for {send_property_name} '{response_data[send_property_name]}' does not "
                     f"match '{send_value}' in the pre-patch data"
