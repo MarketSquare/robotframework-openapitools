@@ -153,14 +153,6 @@ class TestStringSchemaVariations(unittest.TestCase):
         value = schema.get_valid_value()
         self.assertEqual(len(value), 42)
 
-        schema = BytesSchema(minLength=42, maxLength=42)
-        value = schema.get_valid_value()
-        self.assertEqual(len(value), 42)
-
-        schema = BytesSchema(minLength=42)
-        value = schema.get_valid_value()
-        self.assertEqual(len(value), 42)
-
     def test_datetime(self) -> None:
         schema = StringSchema(format="date-time")
         value = schema.get_valid_value()
@@ -196,6 +188,44 @@ class TestStringSchemaVariations(unittest.TestCase):
         self.assertTrue(
             last_log_entry.endswith(f"The pattern was: {pattern}"), last_log_entry
         )
+
+
+class TestBytesSchemaVariations(unittest.TestCase):
+    def test_default_min_max(self) -> None:
+        schema = BytesSchema(maxLength=0)
+        value = schema.get_valid_value()
+        self.assertEqual(value, b"")
+
+        schema = BytesSchema(minLength=36)
+        value = schema.get_valid_value()
+        self.assertEqual(len(value), 36)
+
+    def test_min_max(self) -> None:
+        schema = BytesSchema(minLength=42, maxLength=42)
+        value = schema.get_valid_value()
+        self.assertEqual(len(value), 42)
+
+        schema = BytesSchema(minLength=42)
+        value = schema.get_valid_value()
+        self.assertEqual(len(value), 42)
+
+    def test_pattern(self) -> None:
+        pattern = r"^[1-9][0-9]{3} ?(?!sa|sd|ss|SA|SD|SS)[A-Za-z]{2}$"
+        schema = BytesSchema(pattern=pattern)
+
+        with self.assertLogs(level="WARN") as logs:
+            value = schema.get_valid_value()
+
+        self.assertTrue(len(logs.output) > 0)
+        last_log_entry = logs.output[-1]
+        self.assertTrue(
+            last_log_entry.startswith(
+                "WARNING:RobotFramework:'pattern' is currently not supported for "
+                "'byte' format strings."
+            ),
+            last_log_entry,
+        )
+        self.assertIsInstance(value, bytes)
 
     def test_byte(self) -> None:
         schema = BytesSchema(format="byte")

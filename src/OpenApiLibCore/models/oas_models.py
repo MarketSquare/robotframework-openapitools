@@ -330,7 +330,7 @@ class BytesSchema(SchemaBase[bytes], frozen=True):
             return choice(self.enum)
         if self.pattern:
             logger.warn(
-                "'pattern' is currently not supported for 'byte' format strings."
+                "'pattern' is currently not supported for 'byte' format strings. "
                 "To ensure a valid value is generated for this property, a "
                 "PropertyValueConstraint can be configured. See the Advanced Use "
                 "section of the OpenApiTools documentation for more details."
@@ -358,9 +358,9 @@ class BytesSchema(SchemaBase[bytes], frozen=True):
             invalid_string_value = current_str_value if current_str_value else "x"
             # add random characters from the current value to prevent adding new characters
             while len(invalid_string_value) <= self.maxLength:
-                invalid_string_value += choice(current_str_value)
+                invalid_string_value += choice(invalid_string_value)
             invalid_value = base64.b64encode(invalid_string_value.encode("utf-8"))
-            invalid_values.append(invalid_value)
+            invalid_values.append(invalid_value[0 : self.maxLength + 1])
         if invalid_values:
             return invalid_values
         raise ValueError
@@ -406,7 +406,7 @@ class BytesSchema(SchemaBase[bytes], frozen=True):
 
     @property
     def annotation_string(self) -> str:
-        return "str"
+        return "bytes"
 
 
 class IntegerSchema(SchemaBase[int], frozen=True):
@@ -1040,7 +1040,7 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
 
     @property
     def annotation_string(self) -> str:
-        return "dict[str, Any]"
+        return "dict[str, JSON]"
 
 
 ResolvedSchemaObjectTypes: TypeAlias = (

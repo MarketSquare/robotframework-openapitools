@@ -6,6 +6,7 @@ from robot.api.deco import keyword, library
 from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore import UNSET, OpenApiLibCore, RequestValues
+from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.keyword_logic.path_functions import substitute_path_parameters
 
 run_keyword = BuiltIn().run_keyword
