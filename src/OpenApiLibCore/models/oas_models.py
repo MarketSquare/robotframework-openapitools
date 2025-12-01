@@ -9,6 +9,7 @@ from functools import cached_property
 from random import choice, randint, sample, shuffle, uniform
 from sys import float_info
 from typing import (
+    Annotated,
     Any,
     Callable,
     Generator,
@@ -19,12 +20,13 @@ from typing import (
     TypeAlias,
     TypeGuard,
     TypeVar,
+    Union,
     cast,
 )
 from uuid import uuid4
 
 import rstr
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, Discriminator, Field, RootModel, Tag
 from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
@@ -1043,17 +1045,33 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
         return "dict[str, JSON]"
 
 
-ResolvedSchemaObjectTypes: TypeAlias = (
-    NullSchema
-    | BooleanSchema
-    | StringSchema
-    | BytesSchema
-    | IntegerSchema
-    | NumberSchema
-    | ArraySchema[AI]
-    | ObjectSchema
-)
-RESOLVED_SCHEMA_INSTANCES = (
+def get_discriminator_property(data: Any) -> str:
+    if isinstance(data, dict):
+        format = data.get("format")
+        if format == "byte":
+            return "bytes"
+        return data.get("type", "unknown")
+    if hasattr(data, "format"):
+        if data.format == "byte":
+            return "bytes"
+    return getattr(data, "type", "unknown")
+
+
+ResolvedSchemaObjectTypes = Annotated[
+    Union[
+        Annotated[BytesSchema, Tag("bytes")],
+        Annotated[StringSchema, Tag("string")],
+        Annotated[NullSchema, Tag("null")],
+        Annotated[BooleanSchema, Tag("boolean")],
+        Annotated[IntegerSchema, Tag("integer")],
+        Annotated[NumberSchema, Tag("number")],
+        Annotated[ArraySchema, Tag("array")],
+        Annotated[ObjectSchema, Tag("object")],
+    ],
+    Discriminator(get_discriminator_property),
+]
+
+RESOLVED_SCHEMA_CLASS_TUPLE = (
     NullSchema,
     BooleanSchema,
     StringSchema,
@@ -1121,7 +1139,7 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
                 additional_properties_types = []
                 for additional_properties_item in additional_properties_list:
                     if isinstance(
-                        additional_properties_item, RESOLVED_SCHEMA_INSTANCES
+                        additional_properties_item, RESOLVED_SCHEMA_CLASS_TUPLE
                     ):
                         additional_properties_types.append(additional_properties_item)
                 if not additional_properties_types:
@@ -1148,7 +1166,7 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
             yield merged_schema
         else:
             for schema in self.anyOf + self.oneOf:
-                if isinstance(schema, RESOLVED_SCHEMA_INSTANCES):
+                if isinstance(schema, RESOLVED_SCHEMA_CLASS_TUPLE):
                     yield schema
                 else:
                     yield from schema.resolved_schemas
@@ -1170,7 +1188,7 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
 SchemaObjectTypes: TypeAlias = ResolvedSchemaObjectTypes | UnionTypeSchema  # type: ignore[type-arg]
 
 
-class PropertiesMapping(RootModel[dict[str, "SchemaObjectTypes"]], frozen=True): ...
+class PropertiesMapping(RootModel[dict[str, SchemaObjectTypes]], frozen=True): ...
 
 
 def _get_empty_properties_mapping() -> PropertiesMapping:

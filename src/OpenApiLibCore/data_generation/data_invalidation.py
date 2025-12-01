@@ -15,7 +15,7 @@ from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.data_constraints.dto_base import (
     Dto,
 )
-from OpenApiLibCore.models import IGNORE, Ignore
+from OpenApiLibCore.models import IGNORE
 from OpenApiLibCore.models.oas_models import (
     ArraySchema,
     ObjectSchema,

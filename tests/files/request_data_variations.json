@@ -1,0 +1,149 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "test_get_request_data",
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/null_schema": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "null"
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/boolean_schema": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/integer_schema": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "integer"
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/number_schema": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "number"
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/string_schema": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/bytes_schema": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "string",
+                                "format": "byte"
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/object_schema": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/array_schema": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "type": "number"
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/union_schema": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "null"
+                                    },
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        }
+    }
+}
