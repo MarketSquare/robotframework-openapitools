@@ -948,85 +948,76 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
         # Remove duplicates, then shuffle the property_names so different properties in
         # the data dict are invalidated when rerunning the test.
         shuffle(list(set(property_names)))
-        for property_name in property_names:
-            # if possible, invalidate a constraint but send otherwise valid data
-            id_dependencies = [
-                r
-                for r in relations
-                if isinstance(r, IdDependency) and r.property_name == property_name
-            ]
-            if id_dependencies:
-                invalid_id = uuid4().hex
-                logger.debug(
-                    f"Breaking IdDependency for status_code {status_code}: setting "
-                    f"{property_name} to {invalid_id}"
-                )
-                properties[property_name] = invalid_id
-                return properties
-
-            invalid_value_from_constraint = [
-                r.invalid_value
-                for r in relations
-                if isinstance(r, PropertyValueConstraint)
-                and r.property_name == property_name
-                and r.invalid_value_error_code == status_code
-            ]
-            if (
-                invalid_value_from_constraint
-                and invalid_value_from_constraint[0] is not NOT_SET
-            ):
-                properties[property_name] = invalid_value_from_constraint[0]
-                logger.debug(
-                    f"Using invalid_value {invalid_value_from_constraint[0]} to "
-                    f"invalidate property {property_name}"
-                )
-                return properties
-
-            value_schema = self.properties.root[property_name]
-            if isinstance(value_schema, UnionTypeSchema):
-                # Filter "type": "null" from the possible types since this indicates an
-                # optional / nullable property that can only be invalidated by sending
-                # invalid data of a non-null type
-                non_null_schemas = [
-                    s
-                    for s in value_schema.resolved_schemas
-                    if not isinstance(s, NullSchema)
-                ]
-                value_schema = choice(non_null_schemas)
-
-            # there may not be a current_value when invalidating an optional property
-            current_value = properties.get(property_name, SENTINEL)
-            if current_value is SENTINEL:
-                # the current_value isn't very relevant as long as the type is correct
-                # so no logic to handle Relations / objects / arrays here
-                property_type = value_schema.type
-                if property_type == "object":
-                    current_value = {}
-                elif property_type == "array":
-                    current_value = []
-                else:
-                    current_value = value_schema.get_valid_value()
-
-            values_from_constraint = [
-                r.values[0]
-                for r in relations
-                if isinstance(r, PropertyValueConstraint)
-                and r.property_name == property_name
-            ]
-
-            invalid_value = value_schema.get_invalid_value(
-                valid_value=current_value,  # type: ignore[arg-type]
-                values_from_constraint=values_from_constraint,
-            )
-            if not isinstance(invalid_value, Ignore):
-                properties[property_name] = invalid_value
+        # The value of 1 property will be changed and since they are shuffled, take the first
+        property_name = property_names[0]
+        # if possible, invalidate a constraint but send otherwise valid data
+        id_dependencies = [
+            r
+            for r in relations
+            if isinstance(r, IdDependency) and r.property_name == property_name
+        ]
+        if id_dependencies:
+            invalid_id = uuid4().hex
             logger.debug(
-                f"Property {property_name} changed to {invalid_value!r} "
-                f"(received from get_invalid_value)"
+                f"Breaking IdDependency for status_code {status_code}: setting "
+                f"{property_name} to {invalid_id}"
+            )
+            properties[property_name] = invalid_id
+            return properties
+
+        invalid_value_from_constraint = [
+            r.invalid_value
+            for r in relations
+            if isinstance(r, PropertyValueConstraint)
+            and r.property_name == property_name
+            and r.invalid_value_error_code == status_code
+        ]
+        if (
+            invalid_value_from_constraint
+            and invalid_value_from_constraint[0] is not NOT_SET
+        ):
+            properties[property_name] = invalid_value_from_constraint[0]
+            logger.debug(
+                f"Using invalid_value {invalid_value_from_constraint[0]} to "
+                f"invalidate property {property_name}"
             )
             return properties
-        logger.warn("get_invalidated_data returned unchanged properties")
-        return properties  # pragma: no cover
+
+        value_schema = self.properties.root[property_name]
+        if isinstance(value_schema, UnionTypeSchema):
+            # Filter "type": "null" from the possible types since this indicates an
+            # optional / nullable property that can only be invalidated by sending
+            # invalid data of a non-null type
+            non_null_schemas = [
+                s
+                for s in value_schema.resolved_schemas
+                if not isinstance(s, NullSchema)
+            ]
+            value_schema = choice(non_null_schemas)
+
+        # there may not be a current_value when invalidating an optional property
+        current_value = properties.get(property_name, SENTINEL)
+        if current_value is SENTINEL:
+            current_value = value_schema.get_valid_value()
+
+        values_from_constraint = [
+            r.values[0]
+            for r in relations
+            if isinstance(r, PropertyValueConstraint)
+            and r.property_name == property_name
+        ]
+
+        invalid_value = value_schema.get_invalid_value(
+            valid_value=current_value,  # type: ignore[arg-type]
+            values_from_constraint=values_from_constraint,
+        )
+        if not isinstance(invalid_value, Ignore):
+            properties[property_name] = invalid_value
+        logger.debug(
+            f"Property {property_name} changed to {invalid_value!r} "
+            f"(received from get_invalid_value)"
+        )
+        return properties
 
     @property
     def can_be_invalidated(self) -> bool:
@@ -1050,7 +1041,7 @@ def get_discriminator_property(data: Any) -> str:
         format = data.get("format")
         if format == "byte":
             return "bytes"
-        return data.get("type", "unknown")
+        return data.get("type", "unknown")  # type: ignore[no-any-return]
     if hasattr(data, "format"):
         if data.format == "byte":
             return "bytes"
@@ -1065,7 +1056,7 @@ ResolvedSchemaObjectTypes = Annotated[
         Annotated[BooleanSchema, Tag("boolean")],
         Annotated[IntegerSchema, Tag("integer")],
         Annotated[NumberSchema, Tag("number")],
-        Annotated[ArraySchema, Tag("array")],
+        Annotated[ArraySchema, Tag("array")],  # type: ignore[type-arg]
         Annotated[ObjectSchema, Tag("object")],
     ],
     Discriminator(get_discriminator_property),
@@ -1100,10 +1091,10 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
         raise ValueError
 
     @property
-    def resolved_schemas(self) -> list[ResolvedSchemaObjectTypes]:  # type: ignore[type-arg]
+    def resolved_schemas(self) -> list[ResolvedSchemaObjectTypes]:
         return list(self._get_resolved_schemas())
 
-    def _get_resolved_schemas(self) -> Generator[ResolvedSchemaObjectTypes, None, None]:  # type: ignore[type-arg]
+    def _get_resolved_schemas(self) -> Generator[ResolvedSchemaObjectTypes, None, None]:
         if self.allOf:
             properties_list: list[PropertiesMapping] = []
             additional_properties_list = []
@@ -1185,7 +1176,7 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
         return " | ".join(unique_annotations)
 
 
-SchemaObjectTypes: TypeAlias = ResolvedSchemaObjectTypes | UnionTypeSchema  # type: ignore[type-arg]
+SchemaObjectTypes: TypeAlias = ResolvedSchemaObjectTypes | UnionTypeSchema
 
 
 class PropertiesMapping(RootModel[dict[str, SchemaObjectTypes]], frozen=True): ...
