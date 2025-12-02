@@ -40,6 +40,8 @@ class IGetIdPropertyName(Protocol):
 
 
 class IConstraintMapping(Protocol):
+    # NOTE: This Protocol is used as annotation in a number of the oas_models, which
+    # requires this method to prevent a PydanticSchemaGenerationError.
     @classmethod
     def __get_pydantic_core_schema__(
         cls, source_type: Any, handler: GetCoreSchemaHandler

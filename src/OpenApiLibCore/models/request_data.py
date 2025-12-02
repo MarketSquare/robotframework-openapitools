@@ -57,7 +57,7 @@ class RequestData:
 
     valid_data: JSON
     constraint_mapping: type[IConstraintMapping]
-    body_schema: ResolvedSchemaObjectTypes | None = None  # type: ignore[type-arg]
+    body_schema: ResolvedSchemaObjectTypes | None = None
     parameters: list[ParameterObject] = field(default_factory=list)
     params: dict[str, JSON] = field(default_factory=dict)
     headers: dict[str, str] = field(default_factory=dict)
@@ -116,7 +116,7 @@ class RequestData:
             if param.schema_ is None:
                 continue
 
-            possible_schemas: list[ResolvedSchemaObjectTypes] = []  # type: ignore[type-arg]
+            possible_schemas: list[ResolvedSchemaObjectTypes] = []
             if isinstance(param.schema_, UnionTypeSchema):
                 possible_schemas = param.schema_.resolved_schemas
             else:
@@ -157,7 +157,7 @@ class RequestData:
             if header.schema_ is None:
                 continue
 
-            possible_schemas: list[ResolvedSchemaObjectTypes] = []  # type: ignore[type-arg]
+            possible_schemas: list[ResolvedSchemaObjectTypes] = []
             if isinstance(header.schema_, UnionTypeSchema):
                 possible_schemas = header.schema_.resolved_schemas
             else:
