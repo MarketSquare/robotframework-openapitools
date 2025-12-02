@@ -49,7 +49,7 @@ Test Get Request Data For Endpoint With Object RequestBody
     Should Not Be Empty    ${request_data.body_schema.properties.root}
     Should Be Equal    ${request_data.parameters}    ${list}
     Should Be Equal    ${request_data.params}    ${dict}
-    VAR    &{expected_headers}=    content-type=application/json
+    VAR    &{expected_headers}=    Content-Type=application/json
     Should Be Equal    ${request_data.headers}    ${expected_headers}
     Should Be True    ${request_data.has_body}
 

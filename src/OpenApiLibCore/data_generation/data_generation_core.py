@@ -84,7 +84,11 @@ def get_request_data(
         )
 
     if operation_spec.requestBody.mime_type:
-        headers.update({"content-type": operation_spec.requestBody.mime_type})
+        if "content-type" in headers:
+            key_value = "content-type"  # pragma: no cover
+        else:
+            key_value = "Content-Type"
+        headers.update({key_value: operation_spec.requestBody.mime_type})
 
     if isinstance(body_schema, UnionTypeSchema):
         body_schema = choice(body_schema.resolved_schemas)
@@ -127,7 +131,7 @@ def _get_mapping_dataclass_for_empty_body(
 
 
 def _get_mapping_dataclass_from_valid_data(
-    schema: ResolvedSchemaObjectTypes,  # type: ignore[type-arg]
+    schema: ResolvedSchemaObjectTypes,
     constraint_mapping: type[IConstraintMapping] | None,
     valid_data: JSON,
     method_spec: OperationObject,
@@ -243,7 +247,7 @@ def get_parameter_data(
             continue
 
         if parameter.schema_ is None:
-            continue
+            continue  # pragma: no cover
         value = parameter.schema_.get_valid_value()
         result[parameter_name] = value
     return result

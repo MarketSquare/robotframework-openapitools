@@ -17,7 +17,7 @@ Test Get Request Data For Schema With allOf
     ${request_data}=    Get Request Data    path=/hypermedia    method=post
     VAR    &{dict}=    &{EMPTY}
     VAR    @{list}=    @{EMPTY}
-    VAR    &{expected_headers}=    content-type=application/hal+json
+    VAR    &{expected_headers}=    Content-Type=application/hal+json
     Length Should Be    ${request_data.valid_data}[isan]    36
     Length Should Be    ${request_data.valid_data}[tags]    1
     Length Should Be    ${request_data.valid_data}[tags][0]    36
