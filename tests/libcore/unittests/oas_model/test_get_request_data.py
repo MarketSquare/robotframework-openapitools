@@ -18,7 +18,9 @@ from OpenApiLibCore.models.oas_models import (
 )
 
 unittest_folder = pathlib.Path(__file__).parent.resolve()
-spec_path = unittest_folder.parent.parent / "files" / "request_data_variations.json"
+spec_path = (
+    unittest_folder.parent.parent.parent / "files" / "request_data_variations.json"
+)
 
 
 class TestValidData(unittest.TestCase):
@@ -80,6 +82,12 @@ class TestValidData(unittest.TestCase):
                 request_data.body_schema, (NullSchema, IntegerSchema, StringSchema)
             )
         )
+
+    def test_array_with_union_schema(self) -> None:
+        request_data = self._get_request_data(path="/array_with_union_schema")
+        self.assertIsInstance(request_data.valid_data, list)
+        self.assertIsInstance(request_data.valid_data[0], dict)
+        self.assertTrue(isinstance(request_data.body_schema, ArraySchema))
 
 
 if __name__ == "__main__":
