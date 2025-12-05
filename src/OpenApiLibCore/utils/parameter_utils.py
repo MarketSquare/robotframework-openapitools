@@ -73,8 +73,6 @@ def convert_string_to_python_identifier(string: str, verbose: bool = False) -> s
         return string  # pragma: no cover
 
     converted_string = "".join(_convert_string_to_python_identifier())
-    if not _is_python_safe(converted_string):
-        raise ValueError(
-            f"Failed to convert '{string}' to Python identifier."
-        )  # pragma: no cover
+    if not _is_python_safe(converted_string):  # pragma: no cover
+        raise ValueError(f"Failed to convert '{string}' to Python identifier.")
     return converted_string

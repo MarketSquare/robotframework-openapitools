@@ -84,8 +84,8 @@ def get_request_data(
         )
 
     if operation_spec.requestBody.mime_type:
-        if "content-type" in headers:
-            key_value = "content-type"  # pragma: no cover
+        if "content-type" in headers:  # pragma: no branch
+            key_value = "content-type"
         else:
             key_value = "Content-Type"
         headers.update({key_value: operation_spec.requestBody.mime_type})
@@ -246,8 +246,8 @@ def get_parameter_data(
             result[parameter_name] = value
             continue
 
-        if parameter.schema_ is None:
-            continue  # pragma: no cover
+        if parameter.schema_ is None:  # pragma: no branch
+            continue
         value = parameter.schema_.get_valid_value()
         result[parameter_name] = value
     return result

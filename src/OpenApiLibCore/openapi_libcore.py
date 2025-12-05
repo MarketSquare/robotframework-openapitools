@@ -689,7 +689,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
                 recursion_limit_handler=recursion_limit_handler,
             )  # type: ignore[no-untyped-call]
 
-            if parser.specification is None:  # pragma: no cover
+            if parser.specification is None:  # pragma: no branch
                 raise FatalError(
                     "Source was loaded, but no specification was present after parsing."
                 )
