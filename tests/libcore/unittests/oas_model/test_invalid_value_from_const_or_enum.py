@@ -4,7 +4,6 @@ import unittest
 from OpenApiLibCore.models.oas_models import (
     ArraySchema,
     BooleanSchema,
-    BytesSchema,
     IntegerSchema,
     NullSchema,
     NumberSchema,
@@ -27,11 +26,6 @@ class TestGetInValidValueFromConstOrEnumRaisesWhenNoConstOrEnum(unittest.TestCas
 
     def test_string_schema(self) -> None:
         schema = StringSchema()
-        with self.assertRaises(ValueError):
-            schema.get_invalid_value_from_const_or_enum()
-
-    def test_bytes_schema(self) -> None:
-        schema = BytesSchema()
         with self.assertRaises(ValueError):
             schema.get_invalid_value_from_const_or_enum()
 
@@ -72,11 +66,6 @@ class TestGetInValidValueFromConst(unittest.TestCase):
         schema = StringSchema(const=const)
         self.assertNotEqual(schema.get_invalid_value_from_const_or_enum(), const)
 
-    def test_bytes_schema(self) -> None:
-        const = b"Hello world!"
-        schema = BytesSchema(const=const)
-        self.assertNotEqual(schema.get_invalid_value_from_const_or_enum(), const)
-
     def test_integer_schema(self) -> None:
         const = 42
         schema = IntegerSchema(const=const)
@@ -103,11 +92,6 @@ class TestGetInValidValueFromEnum(unittest.TestCase):
     def test_string_schema(self) -> None:
         enum = ["eggs", "bacon", "spam"]
         schema = StringSchema(enum=enum)
-        self.assertNotIn(schema.get_invalid_value_from_const_or_enum(), enum)
-
-    def test_bytes_schema(self) -> None:
-        enum = [b"eggs", b"bacon", b"spam"]
-        schema = BytesSchema(enum=enum)
         self.assertNotIn(schema.get_invalid_value_from_const_or_enum(), enum)
 
     def test_integer_schema(self) -> None:

@@ -310,107 +310,6 @@ class StringSchema(SchemaBase[str], frozen=True):
         return "str"
 
 
-class BytesSchema(SchemaBase[bytes], frozen=True):
-    type: Literal["string"] = "string"
-    format: Literal["byte"] = "byte"
-    pattern: str = ""
-    maxLength: int | None = None
-    minLength: int | None = None
-    const: bytes | None = None
-    enum: list[bytes] | None = None
-    nullable: bool = False
-
-    def get_valid_value(
-        self,
-        constraint_mapping: ConstraintMappingType | None = None,
-        operation_id: str | None = None,
-    ) -> bytes:
-        """Generate a random string within the min/max length in the schema, if specified."""
-        if self.const is not None:
-            return self.const
-        if self.enum is not None:
-            return choice(self.enum)
-        if self.pattern:
-            logger.warn(
-                "'pattern' is currently not supported for 'byte' format strings. "
-                "To ensure a valid value is generated for this property, a "
-                "PropertyValueConstraint can be configured. See the Advanced Use "
-                "section of the OpenApiTools documentation for more details."
-            )
-        minimum = self.minLength if self.minLength is not None else 0
-        maximum = self.maxLength if self.maxLength is not None else 36
-        maximum = max(minimum, maximum)
-
-        # use "uuid" for generated strings to prevent whitespace characters
-        value = fake_string(string_format="uuid")
-        while len(value) < minimum:
-            value = value + fake_string(string_format="uuid")
-        bytes_value = base64.b64encode(value.encode("utf-8"))
-        if len(bytes_value) > maximum:
-            bytes_value = bytes_value[:maximum]
-        return bytes_value
-
-    def get_values_out_of_bounds(self, current_value: bytes) -> list[bytes]:
-        invalid_values: list[bytes] = []
-        if self.minLength:
-            invalid_values.append(current_value[0 : self.minLength - 1])
-        # if there is a maximum length, send 1 character more
-        if self.maxLength:
-            current_str_value = current_value.decode(encoding="utf-8")
-            invalid_string_value = current_str_value if current_str_value else "x"
-            # add random characters from the current value to prevent adding new characters
-            while len(invalid_string_value) <= self.maxLength:
-                invalid_string_value += choice(invalid_string_value)
-            invalid_value = base64.b64encode(invalid_string_value.encode("utf-8"))
-            invalid_values.append(invalid_value[0 : self.maxLength + 1])
-        if invalid_values:
-            return invalid_values
-        raise ValueError
-
-    def get_invalid_value_from_const_or_enum(self) -> bytes:
-        valid_values = []
-        if self.const is not None:
-            valid_values = [self.const]
-        if self.enum is not None:
-            valid_values = self.enum
-
-        if not valid_values:
-            raise ValueError
-
-        invalid_value = b""
-        for value in valid_values:
-            invalid_value += value + value
-
-        return invalid_value
-
-    def get_invalid_value_from_constraint(
-        self, values_from_constraint: list[bytes]
-    ) -> bytes:
-        invalid_values = 2 * values_from_constraint
-        invalid_value = invalid_values.pop()
-        for value in invalid_values:
-            invalid_value = invalid_value + value
-
-        if not invalid_value:
-            raise ValueError("Value invalidation yielded an empty string.")
-        return invalid_value
-
-    @property
-    def can_be_invalidated(self) -> bool:
-        if (
-            self.maxLength is not None
-            or self.minLength is not None
-            or self.const is not None
-            or self.enum is not None
-        ):
-            return True
-        return False
-
-    @property
-    def annotation_string(self) -> str:
-        return "bytes"
-
-
 class IntegerSchema(SchemaBase[int], frozen=True):
     type: Literal["integer"] = "integer"
     format: str = "int32"
@@ -801,16 +700,16 @@ class ArraySchema(SchemaBase[list[AI]], frozen=True):
 
 
 # NOTE: Workaround for cyclic PropertiesMapping / SchemaObjectTypes annotations
-def _get_properties_mapping_default() -> "PropertiesMapping":
+def _get_properties_mapping_default() -> PropertiesMapping:
     return _get_empty_properties_mapping()
 
 
 class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
     type: Literal["object"] = "object"
-    properties: "PropertiesMapping" = Field(
+    properties: PropertiesMapping = Field(
         default_factory=_get_properties_mapping_default
     )
-    additionalProperties: "bool | SchemaObjectTypes" = True
+    additionalProperties: SchemaObjectTypes | bool = True
     required: list[str] = []
     maxProperties: int | None = None
     minProperties: int | None = None
@@ -1011,12 +910,18 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
             valid_value=current_value,  # type: ignore[arg-type]
             values_from_constraint=values_from_constraint,
         )
-        if not isinstance(invalid_value, Ignore):
+        if isinstance(invalid_value, Ignore):
+            properties.pop(property_name)
+            logger.debug(
+                f"Property {property_name} removed since the invalid_value "
+                f"was IGNORE (received from get_invalid_value)"
+            )
+        else:
             properties[property_name] = invalid_value
-        logger.debug(
-            f"Property {property_name} changed to {invalid_value!r} "
-            f"(received from get_invalid_value)"
-        )
+            logger.debug(
+                f"Property {property_name} changed to {invalid_value} "
+                f"(received from get_invalid_value)"
+            )
         return properties
 
     @property
@@ -1036,37 +941,23 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
         return "dict[str, JSON]"
 
 
-def get_discriminator_property(data: Any) -> str:
-    if isinstance(data, dict):
-        format = data.get("format")
-        if format == "byte":
-            return "bytes"
-        return data.get("type", "unknown")  # type: ignore[no-any-return]
-    if hasattr(data, "format"):
-        if data.format == "byte":
-            return "bytes"
-    return getattr(data, "type", "unknown")
-
-
 ResolvedSchemaObjectTypes = Annotated[
     Union[
-        Annotated[BytesSchema, Tag("bytes")],
-        Annotated[StringSchema, Tag("string")],
-        Annotated[NullSchema, Tag("null")],
-        Annotated[BooleanSchema, Tag("boolean")],
-        Annotated[IntegerSchema, Tag("integer")],
-        Annotated[NumberSchema, Tag("number")],
-        Annotated[ArraySchema, Tag("array")],  # type: ignore[type-arg]
-        Annotated[ObjectSchema, Tag("object")],
+        ArraySchema,  # type: ignore[type-arg]
+        BooleanSchema,
+        IntegerSchema,
+        NullSchema,
+        NumberSchema,
+        ObjectSchema,
+        StringSchema,
     ],
-    Discriminator(get_discriminator_property),
+    Field(discriminator="type"),
 ]
 
 RESOLVED_SCHEMA_CLASS_TUPLE = (
     NullSchema,
     BooleanSchema,
     StringSchema,
-    BytesSchema,
     IntegerSchema,
     NumberSchema,
     ArraySchema,
@@ -1113,7 +1004,7 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
                 if schema.enum:
                     raise ValueError("allOf and models with enums are not compatible")
 
-                if schema.properties:
+                if schema.properties.root:
                     properties_list.append(schema.properties)
                 additional_properties_list.append(schema.additionalProperties)
                 required_list += schema.required

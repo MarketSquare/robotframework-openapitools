@@ -8,13 +8,13 @@ from OpenApiLibCore.data_generation.data_generation_core import get_request_data
 from OpenApiLibCore.models.oas_models import (
     ArraySchema,
     BooleanSchema,
-    BytesSchema,
     IntegerSchema,
     NullSchema,
     NumberSchema,
     ObjectSchema,
     OpenApiObject,
     StringSchema,
+    UnionTypeSchema,
 )
 
 unittest_folder = pathlib.Path(__file__).parent.resolve()
@@ -58,10 +58,10 @@ class TestValidData(unittest.TestCase):
         self.assertIsInstance(request_data.valid_data, str)
         self.assertIsInstance(request_data.body_schema, StringSchema)
 
-    def test_bytes_schema(self) -> None:
+    def test_string_schema_for_byte_format(self) -> None:
         request_data = self._get_request_data(path="/bytes_schema")
-        self.assertIsInstance(request_data.valid_data, bytes)
-        self.assertIsInstance(request_data.body_schema, BytesSchema)
+        self.assertIsInstance(request_data.valid_data, str)
+        self.assertIsInstance(request_data.body_schema, StringSchema)
 
     def test_object_schema(self) -> None:
         request_data = self._get_request_data(path="/object_schema")
@@ -88,6 +88,17 @@ class TestValidData(unittest.TestCase):
         self.assertIsInstance(request_data.valid_data, list)
         self.assertIsInstance(request_data.valid_data[0], dict)
         self.assertTrue(isinstance(request_data.body_schema, ArraySchema))
+        items_schema = request_data.body_schema.items
+        self.assertIsInstance(items_schema, UnionTypeSchema)
+        [resolved_schema] = items_schema.resolved_schemas
+        self.assertEqual(resolved_schema.required, ["name"])
+        self.assertIsInstance(resolved_schema.additionalProperties, UnionTypeSchema)
+        additional_properties_schemas = (
+            resolved_schema.additionalProperties.resolved_schemas
+        )
+        self.assertEqual(
+            additional_properties_schemas, [BooleanSchema(), IntegerSchema()]
+        )
 
 
 if __name__ == "__main__":

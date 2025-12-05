@@ -74,6 +74,6 @@ def ensure_in_use(
     )
     if not response.ok:
         logger.debug(
-            f"POST on {post_url} with json {json_data!r} failed: {response.json()}"
+            f"POST on {post_url} with json {json_data} failed: {response.json()}"
         )
         response.raise_for_status()

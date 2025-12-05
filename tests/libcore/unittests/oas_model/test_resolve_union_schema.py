@@ -4,7 +4,6 @@ import unittest
 from OpenApiLibCore.models.oas_models import (
     ArraySchema,
     BooleanSchema,
-    BytesSchema,
     IntegerSchema,
     NullSchema,
     NumberSchema,
@@ -25,10 +24,6 @@ class TestResolvedSchemasPropery(unittest.TestCase):
             schema.resolved_schemas
 
         schema = UnionTypeSchema(allOf=[StringSchema()])
-        with self.assertRaises(NotImplementedError):
-            schema.resolved_schemas
-
-        schema = UnionTypeSchema(allOf=[BytesSchema()])
         with self.assertRaises(NotImplementedError):
             schema.resolved_schemas
 

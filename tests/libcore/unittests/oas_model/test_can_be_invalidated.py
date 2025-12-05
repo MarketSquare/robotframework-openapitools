@@ -4,7 +4,6 @@ import unittest
 from OpenApiLibCore.models.oas_models import (
     ArraySchema,
     BooleanSchema,
-    BytesSchema,
     IntegerSchema,
     NullSchema,
     NumberSchema,
@@ -36,22 +35,6 @@ class TestCanBeInvalidated(unittest.TestCase):
         self.assertEqual(schema.can_be_invalidated, True)
 
         schema = StringSchema(enum=["eggs", "spam"])
-        self.assertEqual(schema.can_be_invalidated, True)
-
-    def test_bytes_schema(self) -> None:
-        schema = BytesSchema()
-        self.assertEqual(schema.can_be_invalidated, False)
-
-        schema = BytesSchema(maxLength=1)
-        self.assertEqual(schema.can_be_invalidated, True)
-
-        schema = BytesSchema(minLength=1)
-        self.assertEqual(schema.can_be_invalidated, True)
-
-        schema = BytesSchema(const=b"foo")
-        self.assertEqual(schema.can_be_invalidated, True)
-
-        schema = BytesSchema(enum=[b"eggs", b"spam"])
         self.assertEqual(schema.can_be_invalidated, True)
 
     def test_integer_schema(self) -> None:

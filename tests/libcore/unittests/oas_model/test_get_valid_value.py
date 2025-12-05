@@ -4,7 +4,6 @@ import unittest
 from OpenApiLibCore.models.oas_models import (
     ArraySchema,
     BooleanSchema,
-    BytesSchema,
     IntegerSchema,
     NullSchema,
     NumberSchema,
@@ -26,10 +25,6 @@ class TestDefaults(unittest.TestCase):
     def test_string_schema(self) -> None:
         schema = StringSchema()
         self.assertIsInstance(schema.get_valid_value(), str)
-
-    def test_bytes_schema(self) -> None:
-        schema = BytesSchema()
-        self.assertIsInstance(schema.get_valid_value(), bytes)
 
     def test_integer_schema(self) -> None:
         schema = IntegerSchema()
@@ -67,11 +62,6 @@ class TestGetValidValueFromConst(unittest.TestCase):
         schema = StringSchema(const=const)
         self.assertEqual(schema.get_valid_value(), const)
 
-    def test_bytes_schema(self) -> None:
-        const = b"Hello world!"
-        schema = BytesSchema(const=const)
-        self.assertEqual(schema.get_valid_value(), const)
-
     def test_integer_schema(self) -> None:
         const = 42
         schema = IntegerSchema(const=const)
@@ -97,11 +87,6 @@ class TestGetValidValueFromEnum(unittest.TestCase):
     def test_string_schema(self) -> None:
         enum = ["eggs", "bacon", "spam"]
         schema = StringSchema(enum=enum)
-        self.assertIn(schema.get_valid_value(), enum)
-
-    def test_bytes_schema(self) -> None:
-        enum = [b"eggs", b"bacon", b"spam"]
-        schema = BytesSchema(enum=enum)
         self.assertIn(schema.get_valid_value(), enum)
 
     def test_integer_schema(self) -> None:
@@ -133,14 +118,6 @@ class TestStringSchemaVariations(unittest.TestCase):
         self.assertEqual(value, "")
 
         schema = StringSchema(minLength=36)
-        value = schema.get_valid_value()
-        self.assertEqual(len(value), 36)
-
-        schema = BytesSchema(maxLength=0)
-        value = schema.get_valid_value()
-        self.assertEqual(value, b"")
-
-        schema = BytesSchema(minLength=36)
         value = schema.get_valid_value()
         self.assertEqual(len(value), 36)
 
@@ -188,49 +165,6 @@ class TestStringSchemaVariations(unittest.TestCase):
         self.assertTrue(
             last_log_entry.endswith(f"The pattern was: {pattern}"), last_log_entry
         )
-
-
-class TestBytesSchemaVariations(unittest.TestCase):
-    def test_default_min_max(self) -> None:
-        schema = BytesSchema(maxLength=0)
-        value = schema.get_valid_value()
-        self.assertEqual(value, b"")
-
-        schema = BytesSchema(minLength=36)
-        value = schema.get_valid_value()
-        self.assertEqual(len(value), 36)
-
-    def test_min_max(self) -> None:
-        schema = BytesSchema(minLength=42, maxLength=42)
-        value = schema.get_valid_value()
-        self.assertEqual(len(value), 42)
-
-        schema = BytesSchema(minLength=42)
-        value = schema.get_valid_value()
-        self.assertEqual(len(value), 42)
-
-    def test_pattern(self) -> None:
-        pattern = r"^[1-9][0-9]{3} ?(?!sa|sd|ss|SA|SD|SS)[A-Za-z]{2}$"
-        schema = BytesSchema(pattern=pattern)
-
-        with self.assertLogs(level="WARN") as logs:
-            value = schema.get_valid_value()
-
-        self.assertTrue(len(logs.output) > 0)
-        last_log_entry = logs.output[-1]
-        self.assertTrue(
-            last_log_entry.startswith(
-                "WARNING:RobotFramework:'pattern' is currently not supported for "
-                "'byte' format strings."
-            ),
-            last_log_entry,
-        )
-        self.assertIsInstance(value, bytes)
-
-    def test_byte(self) -> None:
-        schema = BytesSchema(format="byte")
-        value = schema.get_valid_value()
-        self.assertIsInstance(value, bytes)
 
 
 class TestArraySchemaVariations(unittest.TestCase):

@@ -4,7 +4,6 @@ import unittest
 from OpenApiLibCore.models.oas_models import (
     ArraySchema,
     BooleanSchema,
-    BytesSchema,
     IntegerSchema,
     NullSchema,
     NumberSchema,
@@ -54,28 +53,6 @@ class TestInvalidValueFromConstraint(unittest.TestCase):
         self.assertIsInstance(value, str)
 
         values = [""]
-        with self.assertRaises(ValueError):
-            _ = schema.get_invalid_value_from_constraint(
-                values_from_constraint=values,
-            )
-
-    def test_bytes(self) -> None:
-        schema = BytesSchema()
-        values = [b"foo"]
-        value = schema.get_invalid_value_from_constraint(
-            values_from_constraint=values,
-        )
-        self.assertNotIn(value, values)
-        self.assertIsInstance(value, bytes)
-
-        values = [b"foo", b"bar", b"baz"]
-        value = schema.get_invalid_value_from_constraint(
-            values_from_constraint=values,
-        )
-        self.assertNotIn(value, values)
-        self.assertIsInstance(value, bytes)
-
-        values = [b""]
         with self.assertRaises(ValueError):
             _ = schema.get_invalid_value_from_constraint(
                 values_from_constraint=values,

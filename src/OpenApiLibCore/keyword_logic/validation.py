@@ -242,7 +242,7 @@ def assert_href_to_resource_is_valid(
     headers = request_data.headers
     get_response = _run_keyword("authorized_request", url, "GET", params, headers)
     assert get_response.json() == referenced_resource, (
-        f"{get_response.json()!r} not equal to original {referenced_resource!r}"
+        f"{get_response.json()} not equal to original {referenced_resource}"
     )
 
 

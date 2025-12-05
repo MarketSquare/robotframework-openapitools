@@ -5,7 +5,6 @@ from sys import float_info
 from OpenApiLibCore.models.oas_models import (
     ArraySchema,
     BooleanSchema,
-    BytesSchema,
     IntegerSchema,
     NullSchema,
     NumberSchema,
@@ -58,38 +57,6 @@ class TestGetValuesOutOfBounds(unittest.TestCase):
         schema = StringSchema(minLength=3, maxLength=5)
         self.assertEqual(
             schema.get_values_out_of_bounds(current_value="TTTT"), ["TT", "TTTTTT"]
-        )
-
-    def test_bytes_schema(self) -> None:
-        schema = BytesSchema()
-        with self.assertRaises(ValueError):
-            schema.get_values_out_of_bounds(
-                current_value=b"minLength and maxLength not set"
-            )
-
-        schema = BytesSchema(minLength=0)
-        with self.assertRaises(ValueError):
-            schema.get_values_out_of_bounds(
-                current_value=b"minLength 0 and maxLength not set"
-            )
-
-        schema = BytesSchema(minLength=2)
-        self.assertEqual(
-            schema.get_values_out_of_bounds(
-                current_value=b"minLength 2 and maxLength not set"
-            ),
-            [b"m"],
-        )
-
-        schema = BytesSchema(maxLength=5)
-        self.assertEqual(
-            schema.get_values_out_of_bounds(current_value=b""),
-            [b"eHh4eH"],
-        )
-
-        schema = BytesSchema(minLength=3, maxLength=5)
-        self.assertEqual(
-            schema.get_values_out_of_bounds(current_value=b"TTTT"), [b"TT", b"VFRUVF"]
         )
 
     def test_integer_schema(self) -> None:
