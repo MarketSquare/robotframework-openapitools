@@ -1,5 +1,5 @@
 # pylint: disable=invalid-name
-from typing import Type
+from typing import Callable
 
 from OpenApiLibCore import (
     IGNORE,
@@ -104,12 +104,14 @@ class EmployeeDto(Dto):
                 property_name="parttime_schedule",
                 values=[ParttimeScheduleDto],
                 treat_as_mandatory=True,
+                invalid_value=IGNORE,
+                invalid_value_error_code=400,
             ),
         ]
         return relations
 
 
-class PatchEmployeeDto(EmployeeDto):
+class PatchEmployeeDto(Dto):
     @staticmethod
     def get_parameter_relations() -> list[ResourceRelation]:
         relations: list[ResourceRelation] = [
@@ -124,6 +126,24 @@ class PatchEmployeeDto(EmployeeDto):
                 values=["will be updated by listener"],
                 invalid_value=IGNORE,
                 invalid_value_error_code=422,
+            ),
+        ]
+        return relations
+
+    @staticmethod
+    def get_relations() -> list[ResourceRelation]:
+        relations: list[ResourceRelation] = [
+            IdDependency(
+                property_name="wagegroup_id",
+                get_path="/wagegroups",
+                error_code=451,
+            ),
+            PropertyValueConstraint(
+                property_name="date_of_birth",
+                values=["1970-07-07", "1980-08-08", "1990-09-09"],
+                invalid_value="2020-02-20",
+                invalid_value_error_code=403,
+                error_code=422,
             ),
         ]
         return relations
@@ -176,7 +196,7 @@ class MessageDto(Dto):
         return relations
 
 
-DTO_MAPPING: dict[tuple[str, str], Type[Dto]] = {
+DTO_MAPPING: dict[tuple[str, str], type[Dto]] = {
     ("/wagegroups", "post"): WagegroupDto,
     ("/wagegroups/{wagegroup_id}", "delete"): WagegroupDeleteDto,
     ("/wagegroups/{wagegroup_id}", "put"): WagegroupDto,
@@ -186,16 +206,22 @@ DTO_MAPPING: dict[tuple[str, str], Type[Dto]] = {
     ("/secret_message", "get"): MessageDto,
 }
 
+
+def my_transformer(identifier_name: str) -> str:
+    return identifier_name.replace("/", "_")
+
+
 # NOTE: "/available_employees": "identification" is not mapped for testing purposes
-ID_MAPPING: dict[str, str] = {
+ID_MAPPING: dict[str, str | tuple[str, Callable[[str], str] | Callable[[int], int]]] = {
     "/employees": "identification",
     "/employees/{employee_id}": "identification",
     "/wagegroups": "wagegroup_id",
-    "/wagegroups/{wagegroup_id}": "wagegroup_id",
+    "/wagegroups/{wagegroup_id}": ("wagegroup_id", my_transformer),
     "/wagegroups/{wagegroup_id}/employees": "identification",
 }
 
-
-PATH_MAPPING: dict[str, Type[Dto]] = {
+# NOTE: WagegroupDeleteDto does not have path mappings for testing purposes
+PATH_MAPPING: dict[str, type[Dto]] = {
     "/energy_label/{zipcode}/{home_number}": EnergyLabelDto,
+    "/wagegroups/{wagegroup_id}": WagegroupDeleteDto,
 }

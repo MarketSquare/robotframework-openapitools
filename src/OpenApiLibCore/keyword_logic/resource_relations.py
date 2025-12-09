@@ -1,15 +1,39 @@
 """Module holding the functions related to relations between resources."""
 
+from typing import Literal, overload
+
 from requests import Response
 from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
-import OpenApiLibCore.path_functions as _path_functions
-from OpenApiLibCore.dto_base import IdReference
-from OpenApiLibCore.models import OpenApiObject
-from OpenApiLibCore.request_data import RequestData
+import OpenApiLibCore.keyword_logic.path_functions as _path_functions
+from OpenApiLibCore.models.oas_models import OpenApiObject
+from OpenApiLibCore.models.request_data import RequestData
+from OpenApiLibCore.models.resource_relations import IdReference
 
 run_keyword = BuiltIn().run_keyword
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_request_data"], *args: str
+) -> RequestData: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_valid_url"], *args: str
+) -> str: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["authorized_request"], *args: object
+) -> Response: ...  # pragma: no cover
+
+
+def _run_keyword(keyword_name: str, *args: object) -> object:
+    return run_keyword(keyword_name, *args)
 
 
 def ensure_in_use(
@@ -34,13 +58,13 @@ def ensure_in_use(
             break
     if not resource_id:
         raise ValueError(f"The provided url ({url}) does not contain an id.")
-    request_data: RequestData = run_keyword(
-        "get_request_data", resource_relation.post_path, "post"
-    )
-    json_data = request_data.dto.as_dict()
-    json_data[resource_relation.property_name] = resource_id
-    post_url: str = run_keyword("get_valid_url", resource_relation.post_path)
-    response: Response = run_keyword(
+    request_data = _run_keyword("get_request_data", resource_relation.post_path, "post")
+    json_data = request_data.valid_data if request_data.valid_data else {}
+    # FIXME: currently only works for object / dict data
+    if isinstance(json_data, dict):
+        json_data[resource_relation.property_name] = resource_id
+    post_url = _run_keyword("get_valid_url", resource_relation.post_path)
+    response = _run_keyword(
         "authorized_request",
         post_url,
         "post",

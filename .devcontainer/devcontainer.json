@@ -20,9 +20,8 @@
                 "charliermarsh.ruff",
                 "d-biehl.robotcode",
                 "tamasfe.even-better-toml",
-                "ms-azuretools.vscode-docker",
-                "Gruntfuggly.todo-tree",
-                "shardulm94.trailing-spaces"
+                "ms-azuretools.vscode-docker"
+
 			]
 		}
 	}

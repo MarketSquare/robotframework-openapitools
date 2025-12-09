@@ -3,16 +3,55 @@
 import json as _json
 from itertools import zip_longest
 from random import choice
-from typing import Any
+from typing import Any, Literal, overload
 
 from requests import Response
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore.models import OpenApiObject
-from OpenApiLibCore.protocols import GetIdPropertyNameType, GetPathDtoClassType
-from OpenApiLibCore.request_data import RequestData
+from OpenApiLibCore.models import oas_models
+from OpenApiLibCore.models.request_data import RequestData
 
 run_keyword = BuiltIn().run_keyword
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_valid_id_for_path"], *args: str
+) -> str: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_ids_from_url"], *args: str
+) -> list[str]: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_valid_url"], *args: str
+) -> str: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_parameterized_path_from_url"], *args: str
+) -> str: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_request_data"], *args: str
+) -> RequestData: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["authorized_request"], *args: object
+) -> Response: ...  # pragma: no cover
+
+
+def _run_keyword(keyword_name: str, *args: object) -> object:
+    return run_keyword(keyword_name, *args)
 
 
 def match_parts(parts: list[str], spec_parts: list[str]) -> bool:
@@ -24,14 +63,14 @@ def match_parts(parts: list[str], spec_parts: list[str]) -> bool:
     return True
 
 
-def get_parametrized_path(path: str, openapi_spec: OpenApiObject) -> str:
+def get_parametrized_path(path: str, openapi_spec: oas_models.OpenApiObject) -> str:
     path_parts = path.split("/")
     # if the last part is empty, the path has a trailing `/` that
     # should be ignored during matching
     if path_parts[-1] == "":
         _ = path_parts.pop(-1)
 
-    spec_paths: list[str] = list(openapi_spec.paths.keys())
+    spec_paths = list(openapi_spec.paths.keys())
 
     candidates: list[str] = []
 
@@ -63,19 +102,19 @@ def get_parametrized_path(path: str, openapi_spec: OpenApiObject) -> str:
 def get_valid_url(
     path: str,
     base_url: str,
-    get_path_dto_class: GetPathDtoClassType,
-    openapi_spec: OpenApiObject,
+    openapi_spec: oas_models.OpenApiObject,
 ) -> str:
     try:
         # path can be partially resolved or provided by a PathPropertiesConstraint
         parametrized_path = get_parametrized_path(path=path, openapi_spec=openapi_spec)
-        _ = openapi_spec.paths[parametrized_path]
+        path_item = openapi_spec.paths[parametrized_path]
     except KeyError:
         raise ValueError(
             f"{path} not found in paths section of the OpenAPI document."
         ) from None
-    dto_class = get_path_dto_class(path=path)
-    relations = dto_class.get_path_relations()
+
+    constraint_mapping = path_item.constraint_mapping
+    relations = constraint_mapping.get_path_relations() if constraint_mapping else []
     paths = [p.path for p in relations]
     if paths:
         url = f"{base_url}{choice(paths)}"
@@ -85,9 +124,7 @@ def get_valid_url(
         if part.startswith("{") and part.endswith("}"):
             type_path_parts = path_parts[slice(index)]
             type_path = "/".join(type_path_parts)
-            existing_id: str | int | float = run_keyword(
-                "get_valid_id_for_path", type_path
-            )
+            existing_id = _run_keyword("get_valid_id_for_path", type_path)
             path_parts[index] = str(existing_id)
     resolved_path = "/".join(path_parts)
     url = f"{base_url}{resolved_path}"
@@ -96,14 +133,14 @@ def get_valid_url(
 
 def get_valid_id_for_path(
     path: str,
-    get_id_property_name: GetIdPropertyNameType,
-) -> str | int:
-    url: str = run_keyword("get_valid_url", path)
+    openapi_spec: oas_models.OpenApiObject,
+) -> str:
+    url = _run_keyword("get_valid_url", path)
     # Try to create a new resource to prevent conflicts caused by
     # operations performed on the same resource by other test cases
-    request_data: RequestData = run_keyword("get_request_data", path, "post")
+    request_data = _run_keyword("get_request_data", path, "post")
 
-    response: Response = run_keyword(
+    response = _run_keyword(
         "authorized_request",
         url,
         "post",
@@ -112,13 +149,14 @@ def get_valid_id_for_path(
         request_data.get_required_properties_dict(),
     )
 
-    id_property, id_transformer = get_id_property_name(path=path)
+    path_item = openapi_spec.paths[path]
+    id_property, id_transformer = path_item.id_mapper
 
     if not response.ok:
         # If a new resource cannot be created using POST, try to retrieve a
         # valid id using a GET request.
         try:
-            valid_id = choice(run_keyword("get_ids_from_url", url))
+            valid_id = choice(_run_keyword("get_ids_from_url", url))
             return id_transformer(valid_id)
         except Exception as exception:
             raise AssertionError(
@@ -172,11 +210,11 @@ def get_valid_id_for_path(
 
 def get_ids_from_url(
     url: str,
-    get_id_property_name: GetIdPropertyNameType,
+    openapi_spec: oas_models.OpenApiObject,
 ) -> list[str]:
-    path: str = run_keyword("get_parameterized_path_from_url", url)
-    request_data: RequestData = run_keyword("get_request_data", path, "get")
-    response = run_keyword(
+    path = _run_keyword("get_parameterized_path_from_url", url)
+    request_data = _run_keyword("get_request_data", path, "get")
+    response = _run_keyword(
         "authorized_request",
         url,
         "get",
@@ -187,11 +225,8 @@ def get_ids_from_url(
     response_data: dict[str, Any] | list[dict[str, Any]] = response.json()
 
     # determine the property name to use
-    mapping = get_id_property_name(path=path)
-    if isinstance(mapping, str):
-        id_property = mapping
-    else:
-        id_property, _ = mapping
+    path_item = openapi_spec.paths[path]
+    id_property, _ = path_item.id_mapper
 
     if isinstance(response_data, list):
         valid_ids: list[str] = [item[id_property] for item in response_data]

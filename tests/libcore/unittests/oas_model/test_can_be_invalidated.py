@@ -1,7 +1,7 @@
 # pylint: disable="missing-class-docstring", "missing-function-docstring"
 import unittest
 
-from OpenApiLibCore.models import (
+from OpenApiLibCore.models.oas_models import (
     ArraySchema,
     BooleanSchema,
     IntegerSchema,

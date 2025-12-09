@@ -3,7 +3,7 @@
 import json as _json
 from enum import Enum
 from http import HTTPStatus
-from typing import Any, Mapping
+from typing import Any, Literal, Mapping, overload
 
 from openapi_core.contrib.requests import (
     RequestsOpenAPIRequest,
@@ -18,15 +18,50 @@ from robot.api import logger
 from robot.api.exceptions import Failure
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore.models import (
+from OpenApiLibCore.annotations import JSON
+from OpenApiLibCore.models.oas_models import (
     OpenApiObject,
     ResponseObject,
     UnionTypeSchema,
 )
-from OpenApiLibCore.protocols import ResponseValidatorType
-from OpenApiLibCore.request_data import RequestData, RequestValues
+from OpenApiLibCore.models.request_data import RequestData, RequestValues
+from OpenApiLibCore.protocols import IResponseValidator
 
 run_keyword = BuiltIn().run_keyword
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["validate_response"], *args: object
+) -> None: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["authorized_request"], *args: object
+) -> Response: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_request_data"], *args: str
+) -> RequestData: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["validate_send_response"], *args: Response | JSON
+) -> None: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["assert_href_to_resource_is_valid"], *args: str | JSON
+) -> None: ...  # pragma: no cover
+
+
+def _run_keyword(keyword_name: str, *args: object) -> object:
+    return run_keyword(keyword_name, *args)
 
 
 class ValidationLevel(str, Enum):
@@ -44,7 +79,7 @@ def perform_validated_request(
     request_values: RequestValues,
     original_data: Mapping[str, Any],
 ) -> None:
-    response = run_keyword(
+    response = _run_keyword(
         "authorized_request",
         request_values.url,
         request_values.method,
@@ -78,13 +113,13 @@ def perform_validated_request(
             f"Response status_code {response.status_code} was not {status_code}."
         )
 
-    run_keyword("validate_response", path, response, original_data)
+    _run_keyword("validate_response", path, response, original_data)
 
     if request_values.method == "DELETE":
-        request_data: RequestData = run_keyword("get_request_data", path, "GET")
+        request_data = _run_keyword("get_request_data", path, "GET")
         get_params = request_data.params
         get_headers = request_data.headers
-        get_response = run_keyword(
+        get_response = _run_keyword(
             "authorized_request", request_values.url, "GET", get_params, get_headers
         )
         if response.ok:
@@ -109,13 +144,13 @@ def perform_validated_request(
 def validate_response(
     path: str,
     response: Response,
-    response_validator: ResponseValidatorType,
+    response_validator: IResponseValidator,
     server_validation_warning_logged: bool,
     disable_server_validation: bool,
-    invalid_property_default_response: int,
+    invalid_data_default_response: int,
     response_validation: str,
     openapi_spec: OpenApiObject,
-    original_data: Mapping[str, Any],
+    original_data: JSON,
 ) -> None:
     if response.status_code == int(HTTPStatus.NO_CONTENT):
         assert not response.content
@@ -127,7 +162,7 @@ def validate_response(
             response_validator=response_validator,
             server_validation_warning_logged=server_validation_warning_logged,
             disable_server_validation=disable_server_validation,
-            invalid_property_default_response=invalid_property_default_response,
+            invalid_data_default_response=invalid_data_default_response,
             response_validation=response_validation,
         )
     except OpenAPIError as exception:
@@ -188,24 +223,24 @@ def validate_response(
     # ensure the href is valid if the response is an object that contains a href
     if isinstance(json_response, dict):
         if href := json_response.get("href"):
-            run_keyword("assert_href_to_resource_is_valid", href, json_response)
+            _run_keyword("assert_href_to_resource_is_valid", href, json_response)
 
     # every property that was sucessfully send and that is in the response
     # schema must have the value that was send
     if response.ok and response.request.method in ["POST", "PUT", "PATCH"]:
-        run_keyword("validate_send_response", response, original_data)
+        _run_keyword("validate_send_response", response, original_data)
     return None
 
 
 def assert_href_to_resource_is_valid(
-    href: str, origin: str, base_url: str, referenced_resource: dict[str, Any]
+    href: str, origin: str, base_url: str, referenced_resource: JSON
 ) -> None:
     url = f"{origin}{href}"
     path = url.replace(base_url, "")
-    request_data: RequestData = run_keyword("get_request_data", path, "GET")
+    request_data = _run_keyword("get_request_data", path, "GET")
     params = request_data.params
     headers = request_data.headers
-    get_response = run_keyword("authorized_request", url, "GET", params, headers)
+    get_response = _run_keyword("authorized_request", url, "GET", params, headers)
     assert get_response.json() == referenced_resource, (
         f"{get_response.json()} not equal to original {referenced_resource}"
     )
@@ -299,6 +334,9 @@ def validate_send_response(
     if original_data:
         for send_property_name, send_value in original_data.items():
             if send_property_name not in send_json.keys():
+                if send_property_name not in response_data:
+                    logger.debug(f"'{send_property_name}' not found in response data.")
+                    continue
                 assert send_value == response_data[send_property_name], (
                     f"Received value for {send_property_name} '{response_data[send_property_name]}' does not "
                     f"match '{send_value}' in the pre-patch data"
@@ -310,7 +348,7 @@ def validate_send_response(
 
 def validate_response_using_validator(
     response: Response,
-    response_validator: ResponseValidatorType,
+    response_validator: IResponseValidator,
 ) -> None:
     openapi_request = RequestsOpenAPIRequest(response.request)
     openapi_response = RequestsOpenAPIResponse(response)
@@ -319,13 +357,23 @@ def validate_response_using_validator(
 
 def _validate_response(
     response: Response,
-    response_validator: ResponseValidatorType,
+    response_validator: IResponseValidator,
     server_validation_warning_logged: bool,
     disable_server_validation: bool,
-    invalid_property_default_response: int,
+    invalid_data_default_response: int,
     response_validation: str,
 ) -> None:
     try:
+        content_type = response.headers.get("Content-Type", "")
+        if content_type:
+            key_value = "Content-Type"
+        else:
+            content_type = response.headers.get("content-type", "")
+            if content_type:
+                key_value = "content-type"
+        if "json" in content_type.lower():
+            content_type, _, _ = content_type.partition(";")
+            response.headers.update({key_value: content_type})  # pyright: ignore[reportPossiblyUnboundVariable]
         validate_response_using_validator(
             response=response,
             response_validator=response_validator,
@@ -354,7 +402,7 @@ def _validate_response(
             if disable_server_validation:
                 return
 
-        if response.status_code == invalid_property_default_response:
+        if response.status_code == invalid_data_default_response:
             logger.debug(error_message)
             return
         if response_validation == ValidationLevel.STRICT:
@@ -372,7 +420,7 @@ def _get_response_object(
     method = method.lower()
     status = str(status_code)
     path_item = openapi_spec.paths[path]
-    path_operations = path_item.get_operations()
+    path_operations = path_item.operations
     operation_data = path_operations.get(method)
     if operation_data is None:
         raise ValueError(f"method '{method}' not supported for {path}.")

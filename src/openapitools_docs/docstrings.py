@@ -170,7 +170,7 @@ by Response validation.
 <h3>mappings_path</h3>
 See the Advanced Use tab for an in-depth explanation.
 
-<h3>invalid_property_default_response</h3>
+<h3>invalid_data_default_response</h3>
 The default response code for requests with a JSON body that does not comply
 with the schema.
 Example: a value outside the specified range or a string value

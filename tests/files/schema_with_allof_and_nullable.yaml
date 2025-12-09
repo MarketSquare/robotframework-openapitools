@@ -69,6 +69,7 @@ components:
           description: The publication date of the work.
           type: string
           format: date
+          nullable: true
     Images:
       title: images
       type: object
