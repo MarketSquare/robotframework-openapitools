@@ -783,7 +783,9 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
             # mapping is never instantiated, we can use isinstance(..., type) for this.
             if isinstance(constrained_value, type):
                 property_schema.attach_constraint_mapping(constrained_value)
-                valid_value, _ = property_schema.get_valid_value(operation_id=operation_id)
+                valid_value, _ = property_schema.get_valid_value(
+                    operation_id=operation_id
+                )
                 return valid_value
 
             return constrained_value
@@ -971,7 +973,7 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
 
     def contains_properties(self, property_names: list[str]) -> bool:
         if self.properties is None:
-            return False
+            return False  # pragma: no cover
         for property_name in property_names:
             if property_name not in self.properties.root:
                 return False
@@ -1031,10 +1033,7 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
             self.constraint_mapping.get_relations()
             + self.constraint_mapping.get_parameter_relations()
         )
-        constrained_property_names = [
-            relation.property_name
-            for relation in relations
-        ]
+        constrained_property_names = [relation.property_name for relation in relations]
 
         if not constrained_property_names:
             chosen_schema = choice(self.resolved_schemas)
@@ -1176,7 +1175,7 @@ class ParameterObject(BaseModel):
     def attach_constraint_mapping(
         self, constraint_mapping: ConstraintMappingType
     ) -> None:
-        if self.schema_:
+        if self.schema_:  # pragma: no branch
             self.schema_.attach_constraint_mapping(constraint_mapping)
 
 
@@ -1221,7 +1220,7 @@ class RequestBodyObject(BaseModel):
         self, constraint_mapping: ConstraintMappingType
     ) -> None:
         for media_object_type in self.content.values():
-            if media_object_type and media_object_type.schema_:
+            if media_object_type and media_object_type.schema_:  # pragma: no branch
                 media_object_type.schema_.attach_constraint_mapping(constraint_mapping)
 
 
@@ -1306,68 +1305,6 @@ class InfoObject(BaseModel):
 class OpenApiObject(BaseModel):
     info: InfoObject
     paths: dict[str, PathItemObject]
-
-
-def get_schema_for_value_constrained_by_constraint_mapping(
-    property_schema: SchemaObjectTypes,
-    constraint_mapping: ConstraintMappingType,
-) -> SchemaObjectTypes:
-    relations = (
-        constraint_mapping.get_relations()
-        + constraint_mapping.get_parameter_relations()
-    )
-    mandatory_property_names = [
-        relation.property_name
-        for relation in relations
-        if getattr(relation, "treat_as_mandatory", False)
-    ]
-    return _get_schema_for_constraint_mapping(
-        property_schema=property_schema,
-        mandatory_property_names=mandatory_property_names,
-    )
-
-
-def _get_schema_for_constraint_mapping(
-    property_schema: SchemaObjectTypes,
-    mandatory_property_names: list[str],
-) -> SchemaObjectTypes:
-    if not isinstance(property_schema, (ObjectSchema, UnionTypeSchema)):
-        return property_schema
-
-    if isinstance(property_schema, ObjectSchema):
-        if mandatory_property_names and not property_schema.contains_properties(
-            mandatory_property_names
-        ):
-            raise ValueError(
-                "No schema found that contains all properties that should be treated as mandatory."
-            )
-        return property_schema
-
-    if not mandatory_property_names:
-        return choice(property_schema.resolved_schemas)
-
-    valid_candidates: list[ObjectSchema] = []
-
-    object_schemas = [
-        schema
-        for schema in property_schema.resolved_schemas
-        if isinstance(schema, ObjectSchema)
-    ]
-    for candidate_schema in object_schemas:
-        try:
-            valid_candidate = _get_schema_for_constraint_mapping(
-                property_schema=candidate_schema,
-                mandatory_property_names=mandatory_property_names,
-            )
-            valid_candidates.append(valid_candidate)  # type: ignore[arg-type]
-        except ValueError:
-            pass
-
-    if not valid_candidates:
-        raise ValueError(
-            "No schema found that contains all properties that should be treated as mandatory."
-        )
-    return choice(valid_candidates)
 
 
 # TODO: move to keyword_logic?

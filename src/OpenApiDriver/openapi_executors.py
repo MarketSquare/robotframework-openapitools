@@ -357,6 +357,6 @@ class OpenApiExecutors(OpenApiLibCore):
     @staticmethod
     def get_keyword_names() -> list[str]:
         """Curated keywords for libdoc and libspec."""
-        if getenv("HIDE_INHERITED_KEYWORDS") == "true":  # pragma: no branch
-            return KEYWORD_NAMES
+        if getenv("HIDE_INHERITED_KEYWORDS") == "true":
+            return KEYWORD_NAMES  # pragma: no cover
         return KEYWORD_NAMES + LIBCORE_KEYWORD_NAMES

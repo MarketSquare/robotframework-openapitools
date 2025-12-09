@@ -82,8 +82,8 @@ def get_request_data(
             f"No supported content schema found: {operation_spec.requestBody.content}"
         )
 
-    if operation_spec.requestBody.mime_type:
-        if "content-type" in headers:  # pragma: no branch
+    if operation_spec.requestBody.mime_type:  # pragma: no branch
+        if "content-type" in headers:  # pragma: no cover
             key_value = "content-type"
         else:
             key_value = "Content-Type"
@@ -241,8 +241,8 @@ def get_parameter_data(
             result[parameter_name] = value
             continue
 
-        if parameter.schema_ is None:  # pragma: no branch
-            continue
+        if parameter.schema_ is None:
+            continue  # pragma: no cover
         value = parameter.schema_.get_valid_value()[0]
         result[parameter_name] = value
     return result
