@@ -78,3 +78,8 @@ Test Get Request Data For Endpoint Without RequestBody But With Constraint Mappi
     Should Be Equal    ${request_data.params}    ${dict}
     Should Be Equal    ${request_data.headers}    ${dict}
     Should Not Be True    ${request_data.has_body}
+
+Test Get Request Data For Endpoint With Treat As Mandatory Constraint
+    ${request_data}=    Get Request Data    path=/employees    method=post
+    VAR    ${valid_data}=    ${request_data.valid_data}
+    Should Not Be Equal    ${valid_data["parttime_schedule"]}    ${NONE}

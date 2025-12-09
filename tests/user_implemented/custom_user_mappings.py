@@ -104,12 +104,14 @@ class EmployeeDto(Dto):
                 property_name="parttime_schedule",
                 values=[ParttimeScheduleDto],
                 treat_as_mandatory=True,
+                invalid_value=IGNORE,
+                invalid_value_error_code=400,
             ),
         ]
         return relations
 
 
-class PatchEmployeeDto(EmployeeDto):
+class PatchEmployeeDto(Dto):
     @staticmethod
     def get_parameter_relations() -> list[ResourceRelation]:
         relations: list[ResourceRelation] = [
@@ -124,6 +126,24 @@ class PatchEmployeeDto(EmployeeDto):
                 values=["will be updated by listener"],
                 invalid_value=IGNORE,
                 invalid_value_error_code=422,
+            ),
+        ]
+        return relations
+
+    @staticmethod
+    def get_relations() -> list[ResourceRelation]:
+        relations: list[ResourceRelation] = [
+            IdDependency(
+                property_name="wagegroup_id",
+                get_path="/wagegroups",
+                error_code=451,
+            ),
+            PropertyValueConstraint(
+                property_name="date_of_birth",
+                values=["1970-07-07", "1980-08-08", "1990-09-09"],
+                invalid_value="2020-02-20",
+                invalid_value_error_code=403,
+                error_code=422,
             ),
         ]
         return relations

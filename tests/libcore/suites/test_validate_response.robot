@@ -12,7 +12,7 @@ ${ORIGIN}       http://localhost:8000
 
 
 *** Test Cases ***
-Test Bool Response
+Test Boolean Response
     ${url}=    Get Valid Url    path=/employees/{employee_id}
     ${request_data}=    Get Request Data    path=/employees/{employee_id}    method=patch
     ${response}=    Authorized Request

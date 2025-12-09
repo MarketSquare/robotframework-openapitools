@@ -301,7 +301,7 @@ def get_employees_in_wagegroup(wagegroup_id: str) -> list[EmployeeDetails]:
     "/employees",
     status_code=201,
     response_model=EmployeeDetails,
-    responses={403: {"model": Detail}, 451: {"model": Detail}},
+    responses={400: {"model": Detail}, 403: {"model": Detail}, 451: {"model": Detail}},
 )
 def post_employee(employee: Employee, response: Response) -> EmployeeDetails:
     wagegroup_id = employee.wagegroup_id
@@ -316,8 +316,9 @@ def post_employee(employee: Employee, response: Response) -> EmployeeDetails:
             status_code=403, detail="An employee must be at least 18 years old."
         )
     parttime_schedule = employee.parttime_schedule
-    if parttime_schedule is not None:
-        parttime_schedule = ParttimeSchedule.model_validate(parttime_schedule)
+    if parttime_schedule is None:
+        raise HTTPException(status_code=400, detail="Data error.")
+    parttime_schedule = ParttimeSchedule.model_validate(parttime_schedule)
     new_employee = EmployeeDetails(
         identification=uuid4().hex,
         name=employee.name,

@@ -22,7 +22,6 @@ from OpenApiLibCore.models.oas_models import (
     ParameterObject,
     ResolvedSchemaObjectTypes,
     UnionTypeSchema,
-    get_valid_json_data,
 )
 from OpenApiLibCore.models.request_data import RequestData
 from OpenApiLibCore.models.resource_relations import (
@@ -90,10 +89,8 @@ def get_request_data(
             key_value = "Content-Type"
         headers.update({key_value: operation_spec.requestBody.mime_type})
 
-    valid_data, schema_used_for_data_generation = get_valid_json_data(
-        schema=body_schema,
-        constraint_mapping=constraint_mapping,
-        operation_id=operation_spec.operationId,
+    valid_data, schema_used_for_data_generation = body_schema.get_valid_value(
+        operation_id=operation_spec.operationId
     )
 
     constraint_mapping = _get_mapping_dataclass_from_valid_data(

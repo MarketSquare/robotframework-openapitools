@@ -782,15 +782,10 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
             # Check if the chosen value is a nested constraint_mapping; since a
             # mapping is never instantiated, we can use isinstance(..., type) for this.
             if isinstance(constrained_value, type):
-                schema = get_schema_for_value_constrained_by_constraint_mapping(
-                    property_schema=property_schema,
-                    constraint_mapping=constrained_value,
-                )
-                return get_valid_json_data(
-                    schema=schema,
-                    constraint_mapping=constrained_value,
-                    operation_id=operation_id,
-                )[0]
+                property_schema.attach_constraint_mapping(constrained_value)
+                valid_value, _ = property_schema.get_valid_value(operation_id=operation_id)
+                return valid_value
+
             return constrained_value
 
         if (
@@ -802,10 +797,10 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
         ) is not None:
             return dependent_id
 
-        return get_valid_json_data(
-            schema=property_schema,
-            constraint_mapping=self.constraint_mapping,
-        )[0]
+        # Constraints are mapped to endpoints; they are not attached to the property
+        # value schemas so update the schema before value generation
+        property_schema.attach_constraint_mapping(self.constraint_mapping)
+        return property_schema.get_valid_value(operation_id=operation_id)[0]
 
     def _get_constrained_values(
         self, property_name: str
@@ -917,11 +912,19 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
             invalid_value_from_constraint
             and invalid_value_from_constraint[0] is not NOT_SET
         ):
-            properties[property_name] = invalid_value_from_constraint[0]
-            logger.debug(
-                f"Using invalid_value {invalid_value_from_constraint[0]} to "
-                f"invalidate property {property_name}"
-            )
+            invalid_value = invalid_value_from_constraint[0]
+            if isinstance(invalid_value, Ignore):
+                properties.pop(property_name)
+                logger.debug(
+                    f"Property {property_name} removed since the invalid_value "
+                    f"was IGNORE (received from get_invalid_value)"
+                )
+            else:
+                properties[property_name] = invalid_value
+                logger.debug(
+                    f"Using invalid_value {invalid_value_from_constraint[0]} to "
+                    f"invalidate property {property_name}"
+                )
             return properties
 
         value_schema = self.properties.root[property_name]
@@ -1024,11 +1027,44 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
         self,
         operation_id: str | None = None,
     ) -> tuple[JSON, ResolvedSchemaObjectTypes]:
-        schema = get_schema_for_value_constrained_by_constraint_mapping(
-            property_schema=self,
-            constraint_mapping=self.constraint_mapping,
+        relations = (
+            self.constraint_mapping.get_relations()
+            + self.constraint_mapping.get_parameter_relations()
         )
-        return schema.get_valid_value(operation_id=operation_id)
+        constrained_property_names = [
+            relation.property_name
+            for relation in relations
+        ]
+
+        if not constrained_property_names:
+            chosen_schema = choice(self.resolved_schemas)
+            return chosen_schema.get_valid_value(operation_id=operation_id)
+
+        valid_values = []
+        valid_schemas = []
+        for candidate in self.resolved_schemas:
+            if isinstance(candidate, ObjectSchema):
+                if candidate.contains_properties(constrained_property_names):
+                    valid_schemas.append(candidate)
+
+            if isinstance(candidate, UnionTypeSchema):
+                candidate.attach_constraint_mapping(self.constraint_mapping)
+                try:
+                    valid_value = candidate.get_valid_value(operation_id=operation_id)
+                    valid_values.append(valid_value)
+                except ValueError:
+                    pass
+        for valid_schema in valid_schemas:
+            valid_value = valid_schema.get_valid_value(operation_id=operation_id)
+            valid_values.append(valid_value)
+
+        if valid_values:
+            return choice(valid_values)
+
+        # The constraints from the parent may not be applicable, resulting in no
+        # valid_values being generated. In that case, generated a random value as normal.
+        chosen_schema = choice(self.resolved_schemas)
+        return chosen_schema.get_valid_value(operation_id=operation_id)
 
     def get_values_out_of_bounds(self, current_value: JSON) -> list[JSON]:
         raise ValueError
@@ -1270,30 +1306,6 @@ class InfoObject(BaseModel):
 class OpenApiObject(BaseModel):
     info: InfoObject
     paths: dict[str, PathItemObject]
-
-
-def get_valid_json_data(
-    schema: SchemaObjectTypes,
-    constraint_mapping: ConstraintMappingType | None,
-    operation_id: str | None = None,
-) -> tuple[JSON, ResolvedSchemaObjectTypes]:
-    """
-    Returns a tuple of valid JSON for the given schema and constraints and the schema
-    which was used to generate the JSON.
-
-    If the provided schema is not a UnionTypeSchema the schema returned will be the
-    same as the provided schema.
-
-    If the provided schema is a UnionTypeSchema, the resolved or selected schema that
-    was used to generated the JSON data is returned.
-    """
-    if constraint_mapping:
-        schema = get_schema_for_value_constrained_by_constraint_mapping(
-            property_schema=schema,
-            constraint_mapping=constraint_mapping,
-        )
-
-    return schema.get_valid_value(operation_id=operation_id)
 
 
 def get_schema_for_value_constrained_by_constraint_mapping(
