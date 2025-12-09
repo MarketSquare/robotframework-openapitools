@@ -17,7 +17,7 @@ from OpenApiLibCore.models.resource_relations import (
     ResourceRelation,
 )
 from OpenApiLibCore.protocols import (
-    IConstraintMapping,
+    ConstraintMappingType,
     IGetIdPropertyName,
 )
 from OpenApiLibCore.utils.id_mapping import dummy_transformer
@@ -80,7 +80,7 @@ class Dto(ABC):
 
 def get_constraint_mapping_dict(
     mappings_module_name: str,
-) -> dict[tuple[str, str], IConstraintMapping]:
+) -> dict[tuple[str, str], ConstraintMappingType]:
     try:
         mappings_module = import_module(mappings_module_name)
         return mappings_module.DTO_MAPPING  # type: ignore[no-any-return]
@@ -92,7 +92,7 @@ def get_constraint_mapping_dict(
 
 def get_path_mapping_dict(
     mappings_module_name: str,
-) -> dict[str, IConstraintMapping]:
+) -> dict[str, ConstraintMappingType]:
     try:
         mappings_module = import_module(mappings_module_name)
         return mappings_module.PATH_MAPPING  # type: ignore[no-any-return]

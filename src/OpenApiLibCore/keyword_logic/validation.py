@@ -420,7 +420,7 @@ def _get_response_object(
     method = method.lower()
     status = str(status_code)
     path_item = openapi_spec.paths[path]
-    path_operations = path_item.get_operations()
+    path_operations = path_item.operations
     operation_data = path_operations.get(method)
     if operation_data is None:
         raise ValueError(f"method '{method}' not supported for {path}.")

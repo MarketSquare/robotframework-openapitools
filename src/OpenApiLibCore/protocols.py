@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import builtins
 from typing import Any, Callable, Protocol
 
 from openapi_core.contrib.requests import (
@@ -66,3 +67,6 @@ class IConstraintMapping(Protocol):
     def get_body_relations_for_error_code(
         cls, error_code: int
     ) -> list[ResourceRelation]: ...
+
+
+ConstraintMappingType = builtins.type[IConstraintMapping]

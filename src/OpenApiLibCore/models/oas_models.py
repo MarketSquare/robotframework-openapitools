@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import base64
-import builtins
 from abc import abstractmethod
 from collections import ChainMap
 from copy import deepcopy
@@ -26,11 +24,12 @@ from typing import (
 from uuid import uuid4
 
 import rstr
-from pydantic import BaseModel, Discriminator, Field, RootModel, Tag
+from pydantic import BaseModel, Field, RootModel
 from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore.annotations import JSON
+from OpenApiLibCore.data_constraints.dto_base import Dto
 from OpenApiLibCore.data_generation.localized_faker import FAKE, fake_string
 from OpenApiLibCore.data_generation.value_utils import (
     json_type_name_of_python_type,
@@ -42,7 +41,7 @@ from OpenApiLibCore.models.resource_relations import (
     IdDependency,
     PropertyValueConstraint,
 )
-from OpenApiLibCore.protocols import IConstraintMapping
+from OpenApiLibCore.protocols import ConstraintMappingType
 from OpenApiLibCore.utils.id_mapping import dummy_transformer
 from OpenApiLibCore.utils.parameter_utils import get_safe_name_for_oas_name
 
@@ -54,7 +53,6 @@ SENTINEL = object()
 
 O = TypeVar("O")
 AI = TypeVar("AI", bound=JSON)
-ConstraintMappingType = builtins.type[IConstraintMapping]
 
 
 def is_object_schema(schema: SchemaObjectTypes) -> TypeGuard[ObjectSchema]:
@@ -64,13 +62,13 @@ def is_object_schema(schema: SchemaObjectTypes) -> TypeGuard[ObjectSchema]:
 class SchemaBase(BaseModel, Generic[O], frozen=True):
     readOnly: bool = False
     writeOnly: bool = False
+    constraint_mapping: ConstraintMappingType = Dto  # type: ignore[assignment]
 
     @abstractmethod
     def get_valid_value(
         self,
-        constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
-    ) -> O: ...
+    ) -> tuple[O, SchemaObjectTypes]: ...
 
     @abstractmethod
     def get_values_out_of_bounds(self, current_value: O) -> list[O]: ...
@@ -95,7 +93,7 @@ class SchemaBase(BaseModel, Generic[O], frozen=True):
         value_type = getattr(self, "type")
 
         if not isinstance(valid_value, python_type_by_json_type_name(value_type)):
-            valid_value = self.get_valid_value()
+            valid_value = self.get_valid_value()[0]
 
         if values_from_constraint:
             # if IGNORE is in the values_from_constraints, the parameter needs to be
@@ -137,16 +135,21 @@ class SchemaBase(BaseModel, Generic[O], frozen=True):
 
         return choice(invalid_values)
 
+    def attach_constraint_mapping(
+        self, constraint_mapping: ConstraintMappingType
+    ) -> None:
+        # NOTE: https://github.com/pydantic/pydantic/issues/11495
+        self.__dict__["constraint_mapping"] = constraint_mapping
+
 
 class NullSchema(SchemaBase[None], frozen=True):
     type: Literal["null"] = "null"
 
     def get_valid_value(
         self,
-        constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
-    ) -> None:
-        return None
+    ) -> tuple[None, NullSchema]:
+        return None, self
 
     def get_values_out_of_bounds(self, current_value: None) -> list[None]:
         raise ValueError
@@ -175,12 +178,11 @@ class BooleanSchema(SchemaBase[bool], frozen=True):
 
     def get_valid_value(
         self,
-        constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
-    ) -> bool:
+    ) -> tuple[bool, BooleanSchema]:
         if self.const is not None:
-            return self.const
-        return choice([True, False])
+            return self.const, self
+        return choice([True, False]), self
 
     def get_values_out_of_bounds(self, current_value: bool) -> list[bool]:
         raise ValueError
@@ -218,18 +220,17 @@ class StringSchema(SchemaBase[str], frozen=True):
 
     def get_valid_value(
         self,
-        constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
-    ) -> str:
+    ) -> tuple[str, StringSchema]:
         """Generate a random string within the min/max length in the schema, if specified."""
         if self.const is not None:
-            return self.const
+            return self.const, self
         if self.enum is not None:
-            return choice(self.enum)
+            return choice(self.enum), self
         # if a pattern is provided, format and min/max length can be ignored
         if pattern := self.pattern:
             try:
-                return rstr.xeger(pattern)
+                return rstr.xeger(pattern), self
             except Exception as exception:
                 logger.warn(
                     f"An error occured trying to generate a string matching the "
@@ -249,7 +250,7 @@ class StringSchema(SchemaBase[str], frozen=True):
             value = value + fake_string(string_format=format_)
         if len(value) > maximum:
             value = value[:maximum]
-        return value
+        return value, self
 
     def get_values_out_of_bounds(self, current_value: str) -> list[str]:
         invalid_values: list[str] = []
@@ -368,16 +369,15 @@ class IntegerSchema(SchemaBase[int], frozen=True):
 
     def get_valid_value(
         self,
-        constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
-    ) -> int:
+    ) -> tuple[int, IntegerSchema]:
         """Generate a random int within the min/max range of the schema, if specified."""
         if self.const is not None:
-            return self.const
+            return self.const, self
         if self.enum is not None:
-            return choice(self.enum)
+            return choice(self.enum), self
 
-        return randint(self._min_value, self._max_value)
+        return randint(self._min_value, self._max_value), self
 
     def get_values_out_of_bounds(self, current_value: int) -> list[int]:  # pylint: disable=unused-argument
         invalid_values: list[int] = []
@@ -482,16 +482,15 @@ class NumberSchema(SchemaBase[float], frozen=True):
 
     def get_valid_value(
         self,
-        constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
-    ) -> float:
+    ) -> tuple[float, NumberSchema]:
         """Generate a random float within the min/max range of the schema, if specified."""
         if self.const is not None:
-            return self.const
+            return self.const, self
         if self.enum is not None:
-            return choice(self.enum)
+            return choice(self.enum), self
 
-        return uniform(self._min_value, self._max_value)
+        return uniform(self._min_value, self._max_value), self
 
     def get_values_out_of_bounds(self, current_value: float) -> list[float]:  # pylint: disable=unused-argument
         invalid_values: list[float] = []
@@ -555,14 +554,13 @@ class ArraySchema(SchemaBase[list[AI]], frozen=True):
 
     def get_valid_value(
         self,
-        constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
-    ) -> list[AI]:
+    ) -> tuple[list[AI], ArraySchema[AI]]:
         if self.const is not None:
-            return self.const
+            return self.const, self
 
         if self.enum is not None:
-            return choice(self.enum)
+            return choice(self.enum), self
 
         minimum = self.minItems if self.minItems is not None else 0
         maximum = self.maxItems if self.maxItems is not None else 1
@@ -571,9 +569,9 @@ class ArraySchema(SchemaBase[list[AI]], frozen=True):
         value: list[AI] = []
         number_of_items_to_generate = randint(minimum, maximum)
         for _ in range(number_of_items_to_generate):
-            item_value = cast("AI", self.items.get_valid_value())
+            item_value = cast("AI", self.items.get_valid_value()[0])
             value.append(item_value)
-        return value
+        return value, self
 
     def get_values_out_of_bounds(self, current_value: list[AI]) -> list[list[AI]]:
         invalid_values: list[list[AI]] = []
@@ -585,10 +583,10 @@ class ArraySchema(SchemaBase[list[AI]], frozen=True):
         if self.maxItems is not None:
             invalid_value = []
             if not current_value:
-                current_value = self.get_valid_value()
+                current_value = self.get_valid_value()[0]
 
             if not current_value:
-                current_value = [self.items.get_valid_value()]  # type: ignore[list-item]
+                current_value = [self.items.get_valid_value()[0]]  # type: ignore[list-item]
 
             while len(invalid_value) <= self.maxItems:
                 invalid_value.append(choice(current_value))
@@ -633,14 +631,13 @@ class ArraySchema(SchemaBase[list[AI]], frozen=True):
     def get_invalid_data(
         self,
         valid_data: list[AI],
-        constraint_mapping: ConstraintMappingType,
         status_code: int,
         invalid_property_default_code: int,
     ) -> list[AI]:
         """Return a data set with one of the properties set to an invalid value or type."""
         invalid_values: list[list[AI]] = []
 
-        relations = constraint_mapping.get_body_relations_for_error_code(
+        relations = self.constraint_mapping.get_body_relations_for_error_code(
             error_code=status_code
         )
         # TODO: handle relations applicable to arrays / lists
@@ -663,11 +660,10 @@ class ArraySchema(SchemaBase[list[AI]], frozen=True):
                 valid_item = (
                     data_to_invalidate.pop()
                     if valid_data
-                    else self.items.get_valid_value()
+                    else self.items.get_valid_value()[0]
                 )
                 invalid_item = self.items.get_invalid_data(
                     valid_data=valid_item,  # type: ignore[arg-type]
-                    constraint_mapping=constraint_mapping,
                     status_code=status_code,
                     invalid_property_default_code=invalid_property_default_code,
                 )
@@ -719,47 +715,40 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
 
     def get_valid_value(
         self,
-        constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
-    ) -> dict[str, JSON]:
+    ) -> tuple[dict[str, JSON], ObjectSchema]:
         if self.const is not None:
-            return self.const
+            return self.const, self
 
         if self.enum is not None:
-            return choice(self.enum)
+            return choice(self.enum), self
 
         json_data: dict[str, Any] = {}
 
-        property_names = self._get_property_names_to_process(
-            constraint_mapping=constraint_mapping
-        )
+        property_names = self._get_property_names_to_process()
 
         for property_name in property_names:
             property_schema = self.properties.root[property_name]
             if property_schema.readOnly:
                 continue
 
-            json_data[property_name] = get_data_for_property(
+            json_data[property_name] = self._get_data_for_property(
                 property_name=property_name,
                 property_schema=property_schema,
-                constraint_mapping=constraint_mapping,
                 operation_id=operation_id,
             )
 
-        return json_data
+        return json_data, self
 
-    def _get_property_names_to_process(
-        self,
-        constraint_mapping: ConstraintMappingType | None,
-    ) -> list[str]:
+    def _get_property_names_to_process(self) -> list[str]:
         property_names = []
 
         properties = {} if self.properties is None else self.properties.root
         for property_name in properties:
             # register the oas_name
             _ = get_safe_name_for_oas_name(property_name)
-            if constrained_values := get_constrained_values(
-                constraint_mapping=constraint_mapping, property_name=property_name
+            if constrained_values := self._get_constrained_values(
+                property_name=property_name
             ):
                 # do not add properties that are configured to be ignored
                 if IGNORE in constrained_values:  # type: ignore[comparison-overlap]
@@ -779,6 +768,59 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
             property_names = required_properties + selected_optional_properties
 
         return property_names
+
+    def _get_data_for_property(
+        self,
+        property_name: str,
+        property_schema: SchemaObjectTypes,
+        operation_id: str | None,
+    ) -> JSON:
+        if constrained_values := self._get_constrained_values(
+            property_name=property_name
+        ):
+            constrained_value = choice(constrained_values)
+            # Check if the chosen value is a nested constraint_mapping; since a
+            # mapping is never instantiated, we can use isinstance(..., type) for this.
+            if isinstance(constrained_value, type):
+                schema = get_schema_for_value_constrained_by_constraint_mapping(
+                    property_schema=property_schema,
+                    constraint_mapping=constrained_value,
+                )
+                return get_valid_json_data(
+                    schema=schema,
+                    constraint_mapping=constrained_value,
+                    operation_id=operation_id,
+                )[0]
+            return constrained_value
+
+        if (
+            dependent_id := get_dependent_id(
+                constraint_mapping=self.constraint_mapping,
+                property_name=property_name,
+                operation_id=operation_id,
+            )
+        ) is not None:
+            return dependent_id
+
+        return get_valid_json_data(
+            schema=property_schema,
+            constraint_mapping=self.constraint_mapping,
+        )[0]
+
+    def _get_constrained_values(
+        self, property_name: str
+    ) -> list[JSON | ConstraintMappingType]:
+        relations = self.constraint_mapping.get_relations()
+        values_list = [
+            c.values
+            for c in relations
+            if (
+                isinstance(c, PropertyValueConstraint)
+                and c.property_name == property_name
+            )
+        ]
+        # values should be empty or contain 1 list of allowed values
+        return values_list.pop() if values_list else []
 
     def get_values_out_of_bounds(
         self, current_value: Mapping[str, JSON]
@@ -826,17 +868,17 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
     def get_invalid_data(
         self,
         valid_data: dict[str, JSON],
-        constraint_mapping: ConstraintMappingType,
         status_code: int,
         invalid_property_default_code: int,
     ) -> dict[str, JSON]:
         """Return a data set with one of the properties set to an invalid value or type."""
         properties: dict[str, JSON] = deepcopy(valid_data)
 
-        relations = constraint_mapping.get_body_relations_for_error_code(
+        relations = self.constraint_mapping.get_body_relations_for_error_code(
             error_code=status_code
         )
         property_names = [r.property_name for r in relations]
+
         if status_code == invalid_property_default_code:
             # add all properties defined in the schema, including optional properties
             property_names.extend((self.properties.root.keys()))
@@ -897,7 +939,7 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
         # there may not be a current_value when invalidating an optional property
         current_value = properties.get(property_name, SENTINEL)
         if current_value is SENTINEL:
-            current_value = value_schema.get_valid_value()
+            current_value = value_schema.get_valid_value()[0]
 
         values_from_constraint = [
             r.values[0]
@@ -923,6 +965,14 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
                 f"(received from get_invalid_value)"
             )
         return properties
+
+    def contains_properties(self, property_names: list[str]) -> bool:
+        if self.properties is None:
+            return False
+        for property_name in property_names:
+            if property_name not in self.properties.root:
+                return False
+        return True
 
     @property
     def can_be_invalidated(self) -> bool:
@@ -972,11 +1022,13 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
 
     def get_valid_value(
         self,
-        constraint_mapping: ConstraintMappingType | None = None,
         operation_id: str | None = None,
-    ) -> JSON:
-        chosen_schema = choice(self.resolved_schemas)
-        return chosen_schema.get_valid_value()
+    ) -> tuple[JSON, ResolvedSchemaObjectTypes]:
+        schema = get_schema_for_value_constrained_by_constraint_mapping(
+            property_schema=self,
+            constraint_mapping=self.constraint_mapping,
+        )
+        return schema.get_valid_value(operation_id=operation_id)
 
     def get_values_out_of_bounds(self, current_value: JSON) -> list[JSON]:
         raise ValueError
@@ -1083,6 +1135,13 @@ class ParameterObject(BaseModel):
     required: bool = False
     description: str = ""
     schema_: SchemaObjectTypes | None = Field(None, alias="schema")
+    constraint_mapping: ConstraintMappingType | None = None
+
+    def attach_constraint_mapping(
+        self, constraint_mapping: ConstraintMappingType
+    ) -> None:
+        if self.schema_:
+            self.schema_.attach_constraint_mapping(constraint_mapping)
 
 
 class MediaTypeObject(BaseModel):
@@ -1122,6 +1181,13 @@ class RequestBodyObject(BaseModel):
         }
         return json_schemas
 
+    def attach_constraint_mapping(
+        self, constraint_mapping: ConstraintMappingType
+    ) -> None:
+        for media_object_type in self.content.values():
+            if media_object_type and media_object_type.schema_:
+                media_object_type.schema_.attach_constraint_mapping(constraint_mapping)
+
 
 class HeaderObject(BaseModel): ...
 
@@ -1144,10 +1210,20 @@ class OperationObject(BaseModel):
     parameters: list[ParameterObject] = []
     requestBody: RequestBodyObject | None = None
     responses: dict[str, ResponseObject] = {}
-    constraint_mapping: type[IConstraintMapping] | None = None
+    constraint_mapping: ConstraintMappingType | None = None
 
     def update_parameters(self, parameters: list[ParameterObject]) -> None:
         self.parameters.extend(parameters)
+
+    def attach_constraint_mappings(self) -> None:
+        if not self.constraint_mapping:
+            return
+
+        if self.requestBody:
+            self.requestBody.attach_constraint_mapping(self.constraint_mapping)
+
+        for parameter_object in self.parameters:
+            parameter_object.attach_constraint_mapping(self.constraint_mapping)
 
 
 class PathItemObject(BaseModel):
@@ -1159,13 +1235,14 @@ class PathItemObject(BaseModel):
     summary: str = ""
     description: str = ""
     parameters: list[ParameterObject] = []
-    constraint_mapping: IConstraintMapping | None = None
+    constraint_mapping: ConstraintMappingType | None = None
     id_mapper: tuple[str, Callable[[str], str]] = (
         "id",
         dummy_transformer,
     )
 
-    def get_operations(self) -> dict[str, OperationObject]:
+    @property
+    def operations(self) -> dict[str, OperationObject]:
         return {
             k: v for k, v in self.__dict__.items() if isinstance(v, OperationObject)
         }
@@ -1174,9 +1251,13 @@ class PathItemObject(BaseModel):
         if not self.parameters:
             return
 
-        operations_to_update = self.get_operations()
+        operations_to_update = self.operations
         for operation_object in operations_to_update.values():
             operation_object.update_parameters(self.parameters)
+
+    def attach_constraint_mappings(self) -> None:
+        for operation_object in self.operations.values():
+            operation_object.attach_constraint_mappings()
 
 
 class InfoObject(BaseModel):
@@ -1190,64 +1271,91 @@ class OpenApiObject(BaseModel):
     info: InfoObject
     paths: dict[str, PathItemObject]
 
-    def model_post_init(self, context: object) -> None:
-        for path_object in self.paths.values():
-            path_object.update_operation_parameters()
 
-
-# TODO: can this be refactored away?
 def get_valid_json_data(
     schema: SchemaObjectTypes,
-    constraint_mapping: type[IConstraintMapping] | None,
-    operation_id: str | None = None,
-) -> JSON:
-    if isinstance(schema, UnionTypeSchema):
-        chosen_schema = choice(schema.resolved_schemas)
-        return get_valid_json_data(
-            schema=chosen_schema,
-            constraint_mapping=constraint_mapping,
-            operation_id=operation_id,
-        )
-
-    return schema.get_valid_value(
-        constraint_mapping=constraint_mapping, operation_id=operation_id
-    )
-
-
-# TODO: move to ObjectSchema?
-def get_data_for_property(
-    property_name: str,
-    property_schema: SchemaObjectTypes,
     constraint_mapping: ConstraintMappingType | None,
-    operation_id: str | None,
-) -> JSON:
-    if constrained_values := get_constrained_values(
-        constraint_mapping=constraint_mapping, property_name=property_name
-    ):
-        constrained_value = choice(constrained_values)
-        # Check if the chosen value is a nested constraint_mapping; since a
-        # mapping is never instantiated, we can use isinstance(..., type) for this.
-        if isinstance(constrained_value, type):
-            return get_value_constrained_by_nested_constraint_mapping(
-                property_schema=property_schema,
-                nested_constraint_mapping=constrained_value,
-                operation_id=operation_id,
-            )
-        return constrained_value
+    operation_id: str | None = None,
+) -> tuple[JSON, ResolvedSchemaObjectTypes]:
+    """
+    Returns a tuple of valid JSON for the given schema and constraints and the schema
+    which was used to generate the JSON.
 
-    if (
-        dependent_id := get_dependent_id(
+    If the provided schema is not a UnionTypeSchema the schema returned will be the
+    same as the provided schema.
+
+    If the provided schema is a UnionTypeSchema, the resolved or selected schema that
+    was used to generated the JSON data is returned.
+    """
+    if constraint_mapping:
+        schema = get_schema_for_value_constrained_by_constraint_mapping(
+            property_schema=schema,
             constraint_mapping=constraint_mapping,
-            property_name=property_name,
-            operation_id=operation_id,
         )
-    ) is not None:
-        return dependent_id
 
-    return get_valid_json_data(
-        schema=property_schema,
-        constraint_mapping=None,
+    return schema.get_valid_value(operation_id=operation_id)
+
+
+def get_schema_for_value_constrained_by_constraint_mapping(
+    property_schema: SchemaObjectTypes,
+    constraint_mapping: ConstraintMappingType,
+) -> SchemaObjectTypes:
+    relations = (
+        constraint_mapping.get_relations()
+        + constraint_mapping.get_parameter_relations()
     )
+    mandatory_property_names = [
+        relation.property_name
+        for relation in relations
+        if getattr(relation, "treat_as_mandatory", False)
+    ]
+    return _get_schema_for_constraint_mapping(
+        property_schema=property_schema,
+        mandatory_property_names=mandatory_property_names,
+    )
+
+
+def _get_schema_for_constraint_mapping(
+    property_schema: SchemaObjectTypes,
+    mandatory_property_names: list[str],
+) -> SchemaObjectTypes:
+    if not isinstance(property_schema, (ObjectSchema, UnionTypeSchema)):
+        return property_schema
+
+    if isinstance(property_schema, ObjectSchema):
+        if mandatory_property_names and not property_schema.contains_properties(
+            mandatory_property_names
+        ):
+            raise ValueError(
+                "No schema found that contains all properties that should be treated as mandatory."
+            )
+        return property_schema
+
+    if not mandatory_property_names:
+        return choice(property_schema.resolved_schemas)
+
+    valid_candidates: list[ObjectSchema] = []
+
+    object_schemas = [
+        schema
+        for schema in property_schema.resolved_schemas
+        if isinstance(schema, ObjectSchema)
+    ]
+    for candidate_schema in object_schemas:
+        try:
+            valid_candidate = _get_schema_for_constraint_mapping(
+                property_schema=candidate_schema,
+                mandatory_property_names=mandatory_property_names,
+            )
+            valid_candidates.append(valid_candidate)  # type: ignore[arg-type]
+        except ValueError:
+            pass
+
+    if not valid_candidates:
+        raise ValueError(
+            "No schema found that contains all properties that should be treated as mandatory."
+        )
+    return choice(valid_candidates)
 
 
 # TODO: move to keyword_logic?
@@ -1281,42 +1389,3 @@ def get_dependent_id(
     )
     logger.debug(f"get_dependent_id for {id_get_path} returned {valid_id}")
     return valid_id
-
-
-def get_value_constrained_by_nested_constraint_mapping(
-    property_schema: SchemaObjectTypes,
-    nested_constraint_mapping: ConstraintMappingType,
-    operation_id: str | None,
-) -> JSON:
-    nested_schema = get_schema_for_nested_constraint_mapping(
-        property_schema=property_schema
-    )
-    nested_value = get_valid_json_data(
-        schema=nested_schema,
-        constraint_mapping=nested_constraint_mapping,
-        operation_id=operation_id,
-    )
-    return nested_value
-
-
-def get_schema_for_nested_constraint_mapping(
-    property_schema: SchemaObjectTypes,
-) -> SchemaObjectTypes:
-    if isinstance(property_schema, UnionTypeSchema):
-        chosen_schema = choice(property_schema.resolved_schemas)
-        return get_schema_for_nested_constraint_mapping(chosen_schema)
-
-    return property_schema
-
-
-def get_constrained_values(
-    constraint_mapping: ConstraintMappingType | None, property_name: str
-) -> list[JSON | ConstraintMappingType]:
-    relations = constraint_mapping.get_relations() if constraint_mapping else []
-    values_list = [
-        c.values
-        for c in relations
-        if (isinstance(c, PropertyValueConstraint) and c.property_name == property_name)
-    ]
-    # values should be empty or contain 1 list of allowed values
-    return values_list.pop() if values_list else []

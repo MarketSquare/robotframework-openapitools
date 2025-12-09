@@ -29,7 +29,7 @@ from OpenApiLibCore.models.resource_relations import (
     PropertyValueConstraint,
     ResourceRelation,
 )
-from OpenApiLibCore.protocols import IConstraintMapping
+from OpenApiLibCore.protocols import ConstraintMappingType
 from OpenApiLibCore.utils.parameter_utils import get_safe_name_for_oas_name
 
 
@@ -90,16 +90,14 @@ def get_request_data(
             key_value = "Content-Type"
         headers.update({key_value: operation_spec.requestBody.mime_type})
 
-    if isinstance(body_schema, UnionTypeSchema):
-        body_schema = choice(body_schema.resolved_schemas)
-
-    valid_data = get_valid_json_data(
+    valid_data, schema_used_for_data_generation = get_valid_json_data(
         schema=body_schema,
         constraint_mapping=constraint_mapping,
         operation_id=operation_spec.operationId,
     )
+
     constraint_mapping = _get_mapping_dataclass_from_valid_data(
-        schema=body_schema,
+        schema=schema_used_for_data_generation,
         constraint_mapping=constraint_mapping,
         valid_data=valid_data,
         method_spec=operation_spec,
@@ -108,7 +106,7 @@ def get_request_data(
     return RequestData(
         valid_data=valid_data,
         constraint_mapping=constraint_mapping,
-        body_schema=body_schema,
+        body_schema=schema_used_for_data_generation,
         parameters=parameters,
         params=params,
         headers=headers,
@@ -116,10 +114,10 @@ def get_request_data(
 
 
 def _get_mapping_dataclass_for_empty_body(
-    constraint_mapping: type[IConstraintMapping] | None,
+    constraint_mapping: ConstraintMappingType | None,
     mapping_cls_name: str,
     method_spec: OperationObject,
-) -> type[IConstraintMapping]:
+) -> ConstraintMappingType:
     cls_name = method_spec.operationId if method_spec.operationId else mapping_cls_name
     base = constraint_mapping if constraint_mapping else Dto
     mapping_class = make_dataclass(
@@ -132,11 +130,11 @@ def _get_mapping_dataclass_for_empty_body(
 
 def _get_mapping_dataclass_from_valid_data(
     schema: ResolvedSchemaObjectTypes,
-    constraint_mapping: type[IConstraintMapping] | None,
+    constraint_mapping: ConstraintMappingType | None,
     valid_data: JSON,
     method_spec: OperationObject,
     mapping_cls_name: str,
-) -> type[IConstraintMapping]:
+) -> ConstraintMappingType:
     if not isinstance(schema, (ObjectSchema, ArraySchema)):
         return _get_mapping_dataclass_for_empty_body(
             constraint_mapping=constraint_mapping,
@@ -208,7 +206,7 @@ def get_mapping_cls_name(path: str, method: str) -> str:
 
 
 def get_request_parameters(
-    constraint_mapping: type[IConstraintMapping] | None, method_spec: OperationObject
+    constraint_mapping: ConstraintMappingType | None, method_spec: OperationObject
 ) -> tuple[list[ParameterObject], dict[str, Any], dict[str, str]]:
     """Get the methods parameter spec and params and headers with valid data."""
     parameters = method_spec.parameters if method_spec.parameters else []
@@ -248,6 +246,6 @@ def get_parameter_data(
 
         if parameter.schema_ is None:  # pragma: no branch
             continue
-        value = parameter.schema_.get_valid_value()
+        value = parameter.schema_.get_valid_value()[0]
         result[parameter_name] = value
     return result

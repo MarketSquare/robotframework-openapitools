@@ -86,7 +86,6 @@ def get_invalid_body_data(
                 raise ValueError("Type of valid_data does not match body_schema type.")
             invalid_item_data: list[JSON] = request_data.body_schema.get_invalid_data(
                 valid_data=request_data.valid_data,
-                constraint_mapping=request_data.constraint_mapping,
                 status_code=status_code,
                 invalid_property_default_code=invalid_data_default_response,
             )
@@ -96,7 +95,6 @@ def get_invalid_body_data(
             raise ValueError("Type of valid_data does not match body_schema type.")
         json_data = request_data.body_schema.get_invalid_data(
             valid_data=request_data.valid_data,
-            constraint_mapping=request_data.constraint_mapping,
             status_code=status_code,
             invalid_property_default_code=invalid_data_default_response,
         )
@@ -128,7 +126,6 @@ def get_invalid_body_data(
             raise ValueError("Type of valid_data does not match body_schema type.")
         invalid_item_data = request_data.body_schema.get_invalid_data(
             valid_data=request_data.valid_data,
-            constraint_mapping=request_data.constraint_mapping,
             status_code=status_code,
             invalid_property_default_code=invalid_data_default_response,
         )
@@ -138,7 +135,6 @@ def get_invalid_body_data(
         raise ValueError("Type of valid_data does not match body_schema type.")
     return request_data.body_schema.get_invalid_data(
         valid_data=request_data.valid_data,
-        constraint_mapping=request_data.constraint_mapping,
         status_code=status_code,
         invalid_property_default_code=invalid_data_default_response,
     )
@@ -312,7 +308,7 @@ def ensure_parameter_in_parameters(
 
             if isinstance(value_schema, UnionTypeSchema):
                 value_schema = choice(value_schema.resolved_schemas)
-            valid_value = value_schema.get_valid_value()
+            valid_value = value_schema.get_valid_value()[0]
         if (
             parameter_data.in_ == "query"
             and parameter_to_invalidate not in params.keys()

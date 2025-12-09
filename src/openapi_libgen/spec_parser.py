@@ -47,7 +47,7 @@ def get_path_items(
     paths: dict[str, PathItemObject],
 ) -> Generator[OperationDetails, None, None]:
     for path, path_item_object in paths.items():
-        operations = path_item_object.get_operations()
+        operations = path_item_object.operations
         for method, operation_object in operations.items():
             operation_details = OperationDetails(
                 path=path,

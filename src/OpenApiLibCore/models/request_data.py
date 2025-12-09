@@ -12,7 +12,7 @@ from OpenApiLibCore.models.oas_models import (
     ResolvedSchemaObjectTypes,
     UnionTypeSchema,
 )
-from OpenApiLibCore.protocols import IConstraintMapping
+from OpenApiLibCore.protocols import ConstraintMappingType
 
 
 @dataclass
@@ -56,7 +56,7 @@ class RequestData:
     """Helper class to manage parameters used when making requests."""
 
     valid_data: JSON
-    constraint_mapping: type[IConstraintMapping]
+    constraint_mapping: ConstraintMappingType
     body_schema: ResolvedSchemaObjectTypes | None = None
     parameters: list[ParameterObject] = field(default_factory=list)
     params: dict[str, JSON] = field(default_factory=dict)

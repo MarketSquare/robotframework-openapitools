@@ -328,7 +328,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             base_url=self.base_url,
             method=method,
             json_data=json_data,
-            constraint_mapping=constraint_mapping,
+            constraint_mapping=constraint_mapping,  # FIXME: the model should have this information
             conflict_status_code=conflict_status_code,
         )
 
@@ -594,7 +594,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
                 _ = get_safe_name_for_oas_name(parameter_object.name)
 
         for path_item in paths_data.values():
-            operations = path_item.get_operations()
+            operations = path_item.operations
             for operation in operations.values():
                 if parameters := operation.parameters:
                     for parameter in parameters:
@@ -625,6 +625,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         for path, path_item in spec_model.paths.items():
             mapper = self.get_id_property_name(path)
             path_item.id_mapper = mapper
+            path_item.update_operation_parameters()
+            path_item.attach_constraint_mappings()
 
         return spec_model
 
