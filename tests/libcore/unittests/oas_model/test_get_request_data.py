@@ -29,8 +29,8 @@ class TestValidData(unittest.TestCase):
         with open(file=spec_path) as json_file:
             spec_dict = json.load(json_file)
         cls.spec = OpenApiObject.model_validate(spec_dict)
-        cls._get_request_data = partial(
-            get_request_data, method="POST", openapi_spec=cls.spec
+        cls._get_request_data = staticmethod(
+            partial(get_request_data, method="POST", openapi_spec=cls.spec)
         )
 
     def test_null_schema(self) -> None:
