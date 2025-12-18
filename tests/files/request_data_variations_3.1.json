@@ -161,7 +161,9 @@
                                                     "type": "string"
                                                 }
                                             },
-                                            "required": ["name"],
+                                            "required": [
+                                                "name"
+                                            ],
                                             "additionalProperties": {
                                                 "type": "boolean"
                                             }
@@ -169,7 +171,14 @@
                                         {
                                             "type": "object",
                                             "additionalProperties": {
-                                                "type": "integer"
+                                                "oneOf": [
+                                                    {
+                                                        "type": "integer"
+                                                    },
+                                                    {
+                                                        "type": "number"
+                                                    }
+                                                ]
                                             }
                                         },
                                         {

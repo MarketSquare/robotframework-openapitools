@@ -1,0 +1,372 @@
+{
+    "openapi": "3.0.4",
+    "info": {
+        "title": "test_get_request_data",
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/boolean_schema": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "boolean",
+                                "nullable": true
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/integer_schema": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "integer",
+                                "nullable": true
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/number_schema": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "number",
+                                "nullable": true
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/string_schema": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "string",
+                                "nullable": true
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/array_schema": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "nullable": true,
+                                "items": {
+                                    "type": "number",
+                                    "nullable": true
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/object_schema": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "nullable": true,
+                                "properties": {
+                                    "id": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/oneof_first": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    {
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/oneof_second": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/oneof_both": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/anyof_first": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "anyOf": [
+                                    {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    {
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/anyof_second": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "anyOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/anyof_both": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "anyOf": [
+                                    {
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/allof_one": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "allOf": [
+                                    {
+                                        "type": "object",
+                                        "nullable": true,
+                                        "properties": {
+                                            "name": {
+                                                "type": "string",
+                                                "nullable": true
+                                            }
+                                        },
+                                        "required": [
+                                            "name"
+                                        ],
+                                        "additionalProperties": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "additionalProperties": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "integer",
+                                                    "nullable": true
+                                                },
+                                                {
+                                                    "type": "number",
+                                                    "nullable": true
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "data": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "value": {
+                                                        "type": "string",
+                                                        "format": "byte"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "additionalProperties": false
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        },
+        "/allof_all": {
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "allOf": [
+                                    {
+                                        "type": "object",
+                                        "nullable": true,
+                                        "properties": {
+                                            "name": {
+                                                "type": "string",
+                                                "nullable": true
+                                            }
+                                        },
+                                        "required": [
+                                            "name"
+                                        ],
+                                        "additionalProperties": {
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "nullable": true,
+                                        "additionalProperties": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "integer",
+                                                    "nullable": true
+                                                },
+                                                {
+                                                    "type": "number",
+                                                    "nullable": true
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "nullable": true,
+                                        "properties": {
+                                            "data": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "value": {
+                                                        "type": "string",
+                                                        "format": "byte"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "additionalProperties": false
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "required": true
+                }
+            }
+        }
+    }
+}

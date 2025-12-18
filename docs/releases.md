@@ -1,13 +1,43 @@
 # Release notes
 
-## OpenApiTools v1.0.5
+## OpenApiTools v2.0.0
+
+### Major changes and new features
+- Request bodies now support all JSON types, not just `objects` (`dicts`).
+    - This closes issue _#9: No body generated when root is a list_.
+    - The `Relations` still need to be reworked to align with this change.
+- Improved handling of `treat_as_mandatory` on a `PropertyValueConstraint`.
+- Added support for using `IGNORE` as `invalid_value` on a `PropertyValueConstraint`.
 
 ### Bugfixes
-- `parameters` at path level are not taken into account at operation level
+- Fixed validation errors caused by `Content-Type` not being handled case-insensitive.
+- Fixed an exception during validation caused by `charset` being included in the `Content-Type` header for `application/json`.
+
+### Breaking changes
+- `invalid_property_default_response` library parameter renamed to `invalid_data_default_response`.
+- The `RequestData` class that is returned by a number of keywords has been changed:
+    - The `dto` property was removed.
+    - The `valid_data` property was added.
+    - The `constrait_mapping` property was added.
+
+### Additional changes
+- Special handling of `"format": "byte"` for `"type": "string"` (OAS 3.0) was removed.
+    - While some logic related to this worked, the result was never JSON-serializable.
+- The devcontainer setup was updated.
+- The GitHub pipeline was updated to include Python 3.14.
+- Updated minimum version markers for many dependencies.
+- Annotations are now complete (as far as possible under Python 3.10).
 
 <br><br><br>
 
 ## Previous versions
+
+### OpenApiTools v1.0.5
+
+#### Bugfixes
+- `parameters` at path level are not taken into account at operation level.
+
+---
 
 ### OpenApiTools v1.0.4
 
@@ -41,7 +71,7 @@
 ### OpenApiTools v1.0.1
 
 #### Bugfixes
-- `openapitools_docs` was missing from package distribution
+- `openapitools_docs` was missing from package distribution.
 
 ---
 

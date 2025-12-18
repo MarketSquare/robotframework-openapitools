@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import builtins
 from abc import abstractmethod
 from collections import ChainMap
 from copy import deepcopy
@@ -144,6 +145,7 @@ class SchemaBase(BaseModel, Generic[O], frozen=True):
 
 class NullSchema(SchemaBase[None], frozen=True):
     type: Literal["null"] = "null"
+    nullable: bool = False
 
     def get_valid_value(
         self,
@@ -169,6 +171,10 @@ class NullSchema(SchemaBase[None], frozen=True):
     @property
     def annotation_string(self) -> str:
         return "None"
+
+    @property
+    def python_type(self) -> builtins.type:
+        return type(None)
 
 
 class BooleanSchema(SchemaBase[bool], frozen=True):
@@ -206,6 +212,10 @@ class BooleanSchema(SchemaBase[bool], frozen=True):
     @property
     def annotation_string(self) -> str:
         return "bool"
+
+    @property
+    def python_type(self) -> builtins.type:
+        return bool
 
 
 class StringSchema(SchemaBase[str], frozen=True):
@@ -309,6 +319,10 @@ class StringSchema(SchemaBase[str], frozen=True):
     @property
     def annotation_string(self) -> str:
         return "str"
+
+    @property
+    def python_type(self) -> builtins.type:
+        return str
 
 
 class IntegerSchema(SchemaBase[int], frozen=True):
@@ -428,6 +442,10 @@ class IntegerSchema(SchemaBase[int], frozen=True):
     def annotation_string(self) -> str:
         return "int"
 
+    @property
+    def python_type(self) -> builtins.type:
+        return int
+
 
 class NumberSchema(SchemaBase[float], frozen=True):
     type: Literal["number"] = "number"
@@ -540,6 +558,10 @@ class NumberSchema(SchemaBase[float], frozen=True):
     @property
     def annotation_string(self) -> str:
         return "float"
+
+    @property
+    def python_type(self) -> builtins.type:
+        return float
 
 
 class ArraySchema(SchemaBase[list[AI]], frozen=True):
@@ -693,6 +715,10 @@ class ArraySchema(SchemaBase[list[AI]], frozen=True):
     @property
     def annotation_string(self) -> str:
         return f"list[{self.items.annotation_string}]"
+
+    @property
+    def python_type(self) -> builtins.type:
+        return list
 
 
 # NOTE: Workaround for cyclic PropertiesMapping / SchemaObjectTypes annotations
@@ -995,6 +1021,10 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
     def annotation_string(self) -> str:
         return "dict[str, JSON]"
 
+    @property
+    def python_type(self) -> builtins.type:
+        return dict
+
 
 ResolvedSchemaObjectTypes = Annotated[
     Union[
@@ -1024,6 +1054,7 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
     allOf: list["SchemaObjectTypes"] = []
     anyOf: list["SchemaObjectTypes"] = []
     oneOf: list["SchemaObjectTypes"] = []
+    nullable: bool = False
 
     def get_valid_value(
         self,
@@ -1036,7 +1067,8 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
         constrained_property_names = [relation.property_name for relation in relations]
 
         if not constrained_property_names:
-            chosen_schema = choice(self.resolved_schemas)
+            resolved_schemas = self.resolved_schemas
+            chosen_schema = choice(resolved_schemas)
             return chosen_schema.get_valid_value(operation_id=operation_id)
 
         valid_values = []
@@ -1068,9 +1100,21 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
     def get_values_out_of_bounds(self, current_value: JSON) -> list[JSON]:
         raise ValueError
 
-    @property
+    @cached_property
     def resolved_schemas(self) -> list[ResolvedSchemaObjectTypes]:
-        return list(self._get_resolved_schemas())
+        schemas_to_return: list[ResolvedSchemaObjectTypes] = []
+        null_schema = None
+
+        resolved_schemas = list(self._get_resolved_schemas())
+        for schema in resolved_schemas:
+            # Prevent duplication of NullSchema when handling nullable models.
+            if isinstance(schema, NullSchema):
+                null_schema = schema
+            else:
+                schemas_to_return.append(schema)
+        if null_schema is not None:
+            schemas_to_return.append(null_schema)
+        return schemas_to_return
 
     def _get_resolved_schemas(self) -> Generator[ResolvedSchemaObjectTypes, None, None]:
         if self.allOf:
@@ -1081,9 +1125,16 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
             min_properties_list = []
             nullable_list = []
 
+            schemas_to_process = []
             for schema in self.allOf:
+                if isinstance(schema, UnionTypeSchema):
+                    schemas_to_process.extend(schema.resolved_schemas)
+                else:
+                    schemas_to_process.append(schema)
+
+            for schema in schemas_to_process:
                 if not isinstance(schema, ObjectSchema):
-                    raise NotImplementedError("allOf only supported for ObjectSchemas")
+                    raise ValueError("allOf is only supported for ObjectSchemas")
 
                 if schema.const is not None:
                     raise ValueError("allOf and models with a const are not compatible")
@@ -1100,7 +1151,7 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
                 nullable_list.append(schema.nullable)
 
             properties_dicts = [mapping.root for mapping in properties_list]
-            properties = dict(ChainMap(*properties_dicts))
+            merged_properties = dict(ChainMap(*properties_dicts))
 
             if True in additional_properties_list:
                 additional_properties_value: bool | SchemaObjectTypes = True
@@ -1111,6 +1162,10 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
                         additional_properties_item, RESOLVED_SCHEMA_CLASS_TUPLE
                     ):
                         additional_properties_types.append(additional_properties_item)
+                    if isinstance(additional_properties_item, UnionTypeSchema):
+                        additional_properties_types.extend(
+                            additional_properties_item.resolved_schemas
+                        )
                 if not additional_properties_types:
                     additional_properties_value = False
                 else:
@@ -1125,17 +1180,28 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
 
             merged_schema = ObjectSchema(
                 type="object",
-                properties=PropertiesMapping(root=properties),
+                properties=PropertiesMapping(root=merged_properties),
                 additionalProperties=additional_properties_value,
                 required=required_list,
                 maxProperties=max_propeties_value,
                 minProperties=min_propeties_value,
-                nullable=all(nullable_list),
+                nullable=False,
             )
+            merged_schema.attach_constraint_mapping(self.constraint_mapping)
             yield merged_schema
+            # If all schemas are nullable the merged schema is treated as nullable.
+            if all(nullable_list):
+                null_schema = NullSchema()
+                null_schema.attach_constraint_mapping(self.constraint_mapping)
+                yield null_schema
         else:
             for schema in self.anyOf + self.oneOf:
                 if isinstance(schema, RESOLVED_SCHEMA_CLASS_TUPLE):
+                    if schema.nullable:
+                        schema.__dict__["nullable"] = False
+                        null_schema = NullSchema()
+                        null_schema.attach_constraint_mapping(self.constraint_mapping)
+                        yield null_schema
                     yield schema
                 else:
                     yield from schema.resolved_schemas
@@ -1177,6 +1243,11 @@ class ParameterObject(BaseModel):
     ) -> None:
         if self.schema_:  # pragma: no branch
             self.schema_.attach_constraint_mapping(constraint_mapping)
+
+    def replace_nullable_with_union(self) -> None:
+        if self.schema_:  # pragma: no branch
+            processed_schema = nullable_schema_to_union_schema(self.schema_)
+            self.schema_ = processed_schema
 
 
 class MediaTypeObject(BaseModel):
@@ -1223,6 +1294,14 @@ class RequestBodyObject(BaseModel):
             if media_object_type and media_object_type.schema_:  # pragma: no branch
                 media_object_type.schema_.attach_constraint_mapping(constraint_mapping)
 
+    def replace_nullable_with_union(self) -> None:
+        for media_object_type in self.content.values():
+            if media_object_type and media_object_type.schema_:  # pragma: no branch
+                processed_schema = nullable_schema_to_union_schema(
+                    media_object_type.schema_
+                )
+                media_object_type.schema_ = processed_schema
+
 
 class HeaderObject(BaseModel): ...
 
@@ -1260,6 +1339,13 @@ class OperationObject(BaseModel):
         for parameter_object in self.parameters:
             parameter_object.attach_constraint_mapping(self.constraint_mapping)
 
+    def replace_nullable_with_union(self) -> None:
+        if self.requestBody:
+            self.requestBody.replace_nullable_with_union()
+
+        for parameter_object in self.parameters:
+            parameter_object.replace_nullable_with_union()
+
 
 class PathItemObject(BaseModel):
     get: OperationObject | None = None
@@ -1294,6 +1380,11 @@ class PathItemObject(BaseModel):
         for operation_object in self.operations.values():
             operation_object.attach_constraint_mappings()
 
+    def replace_nullable_with_union(self) -> None:
+        for operation_object in self.operations.values():
+            operation_object.attach_constraint_mappings()
+            operation_object.replace_nullable_with_union()
+
 
 class InfoObject(BaseModel):
     title: str
@@ -1305,6 +1396,18 @@ class InfoObject(BaseModel):
 class OpenApiObject(BaseModel):
     info: InfoObject
     paths: dict[str, PathItemObject]
+
+
+def nullable_schema_to_union_schema(schema: SchemaObjectTypes) -> SchemaObjectTypes:
+    if not schema.nullable:
+        return schema
+
+    schema.__dict__["nullable"] = False
+    null_schema = NullSchema()
+    null_schema.attach_constraint_mapping(schema.constraint_mapping)
+    union_schema = UnionTypeSchema(oneOf=[schema, null_schema])
+    union_schema.attach_constraint_mapping(schema.constraint_mapping)
+    return union_schema
 
 
 # TODO: move to keyword_logic?

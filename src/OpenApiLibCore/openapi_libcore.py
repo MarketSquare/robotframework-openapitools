@@ -584,7 +584,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
     def _openapi_spec(self) -> OpenApiObject:
         parser, _ = self._load_specs_and_validator()
         spec_model = OpenApiObject.model_validate(parser.specification)
-        spec_model = self._attach_user_mappings(spec_model=spec_model)
+        spec_model = self._perform_post_init_model_updates(spec_model=spec_model)
         self._register_path_parameters(spec_model.paths)
         return spec_model
 
@@ -600,7 +600,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
                     for parameter in parameters:
                         _register_path_parameter(parameter_object=parameter)
 
-    def _attach_user_mappings(self, spec_model: OpenApiObject) -> OpenApiObject:
+    def _perform_post_init_model_updates(
+        self, spec_model: OpenApiObject
+    ) -> OpenApiObject:
         for (
             path,
             operation,
@@ -627,6 +629,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             path_item.id_mapper = mapper
             path_item.update_operation_parameters()
             path_item.attach_constraint_mappings()
+            path_item.replace_nullable_with_union()
 
         return spec_model
 

@@ -148,11 +148,18 @@ def _get_mapping_dataclass_from_valid_data(
             )
         first_item_data = valid_data[0]
         item_object_schema = schema.items
+
         if isinstance(item_object_schema, UnionTypeSchema):
             resolved_schemas = item_object_schema.resolved_schemas
-            item_object_schema = choice(resolved_schemas)
+            for resolved_schema in resolved_schemas:
+                matched_schema = resolved_schema
+                if isinstance(first_item_data, resolved_schema.python_type):
+                    break
+        else:
+            matched_schema = item_object_schema
+
         mapping_dataclass = _get_mapping_dataclass_from_valid_data(
-            schema=item_object_schema,
+            schema=matched_schema,
             constraint_mapping=constraint_mapping,
             valid_data=first_item_data,
             method_spec=method_spec,
