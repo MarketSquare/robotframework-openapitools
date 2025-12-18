@@ -4,12 +4,14 @@
 
 ### Major changes and new features
 - Request bodies now support all JSON types, not just `objects` (`dicts`).
-    - This closes issue _#9: No body generated when root is a list_.
+    - This closes issue *#9: No body generated when root is a list*.
     - The `Relations` still need to be reworked to align with this change.
 - Improved handling of `treat_as_mandatory` on a `PropertyValueConstraint`.
 - Added support for using `IGNORE` as `invalid_value` on a `PropertyValueConstraint`.
 
 ### Bugfixes
+- Added support for the `nullable` property in OAS 3.0 schemas when generating data.
+    - This closes issue *#81: nullable not taken into account in get_valid_value*.
 - Fixed validation errors caused by `Content-Type` not being handled case-insensitive.
 - Fixed an exception during validation caused by `charset` being included in the `Content-Type` header for `application/json`.
 
