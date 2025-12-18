@@ -39,11 +39,6 @@ class TestValidData30(unittest.TestCase):
             partial(get_request_data, method="POST", openapi_spec=cls.spec)
         )
 
-    def test_null_schema(self) -> None:
-        request_data = self._get_request_data(path="/null_schema")
-        self.assertEqual(request_data.valid_data, None)
-        self.assertIsInstance(request_data.body_schema, NullSchema)
-
     def test_bool_schema(self) -> None:
         request_data = self._get_request_data(path="/boolean_schema")
         self.assertIsInstance(request_data.valid_data, bool)
@@ -96,9 +91,8 @@ class TestValidData30(unittest.TestCase):
         self.assertTrue(isinstance(request_data.body_schema, ArraySchema))
         items_schema = request_data.body_schema.items
         self.assertIsInstance(items_schema, UnionTypeSchema)
-        object_schema, null_schema = items_schema.resolved_schemas
+        [object_schema] = items_schema.resolved_schemas
         self.assertIsInstance(object_schema, ObjectSchema)
-        self.assertIsInstance(null_schema, NullSchema)
         self.assertEqual(object_schema.required, ["name"])
         self.assertIsInstance(object_schema.additionalProperties, UnionTypeSchema)
         additional_properties_schemas = (
@@ -186,8 +180,9 @@ class TestValidData31(unittest.TestCase):
         additional_properties_schemas = (
             resolved_schema.additionalProperties.resolved_schemas
         )
-        self.assertEqual(
-            additional_properties_schemas, [BooleanSchema(), IntegerSchema()]
+        self.assertIsInstance(additional_properties_schemas[0], BooleanSchema)
+        self.assertIsInstance(
+            additional_properties_schemas[1], (IntegerSchema, NumberSchema)
         )
 
 

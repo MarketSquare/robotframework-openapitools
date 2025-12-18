@@ -1067,7 +1067,8 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
         constrained_property_names = [relation.property_name for relation in relations]
 
         if not constrained_property_names:
-            chosen_schema = choice(self.resolved_schemas)
+            resolved_schemas = self.resolved_schemas
+            chosen_schema = choice(resolved_schemas)
             return chosen_schema.get_valid_value(operation_id=operation_id)
 
         valid_values = []
@@ -1099,18 +1100,20 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
     def get_values_out_of_bounds(self, current_value: JSON) -> list[JSON]:
         raise ValueError
 
-    @property
+    @cached_property
     def resolved_schemas(self) -> list[ResolvedSchemaObjectTypes]:
-        schemas_to_return = []
-        null_schema_added = False
+        schemas_to_return: list[ResolvedSchemaObjectTypes] = []
+        null_schema = None
 
         resolved_schemas = list(self._get_resolved_schemas())
         for schema in resolved_schemas:
             # Prevent duplication of NullSchema when handling nullable models.
-            if isinstance(schema, NullSchema) and not null_schema_added:
-                null_schema_added = True
-            schemas_to_return.append(schema)
-
+            if isinstance(schema, NullSchema):
+                null_schema = schema
+            else:
+                schemas_to_return.append(schema)
+        if null_schema is not None:
+            schemas_to_return.append(null_schema)
         return schemas_to_return
 
     def _get_resolved_schemas(self) -> Generator[ResolvedSchemaObjectTypes, None, None]:
@@ -1122,9 +1125,16 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
             min_properties_list = []
             nullable_list = []
 
+            schemas_to_process = []
             for schema in self.allOf:
+                if isinstance(schema, UnionTypeSchema):
+                    schemas_to_process.extend(schema.resolved_schemas)
+                else:
+                    schemas_to_process.append(schema)
+
+            for schema in schemas_to_process:
                 if not isinstance(schema, ObjectSchema):
-                    raise NotImplementedError("allOf only supported for ObjectSchemas")
+                    raise ValueError("allOf is only supported for ObjectSchemas")
 
                 if schema.const is not None:
                     raise ValueError("allOf and models with a const are not compatible")
@@ -1141,7 +1151,7 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
                 nullable_list.append(schema.nullable)
 
             properties_dicts = [mapping.root for mapping in properties_list]
-            properties = dict(ChainMap(*properties_dicts))
+            merged_properties = dict(ChainMap(*properties_dicts))
 
             if True in additional_properties_list:
                 additional_properties_value: bool | SchemaObjectTypes = True
@@ -1170,13 +1180,14 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
 
             merged_schema = ObjectSchema(
                 type="object",
-                properties=PropertiesMapping(root=properties),
+                properties=PropertiesMapping(root=merged_properties),
                 additionalProperties=additional_properties_value,
                 required=required_list,
                 maxProperties=max_propeties_value,
                 minProperties=min_propeties_value,
                 nullable=False,
             )
+            merged_schema.attach_constraint_mapping(self.constraint_mapping)
             yield merged_schema
             # If all schemas are nullable the merged schema is treated as nullable.
             if all(nullable_list):
@@ -1392,10 +1403,10 @@ def nullable_schema_to_union_schema(schema: SchemaObjectTypes) -> SchemaObjectTy
         return schema
 
     schema.__dict__["nullable"] = False
-    union_schema = UnionTypeSchema(
-        oneOf=[schema, NullSchema(constraint_mapping=schema.constraint_mapping)],
-        constraint_mapping=schema.constraint_mapping,
-    )
+    null_schema = NullSchema()
+    null_schema.attach_constraint_mapping(schema.constraint_mapping)
+    union_schema = UnionTypeSchema(oneOf=[schema, null_schema])
+    union_schema.attach_constraint_mapping(schema.constraint_mapping)
     return union_schema
 
 

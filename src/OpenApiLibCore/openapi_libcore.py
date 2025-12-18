@@ -600,7 +600,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
                     for parameter in parameters:
                         _register_path_parameter(parameter_object=parameter)
 
-    def _perform_post_init_model_updates(self, spec_model: OpenApiObject) -> OpenApiObject:
+    def _perform_post_init_model_updates(
+        self, spec_model: OpenApiObject
+    ) -> OpenApiObject:
         for (
             path,
             operation,
