@@ -1,11 +1,12 @@
 import json as _json
 import sys
+import tempfile
 from collections.abc import Mapping, MutableMapping
 from copy import deepcopy
 from functools import cached_property
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, Generator, Literal, overload
+from typing import Any, Callable, Generator, Literal, overload
 
 from jsonschema_path import SchemaPath
 from openapi_core import Config, OpenAPI
@@ -42,7 +43,7 @@ from OpenApiLibCore.models.oas_models import (
 from OpenApiLibCore.models.request_data import RequestData, RequestValues
 from OpenApiLibCore.models.resource_relations import IdReference
 from OpenApiLibCore.protocols import IResponseValidator
-from OpenApiLibCore.utils.oas_cache import PARSER_CACHE, CachedParser
+from OpenApiLibCore.utils.oas_cache import SPEC_CACHE, CachedSpec
 from OpenApiLibCore.utils.parameter_utils import (
     get_oas_name_from_safe_name,
     get_safe_name_for_oas_name,
@@ -582,8 +583,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
 
     @cached_property
     def _openapi_spec(self) -> OpenApiObject:
-        parser, _ = self._load_specs_and_validator()
-        spec_model = OpenApiObject.model_validate(parser.specification)
+        specification, _ = self._load_specs_and_validator()
+        spec_model = OpenApiObject.model_validate(specification)
         spec_model = self._perform_post_init_model_updates(spec_model=spec_model)
         self._register_path_parameters(spec_model.paths)
         return spec_model
@@ -640,7 +641,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         _, response_validator = self._load_specs_and_validator()
         return response_validator
 
-    def _get_json_types_from_spec(self, spec: dict[str, JSON]) -> set[str]:
+    def _get_json_types_from_spec(self, spec: Mapping[str, JSON]) -> set[str]:
         json_types: set[str] = set(self._get_json_types(spec))
         return {json_type for json_type in json_types if json_type is not None}
 
@@ -664,7 +665,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
     def _load_specs_and_validator(
         self,
     ) -> tuple[
-        ResolvingParser,
+        Mapping[str, JSON],
         IResponseValidator,
     ]:
         def recursion_limit_handler(
@@ -675,34 +676,24 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             return self._recursion_default  # pragma: no cover
 
         try:
-            # Since parsing of the OAS and creating the Spec can take a long time,
+            # Since parsing of the OAS and the specification can take a long time,
             # they are cached. This is done by storing them in an imported module that
             # will have a global scope due to how the Python import system works. This
             # ensures that in a Suite of Suites where multiple Suites use the same
             # `source`, that OAS is only parsed / loaded once.
-            cached_parser = PARSER_CACHE.get(self._source, None)
-            if cached_parser:
+            cached_spec = SPEC_CACHE.get(self._source, None)
+            if cached_spec:
                 return (
-                    cached_parser.parser,
-                    cached_parser.response_validator,
+                    cached_spec.specification,
+                    cached_spec.response_validator,
                 )
 
-            parser = ResolvingParser(
-                self._source,
-                backend="openapi-spec-validator",
-                recursion_limit=self._recursion_limit,
-                recursion_limit_handler=recursion_limit_handler,
-            )  # type: ignore[no-untyped-call]
+            specification = self._get_specification(recursion_limit_handler)
 
-            if parser.specification is None:  # pragma: no cover
-                raise FatalError(
-                    "Source was loaded, but no specification was present after parsing."
-                )
-
-            validation_spec = SchemaPath.from_dict(parser.specification)  # pyright: ignore[reportArgumentType]
+            validation_spec = SchemaPath.from_dict(specification)  # type: ignore[arg-type]
 
             json_types_from_spec: set[str] = self._get_json_types_from_spec(
-                parser.specification
+                specification
             )
             extra_deserializers = {
                 json_type: _json.loads for json_type in json_types_from_spec
@@ -711,12 +702,12 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             openapi = OpenAPI(spec=validation_spec, config=config)
             response_validator: IResponseValidator = openapi.validate_response
 
-            PARSER_CACHE[self._source] = CachedParser(
-                parser=parser,
+            SPEC_CACHE[self._source] = CachedSpec(
+                specification=specification,
                 response_validator=response_validator,
             )
 
-            return parser, response_validator
+            return specification, response_validator
 
         except ResolutionError as exception:  # pragma: no cover
             raise FatalError(
@@ -726,6 +717,62 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             raise FatalError(
                 f"ValidationError while trying to load openapi spec: {exception}"
             ) from exception
+
+    def _get_specification(
+        self, recursion_limit_handler: Callable[[int, str, JSON], JSON]
+    ) -> Mapping[str, JSON]:
+        if Path(self._source).is_file():
+            return self._load_specification(
+                filepath=self._source, recursion_limit_handler=recursion_limit_handler
+            )
+
+        try:
+            response = self.authorized_request(url=self._source, method="GET")
+            response.raise_for_status()
+        except Exception as exception:  # pragma: no cover
+            raise FatalError(
+                f"Failed to download the OpenAPI spec using an authorized request."
+                f"\nThis download attempt was made since the provided `source` "
+                f"does not point to a file.\nPlease verify the source path is "
+                f"correct if you intent to reference a local file. "
+                f"\nMake sure the source url is correct and reachable if "
+                f"referencing a web resource."
+                f"\nThe exception was: {exception}"
+            )
+
+        _, _, filename = self._source.rpartition("/")
+        with tempfile.TemporaryDirectory() as tempdir:
+            filepath = Path(tempdir, filename)
+            with open(file=filepath, mode="w", encoding="UTF-8") as spec_file:
+                spec_file.write(response.text)
+
+            return self._load_specification(
+                filepath=filepath.as_posix(),
+                recursion_limit_handler=recursion_limit_handler,
+            )
+
+    def _load_specification(
+        self, filepath: str, recursion_limit_handler: Callable[[int, str, JSON], JSON]
+    ) -> Mapping[str, JSON]:
+        try:
+            parser = ResolvingParser(
+                filepath,
+                backend="openapi-spec-validator",
+                recursion_limit=self._recursion_limit,
+                recursion_limit_handler=recursion_limit_handler,
+            )  # type: ignore[no-untyped-call]
+        except Exception as exception:  # pragma: no cover
+            raise FatalError(
+                f"Failed to parse the OpenAPI spec downloaded to {filepath}"
+                f"\nThe exception was: {exception}"
+            )
+
+        if parser.specification is None:  # pragma: no cover
+            raise FatalError(
+                "Source was loaded, but no specification was present after parsing."
+            )
+
+        return parser.specification  # type: ignore[no-any-return]
 
     def read_paths(self) -> dict[str, PathItemObject]:
         return self.openapi_spec.paths

@@ -1,16 +1,16 @@
-"""Module holding the (global) parser cache."""
+"""Module holding the (global) spec cache."""
 
 from dataclasses import dataclass
+from typing import Mapping
 
-from prance import ResolvingParser
-
+from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.protocols import IResponseValidator
 
 
 @dataclass
-class CachedParser:
-    parser: ResolvingParser
+class CachedSpec:
+    specification: Mapping[str, JSON]
     response_validator: IResponseValidator
 
 
-PARSER_CACHE: dict[str, CachedParser] = {}
+SPEC_CACHE: dict[str, CachedSpec] = {}
