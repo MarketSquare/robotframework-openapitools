@@ -6,6 +6,8 @@
 - Request bodies now support all JSON types, not just `objects` (`dicts`).
     - This closes issue *#9: No body generated when root is a list*.
     - The `Relations` still need to be reworked to align with this change.
+- Refactored retrieving / loading of the OpenAPI spec.
+    - This closes issue *#93: SSL error even if cert / verify is set*.
 - Improved handling of `treat_as_mandatory` on a `PropertyValueConstraint`.
 - Added support for using `IGNORE` as `invalid_value` on a `PropertyValueConstraint`.
 
