@@ -6,7 +6,7 @@ from copy import deepcopy
 from functools import cached_property
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, Callable, Generator, Literal, overload
+from typing import Any, Callable, Generator, Literal, Sequence, overload
 
 from jsonschema_path import SchemaPath
 from openapi_core import Config, OpenAPI
@@ -71,10 +71,27 @@ def _run_keyword(
 
 
 def _run_keyword(keyword_name: str, *args: object) -> object:
-    return run_keyword(keyword_name, *args)
+    return run_keyword(keyword_name, *args)  # pyright: ignore[reportArgumentType]
 
 
-@library(scope="SUITE", doc_format="HTML")
+class LibrarySearchOrderManager:
+    ROBOT_LISTENER_API_VERSION = 2
+    ROBOT_LIBRARY_SCOPE = "SUITE"
+
+    def __init__(self) -> None:
+        self.previous_search_order: dict[str, Sequence[str]] = {}
+
+    def start_keyword(self, name: str, attrs: dict[str, str]) -> None:
+        previous_search_order = BuiltIn().set_library_search_order(attrs["libname"])
+        self.previous_search_order[name] = previous_search_order
+
+    def end_keyword(self, name: str, attrs: dict[str, str]) -> None:
+        previous_search_order = self.previous_search_order.get(name, None)
+        if previous_search_order is not None:
+            _ = BuiltIn().set_library_search_order(*previous_search_order)
+
+
+@library(scope="SUITE", doc_format="HTML", listener=LibrarySearchOrderManager())
 class OpenApiLibCore:  # pylint: disable=too-many-public-methods
     def __init__(  # noqa: PLR0913, pylint: disable=dangerous-default-value
         self,

@@ -1437,7 +1437,8 @@ def get_dependent_id(
             return None
 
     valid_id = cast(
-        str | int | float, run_keyword("get_valid_id_for_path", id_get_path)
+        str | int | float,
+        run_keyword("get_valid_id_for_path", id_get_path),  # pyright: ignore[reportArgumentType]
     )
     logger.debug(f"get_dependent_id for {id_get_path} returned {valid_id}")
     return valid_id

@@ -51,7 +51,7 @@ def _run_keyword(
 
 
 def _run_keyword(keyword_name: str, *args: object) -> object:
-    return run_keyword(keyword_name, *args)
+    return run_keyword(keyword_name, *args)  # pyright: ignore[reportArgumentType]
 
 
 def match_parts(parts: list[str], spec_parts: list[str]) -> bool:

@@ -24,7 +24,7 @@ def _run_keyword(
 
 
 def _run_keyword(keyword_name: str, *args: object) -> object:
-    return run_keyword(keyword_name, *args)
+    return run_keyword(keyword_name, *args)  # pyright: ignore[reportArgumentType]
 
 
 def get_invalidated_url(

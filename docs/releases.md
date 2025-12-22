@@ -4,16 +4,18 @@
 
 ### Major changes and new features
 - Request bodies now support all JSON types, not just `objects` (`dicts`).
-    - This closes issue *#9: No body generated when root is a list*.
+    - This closes [issue #9: No body generated when root is a list](https://github.com/MarketSquare/robotframework-openapitools/issues/9).
     - The `Relations` still need to be reworked to align with this change.
 - Refactored retrieving / loading of the OpenAPI spec.
-    - This closes issue *#93: SSL error even if cert / verify is set*.
+    - This closes [issue #93: SSL error even if cert / verify is set](https://github.com/MarketSquare/robotframework-openapitools/issues/93).
 - Improved handling of `treat_as_mandatory` on a `PropertyValueConstraint`.
 - Added support for using `IGNORE` as `invalid_value` on a `PropertyValueConstraint`.
 
 ### Bugfixes
 - Added support for the `nullable` property in OAS 3.0 schemas when generating data.
-    - This closes issue *#81: nullable not taken into account in get_valid_value*.
+    - This closes [issue #81: nullable not taken into account in get_valid_value](https://github.com/MarketSquare/robotframework-openapitools/issues/81).
+- Support added for multiple instances of OpenApiLibCore within the same suite.
+    -  This closes [issue #96: Multiple keywords with same name error when using multiple generated libraries](https://github.com/MarketSquare/robotframework-openapitools/issues/96).
 - Fixed validation errors caused by `Content-Type` not being handled case-insensitive.
 - Fixed an exception during validation caused by `charset` being included in the `Content-Type` header for `application/json`.
 

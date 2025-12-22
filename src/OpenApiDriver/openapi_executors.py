@@ -48,6 +48,12 @@ def _run_keyword(
 
 @overload
 def _run_keyword(
+    keyword_name: Literal["get_invalidated_url"], *args: str | int
+) -> str: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
     keyword_name: Literal["authorized_request"], *args: object
 ) -> Response: ...  # pragma: no cover
 
@@ -70,8 +76,14 @@ def _run_keyword(
 ) -> tuple[dict[str, JSON], dict[str, str]]: ...  # pragma: no cover
 
 
+@overload
+def _run_keyword(
+    keyword_name: Literal["perform_validated_request"], *args: object
+) -> None: ...  # pragma: no cover
+
+
 def _run_keyword(keyword_name: str, *args: object) -> object:
-    return run_keyword(keyword_name, *args)
+    return run_keyword(keyword_name, *args)  # pyright: ignore[reportArgumentType]
 
 
 @library(scope="SUITE", doc_format="ROBOT")
@@ -187,7 +199,7 @@ class OpenApiExecutors(OpenApiLibCore):
         valid_url = _run_keyword("get_valid_url", path)
 
         try:
-            url = run_keyword("get_invalidated_url", valid_url, expected_status_code)
+            url = _run_keyword("get_invalidated_url", valid_url, expected_status_code)
         except Exception as exception:
             message = getattr(exception, "message", "")
             if not message.startswith("ValueError"):
@@ -290,7 +302,7 @@ class OpenApiExecutors(OpenApiLibCore):
                 raise AssertionError(
                     f"No constraint mapping found to cause status_code {status_code}."
                 )
-        run_keyword(
+        _run_keyword(
             "perform_validated_request",
             path,
             status_code,
@@ -322,7 +334,7 @@ class OpenApiExecutors(OpenApiLibCore):
             original_data = {}
             if method == "PATCH":
                 original_data = self.get_original_data(url=url)
-            run_keyword(
+            _run_keyword(
                 "perform_validated_request",
                 path,
                 status_code,

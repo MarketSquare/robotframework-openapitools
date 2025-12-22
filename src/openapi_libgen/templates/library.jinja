@@ -21,7 +21,7 @@ class {{ library_name }}(OpenApiLibCore):
     @staticmethod
     def _perform_request(request_values: RequestValues) -> Response:
         response: Response = run_keyword(
-            "authorized_request",
+            "Authorized Request",
             request_values.url,
             request_values.method,
             request_values.params,
