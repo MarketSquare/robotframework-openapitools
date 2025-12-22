@@ -19,7 +19,7 @@ Test Get Request Data For Invalid Method On Endpoint
     ${request_data}=    Get Request Data    path=/events/    method=delete
     VAR    &{dict}=    &{EMPTY}
     VAR    @{list}=    @{EMPTY}
-    Should Be Equal    ${request_data.constraint_mapping.__doc__}    DeleteEvents()
+    Should Be Equal    ${request_data.relations_mapping.__doc__}    DeleteEvents()
     Should Be Equal    ${request_data.body_schema}    ${NONE}
     Should Be Equal    ${request_data.parameters}    ${list}
     Should Be Equal    ${request_data.params}    ${dict}
@@ -70,7 +70,7 @@ Test Get Request Data For Endpoint With Array Request Body
         END
     END
 
-Test Get Request Data For Endpoint Without RequestBody But With Constraint Mapping
+Test Get Request Data For Endpoint Without RequestBody But With Relation Mapping
     ${request_data}=    Get Request Data    path=/wagegroups/{wagegroup_id}    method=delete
     VAR    &{dict}=    &{EMPTY}
     Should Be Equal    ${request_data.body_schema}    ${NONE}
@@ -79,7 +79,7 @@ Test Get Request Data For Endpoint Without RequestBody But With Constraint Mappi
     Should Be Equal    ${request_data.headers}    ${dict}
     Should Not Be True    ${request_data.has_body}
 
-Test Get Request Data For Endpoint With Treat As Mandatory Constraint
+Test Get Request Data For Endpoint With Treat As Mandatory Relation
     ${request_data}=    Get Request Data    path=/employees    method=post
     VAR    ${valid_data}=    ${request_data.valid_data}
     Should Not Be Equal    ${valid_data["parttime_schedule"]}    ${NONE}

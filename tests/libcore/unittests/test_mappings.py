@@ -3,12 +3,12 @@ import pathlib
 import sys
 import unittest
 
-from OpenApiLibCore import Dto
-from OpenApiLibCore.data_constraints.dto_base import (
+from OpenApiLibCore import RelationsMapping
+from OpenApiLibCore.data_relations.relations_base import (
     GetIdPropertyName,
-    get_constraint_mapping_dict,
     get_id_property_name,
     get_path_mapping_dict,
+    get_relations_mapping_dict,
 )
 from OpenApiLibCore.utils.id_mapping import dummy_transformer
 
@@ -18,7 +18,7 @@ mappings_path = (
 )
 
 
-class TestConstraintMapping(unittest.TestCase):
+class TestRelationsMapping(unittest.TestCase):
     mappings_module_name = ""
 
     @classmethod
@@ -37,25 +37,27 @@ class TestConstraintMapping(unittest.TestCase):
             print(f"removed {sys.path.pop()} from path")
 
     def test_no_mapping(self) -> None:
-        value_constraints_mapping_dict = get_constraint_mapping_dict("dummy")
-        self.assertDictEqual(value_constraints_mapping_dict, {})
+        value_relations_mapping_dict = get_relations_mapping_dict("dummy")
+        self.assertDictEqual(value_relations_mapping_dict, {})
 
     def test_valid_mapping(self) -> None:
-        value_constraints_mapping_dict = get_constraint_mapping_dict(
+        value_relations_mapping_dict = get_relations_mapping_dict(
             self.mappings_module_name
         )
-        self.assertIsInstance(value_constraints_mapping_dict, dict)
-        self.assertGreater(len(value_constraints_mapping_dict.keys()), 0)
+        self.assertIsInstance(value_relations_mapping_dict, dict)
+        self.assertGreater(len(value_relations_mapping_dict.keys()), 0)
 
-    def test_mapped_returns_dto_class(self) -> None:
-        value_constraints_mapping_dict = get_constraint_mapping_dict(
+    def test_mapped_returns_relationsmapping_class(self) -> None:
+        value_relations_mapping_dict = get_relations_mapping_dict(
             self.mappings_module_name
         )
-        keys = value_constraints_mapping_dict.keys()
+        keys = value_relations_mapping_dict.keys()
         for key in keys:
             self.assertIsInstance(key, tuple)
             self.assertEqual(len(key), 2)
-            self.assertTrue(issubclass(value_constraints_mapping_dict[key], Dto))
+            self.assertTrue(
+                issubclass(value_relations_mapping_dict[key], RelationsMapping)
+            )
 
 
 class TestPathMapping(unittest.TestCase):

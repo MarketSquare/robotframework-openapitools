@@ -30,19 +30,19 @@ from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore.annotations import JSON
-from OpenApiLibCore.data_constraints.dto_base import Dto
 from OpenApiLibCore.data_generation.localized_faker import FAKE, fake_string
 from OpenApiLibCore.data_generation.value_utils import (
     json_type_name_of_python_type,
     python_type_by_json_type_name,
 )
+from OpenApiLibCore.data_relations.relations_base import RelationsMapping
 from OpenApiLibCore.models import IGNORE, Ignore
 from OpenApiLibCore.models.resource_relations import (
     NOT_SET,
     IdDependency,
     PropertyValueConstraint,
 )
-from OpenApiLibCore.protocols import ConstraintMappingType
+from OpenApiLibCore.protocols import RelationsMappingType
 from OpenApiLibCore.utils.id_mapping import dummy_transformer
 from OpenApiLibCore.utils.parameter_utils import get_safe_name_for_oas_name
 
@@ -63,7 +63,7 @@ def is_object_schema(schema: SchemaObjectTypes) -> TypeGuard[ObjectSchema]:
 class SchemaBase(BaseModel, Generic[O], frozen=True):
     readOnly: bool = False
     writeOnly: bool = False
-    constraint_mapping: ConstraintMappingType = Dto  # type: ignore[assignment]
+    relations_mapping: RelationsMappingType = RelationsMapping  # type: ignore[assignment]
 
     @abstractmethod
     def get_valid_value(
@@ -136,11 +136,9 @@ class SchemaBase(BaseModel, Generic[O], frozen=True):
 
         return choice(invalid_values)
 
-    def attach_constraint_mapping(
-        self, constraint_mapping: ConstraintMappingType
-    ) -> None:
+    def attach_relations_mapping(self, relations_mapping: RelationsMappingType) -> None:
         # NOTE: https://github.com/pydantic/pydantic/issues/11495
-        self.__dict__["constraint_mapping"] = constraint_mapping
+        self.__dict__["relations_mapping"] = relations_mapping
 
 
 class NullSchema(SchemaBase[None], frozen=True):
@@ -659,7 +657,7 @@ class ArraySchema(SchemaBase[list[AI]], frozen=True):
         """Return a data set with one of the properties set to an invalid value or type."""
         invalid_values: list[list[AI]] = []
 
-        relations = self.constraint_mapping.get_body_relations_for_error_code(
+        relations = self.relations_mapping.get_body_relations_for_error_code(
             error_code=status_code
         )
         # TODO: handle relations applicable to arrays / lists
@@ -805,10 +803,10 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
             property_name=property_name
         ):
             constrained_value = choice(constrained_values)
-            # Check if the chosen value is a nested constraint_mapping; since a
+            # Check if the chosen value is a nested relations_mapping; since a
             # mapping is never instantiated, we can use isinstance(..., type) for this.
             if isinstance(constrained_value, type):
-                property_schema.attach_constraint_mapping(constrained_value)
+                property_schema.attach_relations_mapping(constrained_value)
                 valid_value, _ = property_schema.get_valid_value(
                     operation_id=operation_id
                 )
@@ -818,22 +816,22 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
 
         if (
             dependent_id := get_dependent_id(
-                constraint_mapping=self.constraint_mapping,
+                relations_mapping=self.relations_mapping,
                 property_name=property_name,
                 operation_id=operation_id,
             )
         ) is not None:
             return dependent_id
 
-        # Constraints are mapped to endpoints; they are not attached to the property
+        # Relations are mapped to endpoints; they are not attached to the property
         # value schemas so update the schema before value generation
-        property_schema.attach_constraint_mapping(self.constraint_mapping)
+        property_schema.attach_relations_mapping(self.relations_mapping)
         return property_schema.get_valid_value(operation_id=operation_id)[0]
 
     def _get_constrained_values(
         self, property_name: str
-    ) -> list[JSON | ConstraintMappingType]:
-        relations = self.constraint_mapping.get_relations()
+    ) -> list[JSON | RelationsMappingType]:
+        relations = self.relations_mapping.get_relations()
         values_list = [
             c.values
             for c in relations
@@ -897,7 +895,7 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
         """Return a data set with one of the properties set to an invalid value or type."""
         properties: dict[str, JSON] = deepcopy(valid_data)
 
-        relations = self.constraint_mapping.get_body_relations_for_error_code(
+        relations = self.relations_mapping.get_body_relations_for_error_code(
             error_code=status_code
         )
         property_names = [r.property_name for r in relations]
@@ -1061,8 +1059,8 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
         operation_id: str | None = None,
     ) -> tuple[JSON, ResolvedSchemaObjectTypes]:
         relations = (
-            self.constraint_mapping.get_relations()
-            + self.constraint_mapping.get_parameter_relations()
+            self.relations_mapping.get_relations()
+            + self.relations_mapping.get_parameter_relations()
         )
         constrained_property_names = [relation.property_name for relation in relations]
 
@@ -1079,7 +1077,7 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
                     valid_schemas.append(candidate)
 
             if isinstance(candidate, UnionTypeSchema):
-                candidate.attach_constraint_mapping(self.constraint_mapping)
+                candidate.attach_relations_mapping(self.relations_mapping)
                 try:
                     valid_value = candidate.get_valid_value(operation_id=operation_id)
                     valid_values.append(valid_value)
@@ -1187,12 +1185,12 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
                 minProperties=min_propeties_value,
                 nullable=False,
             )
-            merged_schema.attach_constraint_mapping(self.constraint_mapping)
+            merged_schema.attach_relations_mapping(self.relations_mapping)
             yield merged_schema
             # If all schemas are nullable the merged schema is treated as nullable.
             if all(nullable_list):
                 null_schema = NullSchema()
-                null_schema.attach_constraint_mapping(self.constraint_mapping)
+                null_schema.attach_relations_mapping(self.relations_mapping)
                 yield null_schema
         else:
             for schema in self.anyOf + self.oneOf:
@@ -1200,7 +1198,7 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
                     if schema.nullable:
                         schema.__dict__["nullable"] = False
                         null_schema = NullSchema()
-                        null_schema.attach_constraint_mapping(self.constraint_mapping)
+                        null_schema.attach_relations_mapping(self.relations_mapping)
                         yield null_schema
                     yield schema
                 else:
@@ -1236,13 +1234,11 @@ class ParameterObject(BaseModel):
     required: bool = False
     description: str = ""
     schema_: SchemaObjectTypes | None = Field(None, alias="schema")
-    constraint_mapping: ConstraintMappingType | None = None
+    relations_mapping: RelationsMappingType | None = None
 
-    def attach_constraint_mapping(
-        self, constraint_mapping: ConstraintMappingType
-    ) -> None:
+    def attach_relations_mapping(self, relations_mapping: RelationsMappingType) -> None:
         if self.schema_:  # pragma: no branch
-            self.schema_.attach_constraint_mapping(constraint_mapping)
+            self.schema_.attach_relations_mapping(relations_mapping)
 
     def replace_nullable_with_union(self) -> None:
         if self.schema_:  # pragma: no branch
@@ -1287,12 +1283,10 @@ class RequestBodyObject(BaseModel):
         }
         return json_schemas
 
-    def attach_constraint_mapping(
-        self, constraint_mapping: ConstraintMappingType
-    ) -> None:
+    def attach_relations_mapping(self, relations_mapping: RelationsMappingType) -> None:
         for media_object_type in self.content.values():
             if media_object_type and media_object_type.schema_:  # pragma: no branch
-                media_object_type.schema_.attach_constraint_mapping(constraint_mapping)
+                media_object_type.schema_.attach_relations_mapping(relations_mapping)
 
     def replace_nullable_with_union(self) -> None:
         for media_object_type in self.content.values():
@@ -1324,20 +1318,20 @@ class OperationObject(BaseModel):
     parameters: list[ParameterObject] = []
     requestBody: RequestBodyObject | None = None
     responses: dict[str, ResponseObject] = {}
-    constraint_mapping: ConstraintMappingType | None = None
+    relations_mapping: RelationsMappingType | None = None
 
     def update_parameters(self, parameters: list[ParameterObject]) -> None:
         self.parameters.extend(parameters)
 
-    def attach_constraint_mappings(self) -> None:
-        if not self.constraint_mapping:
+    def attach_relations_mappings(self) -> None:
+        if not self.relations_mapping:
             return
 
         if self.requestBody:
-            self.requestBody.attach_constraint_mapping(self.constraint_mapping)
+            self.requestBody.attach_relations_mapping(self.relations_mapping)
 
         for parameter_object in self.parameters:
-            parameter_object.attach_constraint_mapping(self.constraint_mapping)
+            parameter_object.attach_relations_mapping(self.relations_mapping)
 
     def replace_nullable_with_union(self) -> None:
         if self.requestBody:
@@ -1356,7 +1350,7 @@ class PathItemObject(BaseModel):
     summary: str = ""
     description: str = ""
     parameters: list[ParameterObject] = []
-    constraint_mapping: ConstraintMappingType | None = None
+    relations_mapping: RelationsMappingType | None = None
     id_mapper: tuple[str, Callable[[str], str]] = (
         "id",
         dummy_transformer,
@@ -1376,13 +1370,13 @@ class PathItemObject(BaseModel):
         for operation_object in operations_to_update.values():
             operation_object.update_parameters(self.parameters)
 
-    def attach_constraint_mappings(self) -> None:
+    def attach_relations_mappings(self) -> None:
         for operation_object in self.operations.values():
-            operation_object.attach_constraint_mappings()
+            operation_object.attach_relations_mappings()
 
     def replace_nullable_with_union(self) -> None:
         for operation_object in self.operations.values():
-            operation_object.attach_constraint_mappings()
+            operation_object.attach_relations_mappings()
             operation_object.replace_nullable_with_union()
 
 
@@ -1404,19 +1398,19 @@ def nullable_schema_to_union_schema(schema: SchemaObjectTypes) -> SchemaObjectTy
 
     schema.__dict__["nullable"] = False
     null_schema = NullSchema()
-    null_schema.attach_constraint_mapping(schema.constraint_mapping)
+    null_schema.attach_relations_mapping(schema.relations_mapping)
     union_schema = UnionTypeSchema(oneOf=[schema, null_schema])
-    union_schema.attach_constraint_mapping(schema.constraint_mapping)
+    union_schema.attach_relations_mapping(schema.relations_mapping)
     return union_schema
 
 
 # TODO: move to keyword_logic?
 def get_dependent_id(
-    constraint_mapping: ConstraintMappingType | None,
+    relations_mapping: RelationsMappingType | None,
     property_name: str,
     operation_id: str | None,
 ) -> str | int | float | None:
-    relations = constraint_mapping.get_relations() if constraint_mapping else []
+    relations = relations_mapping.get_relations() if relations_mapping else []
     # multiple get paths are possible based on the operation being performed
     id_get_paths = [
         (d.get_path, d.operation_id)

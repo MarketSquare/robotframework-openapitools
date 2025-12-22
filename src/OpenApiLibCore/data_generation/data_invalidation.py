@@ -12,9 +12,7 @@ from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore.annotations import JSON
-from OpenApiLibCore.data_constraints.dto_base import (
-    Dto,
-)
+from OpenApiLibCore.data_relations.relations_base import RelationsMapping
 from OpenApiLibCore.models import IGNORE
 from OpenApiLibCore.models.oas_models import (
     ArraySchema,
@@ -69,7 +67,7 @@ def get_invalid_body_data(
     invalid_data_default_response: int,
 ) -> JSON:
     method = method.lower()
-    data_relations = request_data.constraint_mapping.get_body_relations_for_error_code(
+    data_relations = request_data.relations_mapping.get_body_relations_for_error_code(
         status_code
     )
     if not data_relations:
@@ -107,7 +105,7 @@ def get_invalid_body_data(
             url,
             method,
             request_data.valid_data,
-            request_data.constraint_mapping,
+            request_data.relations_mapping,
             status_code,
         )
     if isinstance(resource_relation, IdReference):
@@ -147,7 +145,7 @@ def get_invalidated_parameters(
         raise ValueError("No params or headers to invalidate.")
 
     # ensure the status_code can be triggered
-    relations = request_data.constraint_mapping.get_parameter_relations_for_error_code(
+    relations = request_data.relations_mapping.get_parameter_relations_for_error_code(
         status_code
     )
     relations_for_status_code = [
@@ -185,7 +183,7 @@ def get_invalidated_parameters(
         # non-default status_codes can only be the result of a Relation
         parameter_names = relation_property_names
 
-    # Constraint mappings may contain generic mappings for properties that are
+    # Relation mappings may contain generic mappings for properties that are
     # not present in this specific schema
     request_data_parameter_names = [p.name for p in request_data.parameters]
     additional_relation_property_names = {
@@ -235,7 +233,7 @@ def get_invalidated_parameters(
     except ValueError:
         invalid_value_for_error_code = NOT_SET
 
-    # get the constraint values if available for the chosen parameter
+    # get the constrained values if available for the chosen parameter
     try:
         [values_from_constraint] = [
             r.values
@@ -327,13 +325,13 @@ def get_json_data_with_conflict(
     base_url: str,
     method: str,
     json_data: dict[str, JSON],
-    constraint_mapping: type[Dto],
+    relations_mapping: type[RelationsMapping],
     conflict_status_code: int,
 ) -> dict[str, Any]:
     method = method.lower()
     unique_property_value_constraints = [
         r
-        for r in constraint_mapping.get_relations()
+        for r in relations_mapping.get_relations()
         if isinstance(r, UniquePropertyValueConstraint)
     ]
     for relation in unique_property_value_constraints:
@@ -342,7 +340,7 @@ def get_json_data_with_conflict(
         if method in ["patch", "put"]:
             post_url_parts = url.split("/")[:-1]
             post_url = "/".join(post_url_parts)
-            # the PATCH or PUT may use a different constraint_mapping than required for
+            # the PATCH or PUT may use a different relations_mapping than required for
             # POST so valid POST data must be constructed
             path = post_url.replace(base_url, "")
             request_data = _run_keyword("get_request_data", path, "post")
@@ -372,5 +370,5 @@ def get_json_data_with_conflict(
         return json_data
     raise ValueError(
         f"No UniquePropertyValueConstraint in the get_relations list on "
-        f"constraint_mapping {constraint_mapping}."
+        f"relations_mapping {relations_mapping}."
     )

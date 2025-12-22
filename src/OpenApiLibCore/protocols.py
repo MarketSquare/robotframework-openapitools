@@ -40,7 +40,7 @@ class IGetIdPropertyName(Protocol):
     ) -> dict[str, str | tuple[str, Callable[[str], str]]]: ...
 
 
-class IConstraintMapping(Protocol):
+class IRelationsMapping(Protocol):
     # NOTE: This Protocol is used as annotation in a number of the oas_models, which
     # requires this method to prevent a PydanticSchemaGenerationError.
     @classmethod
@@ -69,4 +69,4 @@ class IConstraintMapping(Protocol):
     ) -> list[ResourceRelation]: ...
 
 
-ConstraintMappingType = builtins.type[IConstraintMapping]
+RelationsMappingType = builtins.type[IRelationsMapping]

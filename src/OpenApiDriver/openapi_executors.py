@@ -250,11 +250,11 @@ class OpenApiExecutors(OpenApiLibCore):
         if status_code >= int(HTTPStatus.BAD_REQUEST):
             invalidation_keywords: list[str] = []
 
-            if request_data.constraint_mapping.get_body_relations_for_error_code(
+            if request_data.relations_mapping.get_body_relations_for_error_code(
                 status_code
             ):
                 invalidation_keywords.append("get_invalid_body_data")
-            if request_data.constraint_mapping.get_parameter_relations_for_error_code(
+            if request_data.relations_mapping.get_parameter_relations_for_error_code(
                 status_code
             ):
                 invalidation_keywords.append("get_invalidated_parameters")
@@ -300,7 +300,7 @@ class OpenApiExecutors(OpenApiLibCore):
                     )
             else:
                 raise AssertionError(
-                    f"No constraint mapping found to cause status_code {status_code}."
+                    f"No relation found to cause status_code {status_code}."
                 )
         _run_keyword(
             "perform_validated_request",

@@ -17,15 +17,15 @@ from OpenApiLibCore.models.resource_relations import (
     ResourceRelation,
 )
 from OpenApiLibCore.protocols import (
-    ConstraintMappingType,
     IGetIdPropertyName,
+    RelationsMappingType,
 )
 from OpenApiLibCore.utils.id_mapping import dummy_transformer
 
 
 @dataclass
-class Dto(ABC):
-    """Base class for the Dto class."""
+class RelationsMapping(ABC):
+    """Base class for the RelationsMapping classes."""
 
     @staticmethod
     def get_path_relations() -> list[PathPropertiesConstraint]:
@@ -78,21 +78,21 @@ class Dto(ABC):
         return relations
 
 
-def get_constraint_mapping_dict(
+def get_relations_mapping_dict(
     mappings_module_name: str,
-) -> dict[tuple[str, str], ConstraintMappingType]:
+) -> dict[tuple[str, str], RelationsMappingType]:
     try:
         mappings_module = import_module(mappings_module_name)
-        return mappings_module.DTO_MAPPING  # type: ignore[no-any-return]
+        return mappings_module.RELATIONS_MAPPING  # type: ignore[no-any-return]
     except (ImportError, AttributeError, ValueError) as exception:
         if mappings_module_name != "no mapping":
-            logger.error(f"DTO_MAPPING was not imported: {exception}")
+            logger.error(f"RELATIONS_MAPPING was not imported: {exception}")
         return {}
 
 
 def get_path_mapping_dict(
     mappings_module_name: str,
-) -> dict[str, ConstraintMappingType]:
+) -> dict[str, RelationsMappingType]:
     try:
         mappings_module = import_module(mappings_module_name)
         return mappings_module.PATH_MAPPING  # type: ignore[no-any-return]

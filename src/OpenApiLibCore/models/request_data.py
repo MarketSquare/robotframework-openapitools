@@ -12,7 +12,7 @@ from OpenApiLibCore.models.oas_models import (
     ResolvedSchemaObjectTypes,
     UnionTypeSchema,
 )
-from OpenApiLibCore.protocols import ConstraintMappingType
+from OpenApiLibCore.protocols import RelationsMappingType
 
 
 @dataclass
@@ -56,7 +56,7 @@ class RequestData:
     """Helper class to manage parameters used when making requests."""
 
     valid_data: JSON
-    constraint_mapping: ConstraintMappingType
+    relations_mapping: RelationsMappingType
     body_schema: ResolvedSchemaObjectTypes | None = None
     parameters: list[ParameterObject] = field(default_factory=list)
     params: dict[str, JSON] = field(default_factory=dict)
@@ -171,7 +171,7 @@ class RequestData:
 
     def get_required_properties_dict(self) -> dict[str, JSON]:
         """Get the json data containing only the required properties."""
-        relations = self.constraint_mapping.get_relations()
+        relations = self.relations_mapping.get_relations()
         mandatory_properties = [
             relation.property_name
             for relation in relations
@@ -247,7 +247,7 @@ class RequestData:
         The names of the mandatory parameters, including the parameters configured to be
         treated as mandatory using a PropertyValueConstraint.
         """
-        relations = self.constraint_mapping.get_parameter_relations()
+        relations = self.relations_mapping.get_parameter_relations()
         mandatory_property_names = [
             relation.property_name
             for relation in relations
