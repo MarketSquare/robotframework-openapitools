@@ -12,7 +12,7 @@ from robot.api import logger
 
 import OpenApiLibCore.keyword_logic.path_functions as _path_functions
 from OpenApiLibCore.annotations import JSON
-from OpenApiLibCore.data_constraints.dto_base import Dto
+from OpenApiLibCore.data_relations.relations_base import RelationsMapping
 from OpenApiLibCore.models import IGNORE
 from OpenApiLibCore.models.oas_models import (
     ArraySchema,
@@ -28,7 +28,7 @@ from OpenApiLibCore.models.resource_relations import (
     PropertyValueConstraint,
     ResourceRelation,
 )
-from OpenApiLibCore.protocols import ConstraintMappingType
+from OpenApiLibCore.protocols import RelationsMappingType
 from OpenApiLibCore.utils.parameter_utils import get_safe_name_for_oas_name
 
 
@@ -49,26 +49,26 @@ def get_request_data(
         operation_spec: OperationObject | None = getattr(path_item, method)
         if operation_spec is None:
             raise AttributeError
-        constraint_mapping = operation_spec.constraint_mapping
+        relations_mapping = operation_spec.relations_mapping
     except AttributeError:
         logger.info(
             f"method '{method}' not supported on '{spec_path}, using empty spec."
         )
         operation_spec = OperationObject(operationId="")
-        constraint_mapping = None
+        relations_mapping = None
 
     parameters, params, headers = get_request_parameters(
-        constraint_mapping=constraint_mapping, method_spec=operation_spec
+        relations_mapping=relations_mapping, method_spec=operation_spec
     )
     if operation_spec.requestBody is None:
-        constraint_mapping = _get_mapping_dataclass_for_empty_body(
-            constraint_mapping=constraint_mapping,
+        relations_mapping = _get_mapping_dataclass_for_empty_body(
+            relations_mapping=relations_mapping,
             mapping_cls_name=mapping_cls_name,
             method_spec=operation_spec,
         )
         return RequestData(
             valid_data=None,
-            constraint_mapping=constraint_mapping,
+            relations_mapping=relations_mapping,
             parameters=parameters,
             params=params,
             headers=headers,
@@ -93,16 +93,16 @@ def get_request_data(
         operation_id=operation_spec.operationId
     )
 
-    constraint_mapping = _get_mapping_dataclass_from_valid_data(
+    relations_mapping = _get_mapping_dataclass_from_valid_data(
         schema=schema_used_for_data_generation,
-        constraint_mapping=constraint_mapping,
+        relations_mapping=relations_mapping,
         valid_data=valid_data,
         method_spec=operation_spec,
         mapping_cls_name=mapping_cls_name,
     )
     return RequestData(
         valid_data=valid_data,
-        constraint_mapping=constraint_mapping,
+        relations_mapping=relations_mapping,
         body_schema=schema_used_for_data_generation,
         parameters=parameters,
         params=params,
@@ -111,12 +111,12 @@ def get_request_data(
 
 
 def _get_mapping_dataclass_for_empty_body(
-    constraint_mapping: ConstraintMappingType | None,
+    relations_mapping: RelationsMappingType | None,
     mapping_cls_name: str,
     method_spec: OperationObject,
-) -> ConstraintMappingType:
+) -> RelationsMappingType:
     cls_name = method_spec.operationId if method_spec.operationId else mapping_cls_name
-    base = constraint_mapping if constraint_mapping else Dto
+    base = relations_mapping if relations_mapping else RelationsMapping
     mapping_class = make_dataclass(
         cls_name=cls_name,
         fields=[],
@@ -127,14 +127,14 @@ def _get_mapping_dataclass_for_empty_body(
 
 def _get_mapping_dataclass_from_valid_data(
     schema: ResolvedSchemaObjectTypes,
-    constraint_mapping: ConstraintMappingType | None,
+    relations_mapping: RelationsMappingType | None,
     valid_data: JSON,
     method_spec: OperationObject,
     mapping_cls_name: str,
-) -> ConstraintMappingType:
+) -> RelationsMappingType:
     if not isinstance(schema, (ObjectSchema, ArraySchema)):
         return _get_mapping_dataclass_for_empty_body(
-            constraint_mapping=constraint_mapping,
+            relations_mapping=relations_mapping,
             mapping_cls_name=mapping_cls_name,
             method_spec=method_spec,
         )
@@ -142,7 +142,7 @@ def _get_mapping_dataclass_from_valid_data(
     if isinstance(schema, ArraySchema):
         if not valid_data or not isinstance(valid_data, list):
             return _get_mapping_dataclass_for_empty_body(
-                constraint_mapping=constraint_mapping,
+                relations_mapping=relations_mapping,
                 mapping_cls_name=mapping_cls_name,
                 method_spec=method_spec,
             )
@@ -160,7 +160,7 @@ def _get_mapping_dataclass_from_valid_data(
 
         mapping_dataclass = _get_mapping_dataclass_from_valid_data(
             schema=matched_schema,
-            constraint_mapping=constraint_mapping,
+            relations_mapping=relations_mapping,
             valid_data=first_item_data,
             method_spec=method_spec,
             mapping_cls_name=mapping_cls_name,
@@ -172,7 +172,7 @@ def _get_mapping_dataclass_from_valid_data(
     )
     fields = get_dataclass_fields(object_schema=schema, valid_data=valid_data)
     cls_name = method_spec.operationId if method_spec.operationId else mapping_cls_name
-    base = constraint_mapping if constraint_mapping else Dto
+    base = relations_mapping if relations_mapping else RelationsMapping
     mapping_dataclass = make_dataclass(
         cls_name=cls_name,
         fields=fields,
@@ -210,12 +210,12 @@ def get_mapping_cls_name(path: str, method: str) -> str:
 
 
 def get_request_parameters(
-    constraint_mapping: ConstraintMappingType | None, method_spec: OperationObject
+    relations_mapping: RelationsMappingType | None, method_spec: OperationObject
 ) -> tuple[list[ParameterObject], dict[str, Any], dict[str, str]]:
     """Get the methods parameter spec and params and headers with valid data."""
     parameters = method_spec.parameters if method_spec.parameters else []
     parameter_relations = (
-        constraint_mapping.get_parameter_relations() if constraint_mapping else []
+        relations_mapping.get_parameter_relations() if relations_mapping else []
     )
     query_params = [p for p in parameters if p.in_ == "query"]
     header_params = [p for p in parameters if p.in_ == "header"]

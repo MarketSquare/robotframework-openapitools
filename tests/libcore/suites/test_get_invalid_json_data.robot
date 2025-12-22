@@ -34,7 +34,7 @@ Test Get Invalid Body Data Raises If Data Cannot Be Invalidated
 
 Test Get Invalid Body Data Based On Schema
     ${request_data}=    Get Request Data    path=/events/    method=post
-    Should Be Empty    ${request_data.constraint_mapping.get_body_relations_for_error_code(422)}
+    Should Be Empty    ${request_data.relations_mapping.get_body_relations_for_error_code(422)}
     ${invalid_json}=    Get Invalid Body Data
     ...    url=none
     ...    method=none
@@ -83,7 +83,7 @@ Test Get Invalid Body Data For IdDependency
     ...    url=${url}    method=post    json_data=${invalid_json}
     Should Be Equal As Integers    ${response.status_code}    451
 
-Test Get Invalid Body Data For Constraint Mappings With Other Relations
+Test Get Invalid Body Data For Relation Mappings With Other Relations
     ${request_data}=    Get Request Data    path=/employees    method=post
     ${invalid_json}=    Get Invalid Body Data
     ...    url=${ORIGIN}/employees

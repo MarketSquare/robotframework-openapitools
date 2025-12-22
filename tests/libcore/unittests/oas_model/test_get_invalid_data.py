@@ -2,11 +2,11 @@
 # pyright: reportArgumentType=false
 import unittest
 
-from OpenApiLibCore import Dto, PropertyValueConstraint, ResourceRelation
+from OpenApiLibCore import PropertyValueConstraint, RelationsMapping, ResourceRelation
 from OpenApiLibCore.models.oas_models import ArraySchema, IntegerSchema
 
 
-class ArrayConstraint(Dto):
+class ArrayConstraint(RelationsMapping):
     @staticmethod
     def get_relations() -> list[ResourceRelation]:
         relations: list[ResourceRelation] = [
@@ -23,7 +23,7 @@ class ArrayConstraint(Dto):
 class TestArraySchema(unittest.TestCase):
     def test_raises_for_no_matching_status_code(self) -> None:
         schema = ArraySchema(items=IntegerSchema())
-        schema.attach_constraint_mapping(ArrayConstraint)
+        schema.attach_relations_mapping(ArrayConstraint)
         with self.assertRaises(ValueError) as context:
             _ = schema.get_invalid_data(
                 valid_data=[42],
@@ -37,7 +37,7 @@ class TestArraySchema(unittest.TestCase):
 
     def test_status_code_is_default_code_without_constraints_raises(self) -> None:
         schema = ArraySchema(items=IntegerSchema(maximum=43))
-        schema.attach_constraint_mapping(Dto)
+        schema.attach_relations_mapping(RelationsMapping)
         with self.assertRaises(ValueError) as context:
             _ = schema.get_invalid_data(
                 valid_data=[42],
@@ -51,7 +51,7 @@ class TestArraySchema(unittest.TestCase):
 
     def test_status_code_is_default_code(self) -> None:
         schema = ArraySchema(items=IntegerSchema(maximum=43), minItems=1)
-        schema.attach_constraint_mapping(Dto)
+        schema.attach_relations_mapping(RelationsMapping)
         invalid_data = schema.get_invalid_data(
             valid_data=[42],
             status_code=422,
@@ -61,7 +61,7 @@ class TestArraySchema(unittest.TestCase):
 
         valid_value = [42]
         schema = ArraySchema(items=IntegerSchema(maximum=43), const=valid_value)
-        schema.attach_constraint_mapping(Dto)
+        schema.attach_relations_mapping(RelationsMapping)
         invalid_data = schema.get_invalid_data(
             valid_data=valid_value,
             status_code=422,

@@ -20,11 +20,15 @@
 - Fixed an exception during validation caused by `charset` being included in the `Content-Type` header for `application/json`.
 
 ### Breaking changes
-- `invalid_property_default_response` library parameter renamed to `invalid_data_default_response`.
+- Addressing [issue #95: Refactor: better name for Dto](https://github.com/MarketSquare/robotframework-openapitools/issues/95) introduces a number breaking renames:
+    - `Dto` has been renamed to `RelationsMapping`.
+    - `constraint_mapping` has been renamed to `relations_mapping` in a number of places.
+    - `DTO_MAPPING` has been renamed to `RELATIONS_MAPPING`.
 - The `RequestData` class that is returned by a number of keywords has been changed:
     - The `dto` property was removed.
     - The `valid_data` property was added.
-    - The `constrait_mapping` property was added.
+    - The `relations_mapping` property was added.
+- `invalid_property_default_response` library parameter renamed to `invalid_data_default_response`.
 
 ### Additional changes
 - Special handling of `"format": "byte"` for `"type": "string"` (OAS 3.0) was removed.

@@ -28,13 +28,13 @@ import OpenApiLibCore.keyword_logic.path_invalidation as _path_invalidation
 import OpenApiLibCore.keyword_logic.resource_relations as _resource_relations
 import OpenApiLibCore.keyword_logic.validation as _validation
 from OpenApiLibCore.annotations import JSON
-from OpenApiLibCore.data_constraints.dto_base import (
-    Dto,
-    get_constraint_mapping_dict,
+from OpenApiLibCore.data_generation.localized_faker import FAKE
+from OpenApiLibCore.data_relations.relations_base import (
+    RelationsMapping,
     get_id_property_name,
     get_path_mapping_dict,
+    get_relations_mapping_dict,
 )
-from OpenApiLibCore.data_generation.localized_faker import FAKE
 from OpenApiLibCore.models.oas_models import (
     OpenApiObject,
     ParameterObject,
@@ -155,7 +155,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             mappings_folder = str(mappings_path.parent)
             sys.path.append(mappings_folder)
             mappings_module_name = mappings_path.stem
-            self.constraint_mapping_dict = get_constraint_mapping_dict(
+            self.relations_mapping_dict = get_relations_mapping_dict(
                 mappings_module_name=mappings_module_name
             )
             self.path_mapping_dict = get_path_mapping_dict(
@@ -167,7 +167,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             )
             sys.path.pop()
         else:
-            self.constraint_mapping_dict = get_constraint_mapping_dict(
+            self.relations_mapping_dict = get_relations_mapping_dict(
                 mappings_module_name="no mapping"
             )
             self.path_mapping_dict = get_path_mapping_dict(
@@ -297,7 +297,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         request_data: RequestData,
     ) -> JSON:
         """
-        Return `json_data` based on the `constraint_mapping` on the `request_data` that
+        Return `json_data` based on the `relations_mapping` on the `request_data` that
         will cause the provided `status_code` for the `method` operation on the `url`.
 
         > Note: applicable UniquePropertyValueConstraint and IdReference Relations are
@@ -333,12 +333,12 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         url: str,
         method: str,
         json_data: dict[str, JSON],
-        constraint_mapping: type[Dto],
+        relations_mapping: type[RelationsMapping],
         conflict_status_code: int,
     ) -> dict[str, JSON]:
         """
         Return `json_data` based on the `UniquePropertyValueConstraint` that must be
-        returned by the `get_relations` implementation on the `constraint_mapping` for
+        returned by the `get_relations` implementation on the `relations_mapping` for
         the given `conflict_status_code`.
         """
         return _data_invalidation.get_json_data_with_conflict(
@@ -346,7 +346,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             base_url=self.base_url,
             method=method,
             json_data=json_data,
-            constraint_mapping=constraint_mapping,  # FIXME: the model should have this information
+            relations_mapping=relations_mapping,  # FIXME: the model should have this information
             conflict_status_code=conflict_status_code,
         )
 
@@ -624,19 +624,19 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         for (
             path,
             operation,
-        ), data_constraint in self.constraint_mapping_dict.items():
+        ), data_relations in self.relations_mapping_dict.items():
             try:
                 operation_item = getattr(spec_model.paths[path], operation.lower())
-                operation_item.constraint_mapping = data_constraint
+                operation_item.relations_mapping = data_relations
             except KeyError:
                 logger.warn(
-                    f"The DTO_MAPPING contains a path that is not found in the OpenAPI spec: {path}"
+                    f"The RELATIONS_MAPPING contains a path that is not found in the OpenAPI spec: {path}"
                 )
 
-        for path, path_constraint in self.path_mapping_dict.items():
+        for path, path_relation in self.path_mapping_dict.items():
             try:
                 path_item = spec_model.paths[path]
-                path_item.constraint_mapping = path_constraint
+                path_item.relations_mapping = path_relation
             except KeyError:
                 logger.warn(
                     f"The PATH_MAPPING contains a path that is not found in the OpenAPI spec: {path}"
@@ -646,7 +646,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             mapper = self.get_id_property_name(path)
             path_item.id_mapper = mapper
             path_item.update_operation_parameters()
-            path_item.attach_constraint_mappings()
+            path_item.attach_relations_mappings()
             path_item.replace_nullable_with_union()
 
         return spec_model

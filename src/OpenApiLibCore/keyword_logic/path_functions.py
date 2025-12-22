@@ -113,8 +113,8 @@ def get_valid_url(
             f"{path} not found in paths section of the OpenAPI document."
         ) from None
 
-    constraint_mapping = path_item.constraint_mapping
-    relations = constraint_mapping.get_path_relations() if constraint_mapping else []
+    relations_mapping = path_item.relations_mapping
+    relations = relations_mapping.get_path_relations() if relations_mapping else []
     paths = [p.path for p in relations]
     if paths:
         url = f"{base_url}{choice(paths)}"

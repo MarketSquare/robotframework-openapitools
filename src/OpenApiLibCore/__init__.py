@@ -7,13 +7,13 @@ The following classes and constants are exposed to be used by the library user:
 - IdDependency, IdReference, PathPropertiesConstraint, PropertyValueConstraint,
     UniquePropertyValueConstraint: Classes to be subclassed by the library user
     when implementing a custom mapping module (advanced use).
-- Dto, Relation: Base classes that can be used for type annotations.
+- RelationsMapping, Relation: Base classes that can be used for type annotations.
 - IGNORE: A special constant that can be used as a value in the PropertyValueConstraint.
 """
 
 from importlib.metadata import version
 
-from OpenApiLibCore.data_constraints.dto_base import Dto
+from OpenApiLibCore.data_relations.relations_base import RelationsMapping
 from OpenApiLibCore.keyword_logic.validation import ValidationLevel
 from OpenApiLibCore.models import IGNORE, UNSET
 from OpenApiLibCore.models.request_data import RequestData, RequestValues
@@ -62,12 +62,12 @@ KEYWORD_NAMES = [
 __all__ = [
     "IGNORE",
     "UNSET",
-    "Dto",
     "IdDependency",
     "IdReference",
     "OpenApiLibCore",
     "PathPropertiesConstraint",
     "PropertyValueConstraint",
+    "RelationsMapping",
     "RequestData",
     "RequestValues",
     "ResourceRelation",

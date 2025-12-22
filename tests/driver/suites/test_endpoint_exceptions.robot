@@ -25,6 +25,6 @@ Validate Test Endpoint Keyword
         Run Keyword And Expect Error    Response status_code 401 was not 200.
         ...    Test Endpoint    path=${path}    method=${method}    status_code=${status_code}
     ELSE
-        Run Keyword And Expect Error    No constraint mapping found to cause status_code ${status_code}.
+        Run Keyword And Expect Error    No relation found to cause status_code ${status_code}.
         ...    Test Endpoint    path=${path}    method=${method}    status_code=${status_code}
     END
