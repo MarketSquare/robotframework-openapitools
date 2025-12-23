@@ -22,7 +22,6 @@ from OpenApiLibCore import (
 from OpenApiLibCore import (
     OpenApiLibCore,
     RequestData,
-    RequestValues,
     ValidationLevel,
 )
 from OpenApiLibCore.annotations import JSON
@@ -78,7 +77,7 @@ def _run_keyword(
 
 @overload
 def _run_keyword(
-    keyword_name: Literal["perform_validated_request"], *args: object
+    keyword_name: Literal["validated_request"], *args: object
 ) -> None: ...  # pragma: no cover
 
 
@@ -303,16 +302,14 @@ class OpenApiExecutors(OpenApiLibCore):
                     f"No relation found to cause status_code {status_code}."
                 )
         _run_keyword(
-            "perform_validated_request",
+            "validated_request",
             path,
             status_code,
-            RequestValues(
-                url=url,
-                method=method,
-                params=params,
-                headers=headers,
-                json_data=json_data,
-            ),
+            url,
+            method,
+            params,
+            headers,
+            json_data,
             original_data,
         )
         if status_code < int(HTTPStatus.MULTIPLE_CHOICES) and (
@@ -335,16 +332,14 @@ class OpenApiExecutors(OpenApiLibCore):
             if method == "PATCH":
                 original_data = self.get_original_data(url=url)
             _run_keyword(
-                "perform_validated_request",
+                "validated_request",
                 path,
                 status_code,
-                RequestValues(
-                    url=url,
-                    method=method,
-                    params=params,
-                    headers=headers,
-                    json_data=json_data,
-                ),
+                url,
+                method,
+                params,
+                headers,
+                json_data,
                 original_data,
             )
 
