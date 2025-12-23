@@ -24,10 +24,13 @@ Test Tags           rf7
 *** Variables ***
 @{EXPECTED_FAILURES}
 ...                     GET / 200    # Unsupported MIME type for response schema
+...                     GET /events/ 200    # Message in schema changed to format "byte"
 ...                     GET /reactions/ 200    # /reactions/ path not implemented on API server
+...                     GET /secret_message 200    # Message in schema changed to format "byte"
 ...                     POST /events/ 201    # added 'event_number' property to Event schema
 ...                     POST /employees 201    # added 'team' property to Employee schema
 ...                     GET /employees/{employee_id} 200    # added 'team' property to EmployeeDetails schema
+...                     GET /energy_label/{zipcode}/{home_number} 200    # Message in schema changed to format "byte"
 ...                     PUT /wagegroups/{wagegroup_id} 200    # Unsupported MIME type for requestBody
 ...                     PUT /wagegroups/{wagegroup_id} 404    # Unsupported MIME type for requestBody
 ...                     PUT /wagegroups/{wagegroup_id} 418    # Unsupported MIME type for requestBody

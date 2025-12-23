@@ -4,7 +4,7 @@ Library             OpenApiDriver
 ...                     source=http://localhost:8000/openapi.json
 ...                     origin=http://localhost:8000
 ...                     included_paths=${INCLUDED_PATHS}
-...                     invalid_property_default_response=400
+...                     invalid_data_default_response=400
 
 Test Template       Validate Test Endpoint Keyword
 
@@ -25,6 +25,6 @@ Validate Test Endpoint Keyword
         Run Keyword And Expect Error    Response status_code 401 was not 200.
         ...    Test Endpoint    path=${path}    method=${method}    status_code=${status_code}
     ELSE
-        Run Keyword And Expect Error    No Dto mapping found to cause status_code ${status_code}.
+        Run Keyword And Expect Error    No relation found to cause status_code ${status_code}.
         ...    Test Endpoint    path=${path}    method=${method}    status_code=${status_code}
     END

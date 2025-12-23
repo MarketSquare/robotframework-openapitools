@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiLibCore" type="LIBRARY" format="HTML" scope="SUITE" generated="2025-11-17T16:00:26+00:00" specversion="6" source="/workspaces/robotframework-openapitools/src/OpenApiLibCore/openapi_libcore.py" lineno="59">
-<version>1.0.5</version>
+<keywordspec name="OpenApiLibCore" type="LIBRARY" format="HTML" scope="SUITE" generated="2025-12-23T17:22:18+00:00" specversion="6" source="/workspaces/robotframework-openapitools/src/OpenApiLibCore/openapi_libcore.py" lineno="95">
+<version>2.0.0b1</version>
 <doc>The OpenApiLibCore library provides the keywords and core logic to interact with an OpenAPI server.
 
 Visit the &lt;a href="./index.html" target="_blank"&gt;OpenApiTools documentation&lt;/a&gt; for an introduction.</doc>
 <tags>
 </tags>
 <inits>
-<init name="__init__" lineno="60">
-<arguments repr="source: str, origin: str = , base_path: str = , response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, mappings_path: str | Path = , invalid_property_default_response: int = 422, default_id_property_name: str = id, faker_locale: str | list[str] = , require_body_for_invalid_url: bool = False, recursion_limit: int = 1, recursion_default: JSON = {}, username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, cert: str | tuple[str, str] = , verify_tls: bool | str = True, extra_headers: Mapping[str, str] = {}, cookies: MutableMapping[str, str] | RequestsCookieJar | None = None, proxies: MutableMapping[str, str] | None = None">
+<init name="__init__" lineno="96">
+<arguments repr="source: str, origin: str = , base_path: str = , response_validation: ValidationLevel = WARN, disable_server_validation: bool = True, mappings_path: str | Path = , invalid_data_default_response: int = 422, default_id_property_name: str = id, faker_locale: str | list[str] = , require_body_for_invalid_url: bool = False, recursion_limit: int = 1, recursion_default: JSON = {}, username: str = , password: str = , security_token: str = , auth: AuthBase | None = None, cert: str | tuple[str, str] = , verify_tls: bool | str = True, extra_headers: Mapping[str, str] = {}, cookies: MutableMapping[str, str] | RequestsCookieJar | None = None, proxies: MutableMapping[str, str] | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="source: str">
 <name>source</name>
 <type name="str" typedoc="string"/>
@@ -41,8 +41,8 @@ Visit the &lt;a href="./index.html" target="_blank"&gt;OpenApiTools documentatio
 </type>
 <default/>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="invalid_property_default_response: int = 422">
-<name>invalid_property_default_response</name>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="invalid_data_default_response: int = 422">
+<name>invalid_data_default_response</name>
 <type name="int" typedoc="integer"/>
 <default>422</default>
 </arg>
@@ -120,7 +120,7 @@ Visit the &lt;a href="./index.html" target="_blank"&gt;OpenApiTools documentatio
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="extra_headers: Mapping[str, str] = {}">
 <name>extra_headers</name>
-<type name="Mapping" typedoc="dictionary">
+<type name="Mapping" typedoc="Mapping">
 <type name="str" typedoc="string"/>
 <type name="str" typedoc="string"/>
 </type>
@@ -129,11 +129,11 @@ Visit the &lt;a href="./index.html" target="_blank"&gt;OpenApiTools documentatio
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="cookies: MutableMapping[str, str] | RequestsCookieJar | None = None">
 <name>cookies</name>
 <type name="Union" union="true">
-<type name="MutableMapping" typedoc="dictionary">
+<type name="MutableMapping" typedoc="Mapping">
 <type name="str" typedoc="string"/>
 <type name="str" typedoc="string"/>
 </type>
-<type name="RequestsCookieJar" typedoc="dictionary"/>
+<type name="RequestsCookieJar" typedoc="Mapping"/>
 <type name="None" typedoc="None"/>
 </type>
 <default>None</default>
@@ -141,7 +141,7 @@ Visit the &lt;a href="./index.html" target="_blank"&gt;OpenApiTools documentatio
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="proxies: MutableMapping[str, str] | None = None">
 <name>proxies</name>
 <type name="Union" union="true">
-<type name="MutableMapping" typedoc="dictionary">
+<type name="MutableMapping" typedoc="Mapping">
 <type name="str" typedoc="string"/>
 <type name="str" typedoc="string"/>
 </type>
@@ -189,7 +189,7 @@ by Response validation.
 &lt;h3&gt;mappings_path&lt;/h3&gt;
 See the Advanced Use tab for an in-depth explanation.
 
-&lt;h3&gt;invalid_property_default_response&lt;/h3&gt;
+&lt;h3&gt;invalid_data_default_response&lt;/h3&gt;
 The default response code for requests with a JSON body that does not comply
 with the schema.
 Example: a value outside the specified range or a string value
@@ -272,25 +272,22 @@ A dictionary of &lt;code&gt;"protocol": "proxy url"&lt;/code&gt; to use for all 
 </init>
 </inits>
 <keywords>
-<kw name="Assert Href To Resource Is Valid" lineno="486">
-<arguments repr="href: str, referenced_resource: dict[str, JSON]">
+<kw name="Assert Href To Resource Is Valid" lineno="641">
+<arguments repr="href: str, referenced_resource: JSON">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="href: str">
 <name>href</name>
 <type name="str" typedoc="string"/>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="true" repr="referenced_resource: dict[str, JSON]">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="referenced_resource: JSON">
 <name>referenced_resource</name>
-<type name="dict" typedoc="dictionary">
-<type name="str" typedoc="string"/>
 <type name="JSON"/>
-</type>
 </arg>
 </arguments>
 <doc>Attempt to GET the resource referenced by the &lt;span class="name"&gt;href&lt;/span&gt; and validate it's equal
-to the provided &lt;span class="name"&gt;referenced_resource&lt;/span&gt; object / dictionary.</doc>
-<shortdoc>Attempt to GET the resource referenced by the `href` and validate it's equal to the provided `referenced_resource` object / dictionary.</shortdoc>
+to the provided &lt;span class="name"&gt;referenced_resource&lt;/span&gt;.</doc>
+<shortdoc>Attempt to GET the resource referenced by the `href` and validate it's equal to the provided `referenced_resource`.</shortdoc>
 </kw>
-<kw name="Authorized Request" lineno="406">
+<kw name="Authorized Request" lineno="451">
 <arguments repr="url: str, method: str, params: dict[str, Any] | None = None, headers: dict[str, str] | None = None, json_data: JSON | None = None, data: Any | None = None, files: Any | None = None">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -348,18 +345,28 @@ to the provided &lt;span class="name"&gt;referenced_resource&lt;/span&gt; object
 </arg>
 </arguments>
 <returntype name="Response"/>
-<doc>Perform a request using the security token or authentication set in the library.
+<doc>See the &lt;a href="#Perform%20Authorized%20Request" class="name"&gt;Perform Authorized Request&lt;/a&gt; keyword.
 
-&lt;span class="name"&gt;json_data&lt;/span&gt;, &lt;span class="name"&gt;data&lt;/span&gt; and &lt;span class="name"&gt;files&lt;/span&gt; are passed to &lt;span class="name"&gt;requests.request&lt;/span&gt;s &lt;span class="name"&gt;json&lt;/span&gt;,
-&lt;span class="name"&gt;data&lt;/span&gt; and &lt;span class="name"&gt;files&lt;/span&gt; parameters unaltered.
-See the requests documentation for details:
-https://requests.readthedocs.io/en/latest/api/#requests.request
-
-&gt; Note: provided username / password or auth objects take precedence over token
-    based security</doc>
-<shortdoc>Perform a request using the security token or authentication set in the library.</shortdoc>
+The difference between these keywords is that this keyword accepts separate
+arguments where &lt;a href="#Perform%20Validated%20Request" class="name"&gt;Perform Validated Request&lt;/a&gt; accepts a &lt;span class="name"&gt;RequestValues&lt;/span&gt; object
+(see the &lt;a href="#Get%20Request%20Values" class="name"&gt;Get Request Values&lt;/a&gt; keyword for details).</doc>
+<shortdoc>See the `Perform Authorized Request` keyword.</shortdoc>
 </kw>
-<kw name="Ensure In Use" lineno="391">
+<kw name="Convert Request Values To Dict" lineno="555">
+<arguments repr="request_values: RequestValues">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="request_values: RequestValues">
+<name>request_values</name>
+<type name="RequestValues"/>
+</arg>
+</arguments>
+<returntype name="dict" typedoc="dictionary">
+<type name="str" typedoc="string"/>
+<type name="JSON"/>
+</returntype>
+<doc>Convert a RequestValues object to a dictionary.</doc>
+<shortdoc>Convert a RequestValues object to a dictionary.</shortdoc>
+</kw>
+<kw name="Ensure In Use" lineno="436">
 <arguments repr="url: str, resource_relation: IdReference">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -374,7 +381,7 @@ https://requests.readthedocs.io/en/latest/api/#requests.request
 is used by the resource defined by the &lt;span class="name"&gt;resource_relation&lt;/span&gt;.</doc>
 <shortdoc>Ensure that the (right-most) `id` of the resource referenced by the `url` is used by the resource defined by the `resource_relation`.</shortdoc>
 </kw>
-<kw name="Get Ids From Url" lineno="356">
+<kw name="Get Ids From Url" lineno="405">
 <arguments repr="url: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -388,7 +395,7 @@ is used by the resource defined by the &lt;span class="name"&gt;resource_relatio
 &lt;span class="name"&gt;ids&lt;/span&gt; from the response.</doc>
 <shortdoc>Perform a GET request on the `url` and return the list of resource `ids` from the response.</shortdoc>
 </kw>
-<kw name="Get Invalid Body Data" lineno="253">
+<kw name="Get Invalid Body Data" lineno="297">
 <arguments repr="url: str, method: str, status_code: int, request_data: RequestData">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -407,18 +414,15 @@ is used by the resource defined by the &lt;span class="name"&gt;resource_relatio
 <type name="RequestData"/>
 </arg>
 </arguments>
-<returntype name="dict" typedoc="dictionary">
-<type name="str" typedoc="string"/>
-<type name="JSON"/>
-</returntype>
-<doc>Return &lt;span class="name"&gt;json_data&lt;/span&gt; based on the &lt;span class="name"&gt;dto&lt;/span&gt; on the &lt;span class="name"&gt;request_data&lt;/span&gt; that will cause
-the provided &lt;span class="name"&gt;status_code&lt;/span&gt; for the &lt;span class="name"&gt;method&lt;/span&gt; operation on the &lt;span class="name"&gt;url&lt;/span&gt;.
+<returntype name="JSON"/>
+<doc>Return &lt;span class="name"&gt;json_data&lt;/span&gt; based on the &lt;span class="name"&gt;relations_mapping&lt;/span&gt; on the &lt;span class="name"&gt;request_data&lt;/span&gt; that
+will cause the provided &lt;span class="name"&gt;status_code&lt;/span&gt; for the &lt;span class="name"&gt;method&lt;/span&gt; operation on the &lt;span class="name"&gt;url&lt;/span&gt;.
 
 &gt; Note: applicable UniquePropertyValueConstraint and IdReference Relations are
     considered before changes to &lt;span class="name"&gt;json_data&lt;/span&gt; are made.</doc>
-<shortdoc>Return `json_data` based on the `dto` on the `request_data` that will cause the provided `status_code` for the `method` operation on the `url`.</shortdoc>
+<shortdoc>Return `json_data` based on the `relations_mapping` on the `request_data` that will cause the provided `status_code` for the `method` operation on the `url`.</shortdoc>
 </kw>
-<kw name="Get Invalidated Parameters" lineno="276">
+<kw name="Get Invalidated Parameters" lineno="320">
 <arguments repr="status_code: int, request_data: RequestData">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="status_code: int">
 <name>status_code</name>
@@ -436,23 +440,18 @@ the provided &lt;span class="name"&gt;status_code&lt;/span&gt; for the &lt;span 
 </type>
 <type name="dict" typedoc="dictionary">
 <type name="str" typedoc="string"/>
-<type name="JSON"/>
+<type name="str" typedoc="string"/>
 </type>
 </returntype>
 <doc>Returns a version of &lt;span class="name"&gt;params, headers&lt;/span&gt; as present on &lt;span class="name"&gt;request_data&lt;/span&gt; that has
 been modified to cause the provided &lt;span class="name"&gt;status_code&lt;/span&gt;.</doc>
 <shortdoc>Returns a version of `params, headers` as present on `request_data` that has been modified to cause the provided `status_code`.</shortdoc>
 </kw>
-<kw name="Get Invalidated Url" lineno="366">
-<arguments repr="valid_url: str, path: str = , expected_status_code: int = 404">
+<kw name="Get Invalidated Url" lineno="413">
+<arguments repr="valid_url: str, expected_status_code: int = 404">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="valid_url: str">
 <name>valid_url</name>
 <type name="str" typedoc="string"/>
-</arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="path: str = ">
-<name>path</name>
-<type name="str" typedoc="string"/>
-<default/>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="expected_status_code: int = 404">
 <name>expected_status_code</name>
@@ -463,14 +462,14 @@ been modified to cause the provided &lt;span class="name"&gt;status_code&lt;/spa
 <returntype name="str" typedoc="string"/>
 <doc>Return an url with all the path parameters in the &lt;span class="name"&gt;valid_url&lt;/span&gt; replaced by a
 random UUID if no PathPropertiesConstraint is mapped for the &lt;span class="name"&gt;"get"&lt;/span&gt; operation
-on the mapped &lt;a href="#type-Path" class="name"&gt;path&lt;/a&gt; and &lt;span class="name"&gt;expected_status_code&lt;/span&gt;.
+on the related &lt;a href="#type-Path" class="name"&gt;path&lt;/a&gt; and &lt;span class="name"&gt;expected_status_code&lt;/span&gt;.
 If a PathPropertiesConstraint is mapped, the &lt;span class="name"&gt;invalid_value&lt;/span&gt; is returned.
 
 Raises: ValueError if the valid_url cannot be invalidated.</doc>
-<shortdoc>Return an url with all the path parameters in the `valid_url` replaced by a random UUID if no PathPropertiesConstraint is mapped for the `"get"` operation on the mapped `path` and `expected_status_code`. If a PathPropertiesConstraint is mapped, the `invalid_value` is returned.</shortdoc>
+<shortdoc>Return an url with all the path parameters in the `valid_url` replaced by a random UUID if no PathPropertiesConstraint is mapped for the `"get"` operation on the related `path` and `expected_status_code`. If a PathPropertiesConstraint is mapped, the `invalid_value` is returned.</shortdoc>
 </kw>
-<kw name="Get Json Data With Conflict" lineno="292">
-<arguments repr="url: str, method: str, dto: Dto, conflict_status_code: int">
+<kw name="Get Json Data With Conflict" lineno="336">
+<arguments repr="url: str, method: str, json_data: dict[str, JSON], relations_mapping: type[RelationsMapping], conflict_status_code: int">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
 <type name="str" typedoc="string"/>
@@ -479,9 +478,18 @@ Raises: ValueError if the valid_url cannot be invalidated.</doc>
 <name>method</name>
 <type name="str" typedoc="string"/>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="true" repr="dto: Dto">
-<name>dto</name>
-<type name="Dto"/>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="json_data: dict[str, JSON]">
+<name>json_data</name>
+<type name="dict" typedoc="dictionary">
+<type name="str" typedoc="string"/>
+<type name="JSON"/>
+</type>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="relations_mapping: type[RelationsMapping]">
+<name>relations_mapping</name>
+<type name="type">
+<type name="RelationsMapping"/>
+</type>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="conflict_status_code: int">
 <name>conflict_status_code</name>
@@ -493,11 +501,11 @@ Raises: ValueError if the valid_url cannot be invalidated.</doc>
 <type name="JSON"/>
 </returntype>
 <doc>Return &lt;span class="name"&gt;json_data&lt;/span&gt; based on the &lt;span class="name"&gt;UniquePropertyValueConstraint&lt;/span&gt; that must be
-returned by the &lt;span class="name"&gt;get_relations&lt;/span&gt; implementation on the &lt;span class="name"&gt;dto&lt;/span&gt; for the given
-&lt;span class="name"&gt;conflict_status_code&lt;/span&gt;.</doc>
-<shortdoc>Return `json_data` based on the `UniquePropertyValueConstraint` that must be returned by the `get_relations` implementation on the `dto` for the given `conflict_status_code`.</shortdoc>
+returned by the &lt;span class="name"&gt;get_relations&lt;/span&gt; implementation on the &lt;span class="name"&gt;relations_mapping&lt;/span&gt; for
+the given &lt;span class="name"&gt;conflict_status_code&lt;/span&gt;.</doc>
+<shortdoc>Return `json_data` based on the `UniquePropertyValueConstraint` that must be returned by the `get_relations` implementation on the `relations_mapping` for the given `conflict_status_code`.</shortdoc>
 </kw>
-<kw name="Get Parameterized Path From Url" lineno="342">
+<kw name="Get Parameterized Path From Url" lineno="391">
 <arguments repr="url: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
 <name>url</name>
@@ -508,7 +516,7 @@ returned by the &lt;span class="name"&gt;get_relations&lt;/span&gt; implementati
 <doc>Return the path as found in the &lt;span class="name"&gt;paths&lt;/span&gt; section based on the given &lt;span class="name"&gt;url&lt;/span&gt;.</doc>
 <shortdoc>Return the path as found in the `paths` section based on the given `url`.</shortdoc>
 </kw>
-<kw name="Get Request Data" lineno="242">
+<kw name="Get Request Data" lineno="288">
 <arguments repr="path: str, method: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
@@ -523,7 +531,7 @@ returned by the &lt;span class="name"&gt;get_relations&lt;/span&gt; implementati
 <doc>Return an object with valid request data for body, headers and query params.</doc>
 <shortdoc>Return an object with valid request data for body, headers and query params.</shortdoc>
 </kw>
-<kw name="Get Request Values" lineno="201">
+<kw name="Get Request Values" lineno="240">
 <arguments repr="path: str, method: str, overrides: Mapping[str, JSON] = {}">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
@@ -535,7 +543,7 @@ returned by the &lt;span class="name"&gt;get_relations&lt;/span&gt; implementati
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="overrides: Mapping[str, JSON] = {}">
 <name>overrides</name>
-<type name="Mapping" typedoc="dictionary">
+<type name="Mapping" typedoc="Mapping">
 <type name="str" typedoc="string"/>
 <type name="JSON"/>
 </type>
@@ -543,10 +551,58 @@ returned by the &lt;span class="name"&gt;get_relations&lt;/span&gt; implementati
 </arg>
 </arguments>
 <returntype name="RequestValues"/>
-<doc>Return an object with all (valid) request values needed to make a request.</doc>
+<doc>Return an object with all (valid) request values needed to make a request.
+
+The &lt;span class="name"&gt;overrides&lt;/span&gt; dictionary can be used to pass specific values for parameters
+instead of having them be generated automatically.</doc>
 <shortdoc>Return an object with all (valid) request values needed to make a request.</shortdoc>
 </kw>
-<kw name="Get Valid Id For Path" lineno="330">
+<kw name="Get Request Values Object" lineno="524">
+<arguments repr="url: str, method: str, params: dict[str, JSON] = {}, headers: dict[str, str] = {}, json_data: JSON | None = None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
+<name>url</name>
+<type name="str" typedoc="string"/>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
+<name>method</name>
+<type name="str" typedoc="string"/>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="params: dict[str, JSON] = {}">
+<name>params</name>
+<type name="dict" typedoc="dictionary">
+<type name="str" typedoc="string"/>
+<type name="JSON"/>
+</type>
+<default>{}</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="headers: dict[str, str] = {}">
+<name>headers</name>
+<type name="dict" typedoc="dictionary">
+<type name="str" typedoc="string"/>
+<type name="str" typedoc="string"/>
+</type>
+<default>{}</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="json_data: JSON | None = None">
+<name>json_data</name>
+<type name="Union" union="true">
+<type name="JSON"/>
+<type name="None" typedoc="None"/>
+</type>
+<default>None</default>
+</arg>
+</arguments>
+<returntype name="RequestValues"/>
+<doc>This keyword can be used to instantiate a RequestValues object that can be used
+with the &lt;a href="#Perform%20Authorized%20Request" class="name"&gt;Perform Authorized Request&lt;/a&gt; and &lt;a href="#Perform%20Validated%20Request" class="name"&gt;Perform Validated Request&lt;/a&gt; keywords.
+
+This is a utility keyword that can make certain test cases or keywords more
+concise, but logging and debugging information will be more limited.
+
+See also the &lt;a href="#Get%20Request%20Values" class="name"&gt;Get Request Values&lt;/a&gt; keyword.</doc>
+<shortdoc>This keyword can be used to instantiate a RequestValues object that can be used with the `Perform Authorized Request` and `Perform Validated Request` keywords.</shortdoc>
+</kw>
+<kw name="Get Valid Id For Path" lineno="379">
 <arguments repr="path: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
@@ -564,7 +620,7 @@ To prevent resource conflicts with other test cases, a new resource is created
 (by a POST operation) if possible.</doc>
 <shortdoc>Support keyword that returns the `id` for an existing resource at `path`.</shortdoc>
 </kw>
-<kw name="Get Valid Url" lineno="311">
+<kw name="Get Valid Url" lineno="361">
 <arguments repr="path: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
@@ -582,7 +638,44 @@ keyword will be executed to retrieve valid ids for the path parameters.
 [https://marketsquare.github.io/robotframework-openapitools/advanced_use.html | here].</doc>
 <shortdoc>This keyword returns a valid url for the given `path`.</shortdoc>
 </kw>
-<kw name="Perform Validated Request" lineno="455">
+<kw name="Perform Authorized Request" lineno="494">
+<arguments repr="request_values: RequestValues, data: Any | None = None, files: Any | None = None">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="request_values: RequestValues">
+<name>request_values</name>
+<type name="RequestValues"/>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="data: Any | None = None">
+<name>data</name>
+<type name="Union" union="true">
+<type name="Any" typedoc="Any"/>
+<type name="None" typedoc="None"/>
+</type>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="files: Any | None = None">
+<name>files</name>
+<type name="Union" union="true">
+<type name="Any" typedoc="Any"/>
+<type name="None" typedoc="None"/>
+</type>
+<default>None</default>
+</arg>
+</arguments>
+<returntype name="Response"/>
+<doc>Perform a request using the security token or authentication set in the library.
+
+&lt;span class="name"&gt;json_data&lt;/span&gt;, &lt;span class="name"&gt;data&lt;/span&gt; and &lt;span class="name"&gt;files&lt;/span&gt; are passed to &lt;span class="name"&gt;requests.request&lt;/span&gt;s &lt;span class="name"&gt;json&lt;/span&gt;,
+&lt;span class="name"&gt;data&lt;/span&gt; and &lt;span class="name"&gt;files&lt;/span&gt; parameters unaltered.
+See the requests documentation for details:
+https://requests.readthedocs.io/en/latest/api/#requests.request
+
+See also &lt;a href="#Authorized%20Request" class="name"&gt;Authorized Request&lt;/a&gt; and &lt;a href="#Get%20Request%20Values" class="name"&gt;Get Request Values&lt;/a&gt;.
+
+&gt; Note: provided username / password or auth objects take precedence over token
+    based security</doc>
+<shortdoc>Perform a request using the security token or authentication set in the library.</shortdoc>
+</kw>
+<kw name="Perform Validated Request" lineno="608">
 <arguments repr="path: str, status_code: int, request_values: RequestValues, original_data: Mapping[str, JSON] = {}">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
@@ -598,7 +691,7 @@ keyword will be executed to retrieve valid ids for the path parameters.
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="original_data: Mapping[str, JSON] = {}">
 <name>original_data</name>
-<type name="Mapping" typedoc="dictionary">
+<type name="Mapping" typedoc="Mapping">
 <type name="str" typedoc="string"/>
 <type name="JSON"/>
 </type>
@@ -607,10 +700,12 @@ keyword will be executed to retrieve valid ids for the path parameters.
 </arguments>
 <doc>This keyword first calls the Authorized Request keyword, then the Validate
 Response keyword and finally validates, for &lt;span class="name"&gt;DELETE&lt;/span&gt; operations, whether
-the target resource was indeed deleted (OK response) or not (error responses).</doc>
+the target resource was indeed deleted (OK response) or not (error responses).
+
+See also &lt;a href="#Validated%20Request" class="name"&gt;Validated Request&lt;/a&gt; and &lt;a href="#Get%20Request%20Values" class="name"&gt;Get Request Values&lt;/a&gt;.</doc>
 <shortdoc>This keyword first calls the Authorized Request keyword, then the Validate Response keyword and finally validates, for `DELETE` operations, whether the target resource was indeed deleted (OK response) or not (error responses).</shortdoc>
 </kw>
-<kw name="Set Auth" lineno="179">
+<kw name="Set Auth" lineno="218">
 <arguments repr="auth: AuthBase">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="auth: AuthBase">
 <name>auth</name>
@@ -623,7 +718,7 @@ After calling this keyword, subsequent requests
 will use the provided &lt;span class="name"&gt;auth&lt;/span&gt; instance.</doc>
 <shortdoc>Set the `auth` used for authentication after the library is imported.</shortdoc>
 </kw>
-<kw name="Set Basic Auth" lineno="167">
+<kw name="Set Basic Auth" lineno="206">
 <arguments repr="username: str, password: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="username: str">
 <name>username</name>
@@ -641,7 +736,7 @@ After calling this keyword, subsequent requests
 will use the provided credentials.</doc>
 <shortdoc>Set the `username` and `password` used for basic authentication after the library is imported.</shortdoc>
 </kw>
-<kw name="Set Extra Headers" lineno="189">
+<kw name="Set Extra Headers" lineno="228">
 <arguments repr="extra_headers: dict[str, str]">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="extra_headers: dict[str, str]">
 <name>extra_headers</name>
@@ -657,7 +752,7 @@ After calling this keyword, subsequent requests
 will use the provided &lt;span class="name"&gt;extra_headers&lt;/span&gt;.</doc>
 <shortdoc>Set the `extra_headers` used in requests after the library is imported.</shortdoc>
 </kw>
-<kw name="Set Origin" lineno="144">
+<kw name="Set Origin" lineno="183">
 <arguments repr="origin: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="origin: str">
 <name>origin</name>
@@ -674,7 +769,7 @@ In combination with OpenApiLibCore, the &lt;span class="name"&gt;origin&lt;/span
 target another server that hosts an API that complies to the same OAS.</doc>
 <shortdoc>Set the `origin` after the library is imported.</shortdoc>
 </kw>
-<kw name="Set Security Token" lineno="158">
+<kw name="Set Security Token" lineno="197">
 <arguments repr="security_token: str">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="security_token: str">
 <name>security_token</name>
@@ -686,8 +781,8 @@ target another server that hosts an API that complies to the same OAS.</doc>
 After calling this keyword, subsequent requests will use the provided token.</doc>
 <shortdoc>Set the `security_token` after the library is imported.</shortdoc>
 </kw>
-<kw name="Validate Response" lineno="501">
-<arguments repr="path: str, response: Response, original_data: Mapping[str, JSON] = {}">
+<kw name="Validate Response" lineno="656">
+<arguments repr="path: str, response: Response, original_data: JSON = {}">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
 <name>path</name>
 <type name="str" typedoc="string"/>
@@ -696,12 +791,9 @@ After calling this keyword, subsequent requests will use the provided token.</do
 <name>response</name>
 <type name="Response"/>
 </arg>
-<arg kind="POSITIONAL_OR_NAMED" required="false" repr="original_data: Mapping[str, JSON] = {}">
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="original_data: JSON = {}">
 <name>original_data</name>
-<type name="Mapping" typedoc="dictionary">
-<type name="str" typedoc="string"/>
 <type name="JSON"/>
-</type>
 <default>{}</default>
 </arg>
 </arguments>
@@ -715,18 +807,18 @@ After calling this keyword, subsequent requests will use the provided token.</do
 - validate that a PATCH operation only updates the provided properties</doc>
 <shortdoc>Validate the `response` by performing the following validations: - validate the `response` against the openapi schema for the `path` - validate that the response does not contain extra properties - validate that a href, if present, refers to the correct resource - validate that the value for a property that is in the response is equal to     the property value that was send - validate that no `original_data` is preserved when performing a PUT operation - validate that a PATCH operation only updates the provided properties</shortdoc>
 </kw>
-<kw name="Validate Response Using Validator" lineno="475">
+<kw name="Validate Response Using Validator" lineno="630">
 <arguments repr="response: Response">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="response: Response">
 <name>response</name>
 <type name="Response"/>
 </arg>
 </arguments>
-<doc>Validate the &lt;span class="name"&gt;response&lt;/span&gt; against the OpenAPI Spec that is
+<doc>Validate the &lt;span class="name"&gt;response&lt;/span&gt; against the OpenAPI spec that is
 loaded during library initialization.</doc>
-<shortdoc>Validate the `response` against the OpenAPI Spec that is loaded during library initialization.</shortdoc>
+<shortdoc>Validate the `response` against the OpenAPI spec that is loaded during library initialization.</shortdoc>
 </kw>
-<kw name="Validate Send Response" lineno="531">
+<kw name="Validate Send Response" lineno="686">
 <arguments repr="response: Response, original_data: Mapping[str, JSON] = {}">
 <arg kind="POSITIONAL_OR_NAMED" required="true" repr="response: Response">
 <name>response</name>
@@ -734,7 +826,7 @@ loaded during library initialization.</doc>
 </arg>
 <arg kind="POSITIONAL_OR_NAMED" required="false" repr="original_data: Mapping[str, JSON] = {}">
 <name>original_data</name>
-<type name="Mapping" typedoc="dictionary">
+<type name="Mapping" typedoc="Mapping">
 <type name="str" typedoc="string"/>
 <type name="JSON"/>
 </type>
@@ -747,6 +839,64 @@ In case a PATCH request, validate that only the properties that were patched
 have changed and that other properties are still at their pre-patch values.</doc>
 <shortdoc>Validate that each property that was send that is in the response has the value that was send. In case a PATCH request, validate that only the properties that were patched have changed and that other properties are still at their pre-patch values.</shortdoc>
 </kw>
+<kw name="Validated Request" lineno="570">
+<arguments repr="path: str, status_code: int, url: str, method: str, params: dict[str, JSON] = {}, headers: dict[str, str] = {}, json_data: JSON | None = None, original_data: Mapping[str, JSON] = {}">
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="path: str">
+<name>path</name>
+<type name="str" typedoc="string"/>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="status_code: int">
+<name>status_code</name>
+<type name="int" typedoc="integer"/>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="url: str">
+<name>url</name>
+<type name="str" typedoc="string"/>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="true" repr="method: str">
+<name>method</name>
+<type name="str" typedoc="string"/>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="params: dict[str, JSON] = {}">
+<name>params</name>
+<type name="dict" typedoc="dictionary">
+<type name="str" typedoc="string"/>
+<type name="JSON"/>
+</type>
+<default>{}</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="headers: dict[str, str] = {}">
+<name>headers</name>
+<type name="dict" typedoc="dictionary">
+<type name="str" typedoc="string"/>
+<type name="str" typedoc="string"/>
+</type>
+<default>{}</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="json_data: JSON | None = None">
+<name>json_data</name>
+<type name="Union" union="true">
+<type name="JSON"/>
+<type name="None" typedoc="None"/>
+</type>
+<default>None</default>
+</arg>
+<arg kind="POSITIONAL_OR_NAMED" required="false" repr="original_data: Mapping[str, JSON] = {}">
+<name>original_data</name>
+<type name="Mapping" typedoc="Mapping">
+<type name="str" typedoc="string"/>
+<type name="JSON"/>
+</type>
+<default>{}</default>
+</arg>
+</arguments>
+<doc>See the &lt;a href="#Perform%20Validated%20Request" class="name"&gt;Perform Validated Request&lt;/a&gt; keyword.
+
+The difference between these keywords is that this keyword accepts separate
+arguments where &lt;a href="#Perform%20Validated%20Request" class="name"&gt;Perform Validated Request&lt;/a&gt; accepts a &lt;span class="name"&gt;RequestValues&lt;/span&gt; object
+(see the &lt;a href="#Get%20Request%20Values" class="name"&gt;Get Request Values&lt;/a&gt; keyword for details).</doc>
+<shortdoc>See the `Perform Validated Request` keyword.</shortdoc>
+</kw>
 </keywords>
 <typedocs>
 <type name="Any" type="Standard">
@@ -756,10 +906,11 @@ have changed and that other properties are still at their pre-patch values.</doc
 </accepts>
 <usages>
 <usage>Authorized Request</usage>
+<usage>Perform Authorized Request</usage>
 </usages>
 </type>
 <type name="boolean" type="Standard">
-<doc>&lt;p&gt;Strings &lt;code&gt;TRUE&lt;/code&gt;, &lt;code&gt;YES&lt;/code&gt;, &lt;code&gt;ON&lt;/code&gt; and &lt;code&gt;1&lt;/code&gt; are converted to Boolean &lt;code&gt;True&lt;/code&gt;, the empty string as well as strings &lt;code&gt;FALSE&lt;/code&gt;, &lt;code&gt;NO&lt;/code&gt;, &lt;code&gt;OFF&lt;/code&gt; and &lt;code&gt;0&lt;/code&gt; are converted to Boolean &lt;code&gt;False&lt;/code&gt;, and the string &lt;code&gt;NONE&lt;/code&gt; is converted to the Python &lt;code&gt;None&lt;/code&gt; object. Other strings and other accepted values are passed as-is, allowing keywords to handle them specially if needed. All string comparisons are case-insensitive.&lt;/p&gt;
+<doc>&lt;p&gt;Strings &lt;code&gt;TRUE&lt;/code&gt;, &lt;code&gt;YES&lt;/code&gt;, &lt;code&gt;ON&lt;/code&gt;, &lt;code&gt;1&lt;/code&gt; and possible localization specific "true strings" are converted to Boolean &lt;code&gt;True&lt;/code&gt;, the empty string, strings &lt;code&gt;FALSE&lt;/code&gt;, &lt;code&gt;NO&lt;/code&gt;, &lt;code&gt;OFF&lt;/code&gt; and &lt;code&gt;0&lt;/code&gt; and possibly localization specific "false strings" are converted to Boolean &lt;code&gt;False&lt;/code&gt;, and the string &lt;code&gt;NONE&lt;/code&gt; is converted to the Python &lt;code&gt;None&lt;/code&gt; object. Other strings and all other values are passed as-is, allowing keywords to handle them specially if needed. All string comparisons are case-insensitive.&lt;/p&gt;
 &lt;p&gt;Examples: &lt;code&gt;TRUE&lt;/code&gt; (converted to &lt;code&gt;True&lt;/code&gt;), &lt;code&gt;off&lt;/code&gt; (converted to &lt;code&gt;False&lt;/code&gt;), &lt;code&gt;example&lt;/code&gt; (used as-is)&lt;/p&gt;</doc>
 <accepts>
 <type>string</type>
@@ -772,7 +923,8 @@ have changed and that other properties are still at their pre-patch values.</doc
 </usages>
 </type>
 <type name="dictionary" type="Standard">
-<doc>&lt;p&gt;Strings must be Python &lt;a href="https://docs.python.org/library/stdtypes.html#dict"&gt;dictionary&lt;/a&gt; literals. They are converted to actual dictionaries using the &lt;a href="https://docs.python.org/library/ast.html#ast.literal_eval"&gt;ast.literal_eval&lt;/a&gt; function. They can contain any values &lt;code&gt;ast.literal_eval&lt;/code&gt; supports, including dictionaries and other containers.&lt;/p&gt;
+<doc>&lt;p&gt;Strings must be Python &lt;a href="https://docs.python.org/library/stdtypes.html#dict"&gt;dictionary&lt;/a&gt; literals. They are converted to actual dictionaries using the &lt;a href="https://docs.python.org/library/ast.html#ast.literal_eval"&gt;ast.literal_eval&lt;/a&gt; function. They can contain any values &lt;code&gt;ast.literal_eval&lt;/code&gt; supports, including dictionaries and other collections.&lt;/p&gt;
+&lt;p&gt;Any mapping is accepted and converted to a &lt;code&gt;dict&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;If the type has nested types like &lt;code&gt;dict[str, int]&lt;/code&gt;, items are converted to those types automatically. This in new in Robot Framework 6.0.&lt;/p&gt;
 &lt;p&gt;Examples: &lt;code&gt;{'a': 1, 'b': 2}&lt;/code&gt;, &lt;code&gt;{'key': 1, 'nested': {'key': 2}}&lt;/code&gt;&lt;/p&gt;</doc>
 <accepts>
@@ -780,22 +932,18 @@ have changed and that other properties are still at their pre-patch values.</doc
 <type>Mapping</type>
 </accepts>
 <usages>
-<usage>__init__</usage>
-<usage>Assert Href To Resource Is Valid</usage>
 <usage>Authorized Request</usage>
-<usage>Get Invalid Body Data</usage>
+<usage>Convert Request Values To Dict</usage>
 <usage>Get Invalidated Parameters</usage>
 <usage>Get Json Data With Conflict</usage>
-<usage>Get Request Values</usage>
-<usage>Perform Validated Request</usage>
+<usage>Get Request Values Object</usage>
 <usage>Set Extra Headers</usage>
-<usage>Validate Response</usage>
-<usage>Validate Send Response</usage>
+<usage>Validated Request</usage>
 </usages>
 </type>
 <type name="float" type="Standard">
 <doc>&lt;p&gt;Conversion is done using Python's &lt;a href="https://docs.python.org/library/functions.html#float"&gt;float&lt;/a&gt; built-in function.&lt;/p&gt;
-&lt;p&gt;Starting from RF 4.1, spaces and underscores can be used as visual separators for digit grouping purposes.&lt;/p&gt;
+&lt;p&gt;Spaces and underscores can be used as visual separators for digit grouping purposes.&lt;/p&gt;
 &lt;p&gt;Examples: &lt;code&gt;3.14&lt;/code&gt;, &lt;code&gt;2.9979e8&lt;/code&gt;, &lt;code&gt;10 000.000 01&lt;/code&gt;&lt;/p&gt;</doc>
 <accepts>
 <type>string</type>
@@ -807,8 +955,7 @@ have changed and that other properties are still at their pre-patch values.</doc
 </type>
 <type name="integer" type="Standard">
 <doc>&lt;p&gt;Conversion is done using Python's &lt;a href="https://docs.python.org/library/functions.html#int"&gt;int&lt;/a&gt; built-in function. Floating point numbers are accepted only if they can be represented as integers exactly. For example, &lt;code&gt;1.0&lt;/code&gt; is accepted and &lt;code&gt;1.1&lt;/code&gt; is not.&lt;/p&gt;
-&lt;p&gt;Starting from RF 4.1, it is possible to use hexadecimal, octal and binary numbers by prefixing values with &lt;code&gt;0x&lt;/code&gt;, &lt;code&gt;0o&lt;/code&gt; and &lt;code&gt;0b&lt;/code&gt;, respectively.&lt;/p&gt;
-&lt;p&gt;Starting from RF 4.1, spaces and underscores can be used as visual separators for digit grouping purposes.&lt;/p&gt;
+&lt;p&gt;It is possible to use hexadecimal, octal and binary numbers by prefixing values with &lt;code&gt;0x&lt;/code&gt;, &lt;code&gt;0o&lt;/code&gt; and &lt;code&gt;0b&lt;/code&gt;, respectively. Spaces and underscores can be used as visual separators for digit grouping purposes.&lt;/p&gt;
 &lt;p&gt;Examples: &lt;code&gt;42&lt;/code&gt;, &lt;code&gt;-1&lt;/code&gt;, &lt;code&gt;0b1010&lt;/code&gt;, &lt;code&gt;10 000 000&lt;/code&gt;, &lt;code&gt;0xBAD_C0FFEE&lt;/code&gt;&lt;/p&gt;</doc>
 <accepts>
 <type>string</type>
@@ -822,12 +969,15 @@ have changed and that other properties are still at their pre-patch values.</doc
 <usage>Get Json Data With Conflict</usage>
 <usage>Get Valid Id For Path</usage>
 <usage>Perform Validated Request</usage>
+<usage>Validated Request</usage>
 </usages>
 </type>
 <type name="list" type="Standard">
-<doc>&lt;p&gt;Strings must be Python &lt;a href="https://docs.python.org/library/stdtypes.html#list"&gt;list&lt;/a&gt; literals. They are converted to actual lists using the &lt;a href="https://docs.python.org/library/ast.html#ast.literal_eval"&gt;ast.literal_eval&lt;/a&gt; function. They can contain any values &lt;code&gt;ast.literal_eval&lt;/code&gt; supports, including lists and other containers.&lt;/p&gt;
-&lt;p&gt;If the type has nested types like &lt;code&gt;list[int]&lt;/code&gt;, items are converted to those types automatically. This in new in Robot Framework 6.0.&lt;/p&gt;
-&lt;p&gt;Examples: &lt;code&gt;['one', 'two']&lt;/code&gt;, &lt;code&gt;[('one', 1), ('two', 2)]&lt;/code&gt;&lt;/p&gt;</doc>
+<doc>&lt;p&gt;Strings must be Python &lt;a href="https://docs.python.org/library/stdtypes.html#list"&gt;list&lt;/a&gt; or &lt;a href="https://docs.python.org/library/stdtypes.html#tuple"&gt;tuple&lt;/a&gt; literals. They are converted using the &lt;a href="https://docs.python.org/library/ast.html#ast.literal_eval"&gt;ast.literal_eval&lt;/a&gt; function and possible tuples converted further to lists. They can contain any values &lt;code&gt;ast.literal_eval&lt;/code&gt; supports, including lists and other collections.&lt;/p&gt;
+&lt;p&gt;If the argument is a list, it is used without conversion. Tuples and other sequences are converted to lists.&lt;/p&gt;
+&lt;p&gt;If the type has nested types like &lt;code&gt;list[int]&lt;/code&gt;, items are converted to those types automatically.&lt;/p&gt;
+&lt;p&gt;Examples: &lt;code&gt;['one', 'two']&lt;/code&gt;, &lt;code&gt;[('one', 1), ('two', 2)]&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Support to convert nested types is new in Robot Framework 6.0. Support for tuple literals is new in Robot Framework 7.4.&lt;/p&gt;</doc>
 <accepts>
 <type>string</type>
 <type>Sequence</type>
@@ -837,14 +987,35 @@ have changed and that other properties are still at their pre-patch values.</doc
 <usage>Get Ids From Url</usage>
 </usages>
 </type>
+<type name="Mapping" type="Standard">
+<doc>&lt;p&gt;Strings must be Python &lt;a href="https://docs.python.org/library/stdtypes.html#dict"&gt;dictionary&lt;/a&gt; literals. They are converted to actual dictionaries using the &lt;a href="https://docs.python.org/library/ast.html#ast.literal_eval"&gt;ast.literal_eval&lt;/a&gt; function. They can contain any values &lt;code&gt;ast.literal_eval&lt;/code&gt; supports, including dictionaries and other collections.&lt;/p&gt;
+&lt;p&gt;Any mapping is accepted without conversion. An exception is that if the type is &lt;code&gt;MutableMapping&lt;/code&gt;, immutable values are converted to &lt;code&gt;dict&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;If the type has nested types like &lt;code&gt;Mapping[str, int]&lt;/code&gt;, items are converted to those types automatically. This in new in Robot Framework 6.0.&lt;/p&gt;
+&lt;p&gt;Examples: &lt;code&gt;{'a': 1, 'b': 2}&lt;/code&gt;, &lt;code&gt;{'key': 1, 'nested': {'key': 2}}&lt;/code&gt;&lt;/p&gt;</doc>
+<accepts>
+<type>string</type>
+<type>Mapping</type>
+</accepts>
+<usages>
+<usage>__init__</usage>
+<usage>Get Request Values</usage>
+<usage>Perform Validated Request</usage>
+<usage>Validate Send Response</usage>
+<usage>Validated Request</usage>
+</usages>
+</type>
 <type name="None" type="Standard">
-<doc>&lt;p&gt;String &lt;code&gt;NONE&lt;/code&gt; (case-insensitive) is converted to Python &lt;code&gt;None&lt;/code&gt; object. Other values cause an error.&lt;/p&gt;</doc>
+<doc>&lt;p&gt;String &lt;code&gt;NONE&lt;/code&gt; (case-insensitive) and the empty string are converted to the Python &lt;code&gt;None&lt;/code&gt; object. Other values cause an error.&lt;/p&gt;
+&lt;p&gt;Converting the empty string is new in Robot Framework 7.4.&lt;/p&gt;</doc>
 <accepts>
 <type>string</type>
 </accepts>
 <usages>
 <usage>__init__</usage>
 <usage>Authorized Request</usage>
+<usage>Get Request Values Object</usage>
+<usage>Perform Authorized Request</usage>
+<usage>Validated Request</usage>
 </usages>
 </type>
 <type name="Path" type="Standard">
@@ -859,7 +1030,9 @@ have changed and that other properties are still at their pre-patch values.</doc
 </usages>
 </type>
 <type name="string" type="Standard">
-<doc>&lt;p&gt;All arguments are converted to Unicode strings.&lt;/p&gt;</doc>
+<doc>&lt;p&gt;All arguments are converted to Unicode strings.&lt;/p&gt;
+&lt;p&gt;Most values are converted simply by using &lt;code&gt;str(value)&lt;/code&gt;. An exception is that bytes are mapped directly to Unicode code points with same ordinals. This means that, for example, &lt;code&gt;b"hyv\xe4"&lt;/code&gt; becomes &lt;code&gt;"hyvä"&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Converting bytes specially is new Robot Framework 7.4.&lt;/p&gt;</doc>
 <accepts>
 <type>Any</type>
 </accepts>
@@ -867,6 +1040,7 @@ have changed and that other properties are still at their pre-patch values.</doc
 <usage>__init__</usage>
 <usage>Assert Href To Resource Is Valid</usage>
 <usage>Authorized Request</usage>
+<usage>Convert Request Values To Dict</usage>
 <usage>Ensure In Use</usage>
 <usage>Get Ids From Url</usage>
 <usage>Get Invalid Body Data</usage>
@@ -876,6 +1050,7 @@ have changed and that other properties are still at their pre-patch values.</doc
 <usage>Get Parameterized Path From Url</usage>
 <usage>Get Request Data</usage>
 <usage>Get Request Values</usage>
+<usage>Get Request Values Object</usage>
 <usage>Get Valid Id For Path</usage>
 <usage>Get Valid Url</usage>
 <usage>Perform Validated Request</usage>
@@ -885,12 +1060,15 @@ have changed and that other properties are still at their pre-patch values.</doc
 <usage>Set Security Token</usage>
 <usage>Validate Response</usage>
 <usage>Validate Send Response</usage>
+<usage>Validated Request</usage>
 </usages>
 </type>
 <type name="tuple" type="Standard">
-<doc>&lt;p&gt;Strings must be Python &lt;a href="https://docs.python.org/library/stdtypes.html#tuple"&gt;tuple&lt;/a&gt; literals. They are converted to actual tuples using the &lt;a href="https://docs.python.org/library/ast.html#ast.literal_eval"&gt;ast.literal_eval&lt;/a&gt; function. They can contain any values &lt;code&gt;ast.literal_eval&lt;/code&gt; supports, including tuples and other containers.&lt;/p&gt;
-&lt;p&gt;If the type has nested types like &lt;code&gt;tuple[str, int, int]&lt;/code&gt;, items are converted to those types automatically. This in new in Robot Framework 6.0.&lt;/p&gt;
-&lt;p&gt;Examples: &lt;code&gt;('one', 'two')&lt;/code&gt;, &lt;code&gt;(('one', 1), ('two', 2))&lt;/code&gt;&lt;/p&gt;</doc>
+<doc>&lt;p&gt;Strings must be Python &lt;a href="https://docs.python.org/library/stdtypes.html#tuple"&gt;tuple&lt;/a&gt; or &lt;a href="https://docs.python.org/library/stdtypes.html#list"&gt;list&lt;/a&gt; literals. They are converted using the &lt;a href="https://docs.python.org/library/ast.html#ast.literal_eval"&gt;ast.literal_eval&lt;/a&gt; function and possible lists converted further to tuples. They can contain any values &lt;code&gt;ast.literal_eval&lt;/code&gt; supports, including tuples and other collections.&lt;/p&gt;
+&lt;p&gt;If the argument is a tuple, it is used without conversion. Lists and other sequences are converted to tuples.&lt;/p&gt;
+&lt;p&gt;If the type has nested types like &lt;code&gt;tuple[str, int, int]&lt;/code&gt;, items are converted to those types automatically.&lt;/p&gt;
+&lt;p&gt;Examples: &lt;code&gt;('one', 'two')&lt;/code&gt;, &lt;code&gt;(('one', 1), ('two', 2))&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Support to convert nested types is new in Robot Framework 6.0. Support for list literals is new in Robot Framework 7.4.&lt;/p&gt;</doc>
 <accepts>
 <type>string</type>
 <type>Sequence</type>

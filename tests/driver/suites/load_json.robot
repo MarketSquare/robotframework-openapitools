@@ -3,6 +3,7 @@ Library             OpenApiDriver
 ...                     source=${ROOT}/tests/files/petstore_openapi.json
 ...                     ignored_responses=${IGNORED_RESPONSES}
 ...                     ignored_testcases=${IGNORED_TESTS}
+...                     mappings_path=${ROOT}/tests/user_implemented    # library can load with invalid mappings_path
 
 Test Template       Do Nothing
 

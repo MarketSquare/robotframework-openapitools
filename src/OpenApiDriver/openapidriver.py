@@ -34,7 +34,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         response_validation: ValidationLevel = ValidationLevel.WARN,
         disable_server_validation: bool = True,
         mappings_path: str | Path = "",
-        invalid_property_default_response: int = 422,
+        invalid_data_default_response: int = 422,
         default_id_property_name: str = "id",
         faker_locale: str | list[str] = "",
         require_body_for_invalid_url: bool = False,
@@ -64,7 +64,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
             response_validation=response_validation,
             disable_server_validation=disable_server_validation,
             mappings_path=mappings_path,
-            invalid_property_default_response=invalid_property_default_response,
+            invalid_data_default_response=invalid_data_default_response,
             default_id_property_name=default_id_property_name,
             faker_locale=faker_locale,
             require_body_for_invalid_url=require_body_for_invalid_url,
@@ -84,7 +84,7 @@ class OpenApiDriver(OpenApiExecutors, DataDriver):
         read_paths_method = self.read_paths
         DataDriver.__init__(
             self,
-            reader_class=OpenApiReader,
+            reader_class=OpenApiReader,  # type: ignore[arg-type]
             read_paths_method=read_paths_method,
             included_paths=included_paths,
             ignored_paths=ignored_paths,

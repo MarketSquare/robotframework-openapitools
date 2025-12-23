@@ -13,12 +13,15 @@ ${ORIGIN}       http://localhost:8000
 
 *** Test Cases ***
 Test Get Json Data With Conflict Raises For No UniquePropertyValueConstraint
+    # No mapping for /wagegroups GET will yield a default relations_mapping on the request_data
+    ${request_data}=    Get Request Data    path=/wagegroups    method=get
     ${url}=    Get Valid Url    path=/wagegroups
     Run Keyword And Expect Error    ValueError: No UniquePropertyValueConstraint*
     ...    Get Json Data With Conflict
     ...    url=${url}
     ...    method=post
-    ...    dto=${DEFAULT_DTO()}
+    ...    json_data=&{EMPTY}
+    ...    relations_mapping=${request_data.relations_mapping}
     ...    conflict_status_code=418
 
 Test Get Json Data With Conflict For Post Request
@@ -27,7 +30,8 @@ Test Get Json Data With Conflict For Post Request
     ${invalid_data}=    Get Json Data With Conflict
     ...    url=${url}
     ...    method=post
-    ...    dto=${request_data.dto}
+    ...    json_data=${request_data.valid_data}
+    ...    relations_mapping=${request_data.relations_mapping}
     ...    conflict_status_code=418
     Should Not Be Empty    ${invalid_data}
 
@@ -37,7 +41,8 @@ Test Get Json Data With Conflict For Put Request
     ${invalid_json}=    Get Json Data With Conflict
     ...    url=${url}
     ...    method=put
-    ...    dto=${request_data.dto}
+    ...    json_data=${request_data.valid_data}
+    ...    relations_mapping=${request_data.relations_mapping}
     ...    conflict_status_code=418
     ${response}=    Authorized Request
     ...    url=${url}    method=put    json_data=${invalid_json}
@@ -49,7 +54,7 @@ Test Get Json Data With Conflict For Put Request
 #    ${invalid_json}=    Get Json Data With Conflict
 #    ...    url=${url}
 #    ...    method=put
-#    ...    dto=${request_data.dto}
+#    ...    relations_mapping=${request_data.relations_mapping}
 #    ...    conflict_status_code=418
 #    ${response}=    Authorized Request
 #    ...    url=${url}    method=put    json_data=${invalid_json}

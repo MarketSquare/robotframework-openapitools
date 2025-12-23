@@ -12,7 +12,7 @@ ${ORIGIN}       http://localhost:8000
 
 
 *** Test Cases ***
-Test Bool Response
+Test Boolean Response
     ${url}=    Get Valid Url    path=/employees/{employee_id}
     ${request_data}=    Get Request Data    path=/employees/{employee_id}    method=patch
     ${response}=    Authorized Request
@@ -20,6 +20,6 @@ Test Bool Response
     ...    method=patch
     ...    params=${request_data.params}
     ...    headers=${request_data.headers}
-    ...    json_data=${request_data.dto.as_dict()}
+    ...    json_data=${request_data.valid_data}
 
     Validate Response    path=/employees/{employee_id}    response=${response}

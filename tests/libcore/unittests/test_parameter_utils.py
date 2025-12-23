@@ -1,7 +1,7 @@
 # pylint: disable="missing-class-docstring", "missing-function-docstring"
 import unittest
 
-from OpenApiLibCore.parameter_utils import (
+from OpenApiLibCore.utils.parameter_utils import (
     get_oas_name_from_safe_name,
     get_safe_name_for_oas_name,
 )

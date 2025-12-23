@@ -170,7 +170,7 @@ by Response validation.
 <h3>mappings_path</h3>
 See the Advanced Use tab for an in-depth explanation.
 
-<h3>invalid_property_default_response</h3>
+<h3>invalid_data_default_response</h3>
 The default response code for requests with a JSON body that does not comply
 with the schema.
 Example: a value outside the specified range or a string value
@@ -498,10 +498,10 @@ The (almost) bare minimum implementation of a mappings.py file looks like this:
 <div class="code-block"><pre><code class="language-python">
 from OpenApiLibCore import (
     IGNORE,
-    Dto,
     IdDependency,
     IdReference,
     PathPropertiesConstraint,
+    RelationsMapping,
     PropertyValueConstraint,
     UniquePropertyValueConstraint,
 )
@@ -512,7 +512,7 @@ ID_MAPPING = {
 }
 
 
-class MyDtoThatDoesNothing(Dto):
+class MyMappingThatDoesNothing(RelationsMapping):
     @staticmethod
     def get_relations():
         relations = []
@@ -529,13 +529,13 @@ class MyDtoThatDoesNothing(Dto):
         return relations
 
 
-DTO_MAPPING = {
-    ("/myspecialpath", "post"): MyDtoThatDoesNothing
+RELATIONS_MAPPING = {
+    ("/myspecialpath", "post"): MyMappingThatDoesNothing
 }
 
 
 PATH_MAPPING = {
-    "/mypathwithexternalid/{external_id}": MyDtoThatDoesNothing
+    "/mypathwithexternalid/{external_id}": MyMappingThatDoesNothing
 }
 
 </code></pre></div>
@@ -547,13 +547,13 @@ There are 5 main parts in this mappings file:
 Here the classes needed to implement custom mappings are imported.
 This section can just be copied without changes.</li>
 <li>The <code class="language-python">ID_MAPPING</code> "constant" definition / assignment.</li>
-<li>The section defining the mapping Dtos. More on this later.</li>
-<li>The <code class="language-python">DTO_MAPPING</code> "constant" definition / assignment.</li>
+<li>The section defining the RelationsMappings. More on this later.</li>
+<li>The <code class="language-python">RELATIONS_MAPPING</code> "constant" definition / assignment.</li>
 <li>The <code class="language-python">PATH_MAPPING</code> "constant" definition / assignment.</li>
 </ol>
 
-<h2>The ID_MAPPING, DTO_MAPPING and PATH_MAPPING</h2>
-When a custom mappings file is used, the OpenApiLibCore will attempt to import it and then import <code>DTO_MAPPING</code>, <code>PATH_MAPPING</code> and <code>ID_MAPPING</code> from it.
+<h2>The ID_MAPPING, RELATIONS_MAPPING and PATH_MAPPING</h2>
+When a custom mappings file is used, the OpenApiLibCore will attempt to import it and then import <code>RELATIONS_MAPPING</code>, <code>PATH_MAPPING</code> and <code>ID_MAPPING</code> from it.
 For this reason, the exact same name must be used in a custom mappings file (capitilization matters).
 
 <h3>The ID_MAPPING</h3>
@@ -575,18 +575,18 @@ ID_MAPPING = {
 
 </code></pre></div>
 
-<h3>The DTO_MAPPING</h3>
-The <code>DTO_MAPPING</code> is a dictionary with a tuple as its key and a mappings Dto as its value.
+<h3>The RELATIONS_MAPPING</h3>
+The <code>RELATIONS_MAPPING</code> is a dictionary with a tuple as its key and a RelationsMapping as its value.
 The tuple must be in the form <code class="language-python">("path_from_the_paths_section", "method_supported_by_the_path")</code>.
 The <code class="language-python">path_from_the_paths_section</code> must be exactly as found in the openapi document.
 The <code class="language-python">method_supported_by_the_path</code> must be one of the methods supported by the path and must be in lowercase.
 
 <h3>The PATH_MAPPING</h3>
-The <code>PATH_MAPPING</code> is a dictionary with a <code>"path_from_the_paths_section"</code> as its key and a mappings Dto as its value.
+The <code>PATH_MAPPING</code> is a dictionary with a <code>"path_from_the_paths_section"</code> as its key and a RelationsMapping as its value.
 The <code>path_from_the_paths_section</code> must be exactly as found in the openapi document.
 
 
-<h2>Dto mapping classes</h2>
+<h2>RelationsMapping classes</h2>
 As can be seen from the import section above, a number of classes are available to deal with relations between resources and / or constraints on properties.
 Each of these classes is designed to handle a relation or constraint commonly seen in REST APIs.
 
@@ -611,7 +611,7 @@ Since a typical REST API generates this <code>id</code> for a new resource and r
 This relation can be implemented as follows:
 
 <div class="code-block"><pre><code class="language-python">
-class EmployeeDto(Dto):
+class EmployeeMapping(RelationsMapping):
     @staticmethod
     def get_relations():
         relations = [
@@ -623,8 +623,8 @@ class EmployeeDto(Dto):
         ]
         return relations
 
-DTO_MAPPING = {
-    ("/employees", "post"): EmployeeDto
+RELATIONS_MAPPING = {
+    ("/employees", "post"): EmployeeMapping
 }
 
 </code></pre></div>
@@ -655,7 +655,7 @@ This <code>error_code</code> should be described as one of the <code>responses</
 To verify that the specified <code>error_code</code> indeed occurs when attempting to <code>delete</code> the Wagegroup, we can implement the following dependency:
 
 <div class="code-block"><pre><code class="language-python">
-class WagegroupDto(Dto):
+class WagegroupMapping(RelationsMapping):
     @staticmethod
     def get_relations():
         relations = [
@@ -667,8 +667,8 @@ class WagegroupDto(Dto):
         ]
         return relations
 
-DTO_MAPPING = {
-    ("/wagegroups/{wagegroup_id}", "delete"): WagegroupDto
+RELATIONS_MAPPING = {
+    ("/wagegroups/{wagegroup_id}", "delete"): WagegroupMapping
 }
 
 </code></pre></div>
@@ -687,7 +687,7 @@ When a number is chosen that is already in use, the API should return the <code>
 To verify that the specified <code>error_code</code> occurs when attempting to <code>post</code> an Employee with an <code>employee_number</code> that is already in use, we can implement the following dependency:
 
 <div class="code-block"><pre><code class="language-python">
-class EmployeeDto(Dto):
+class EmployeeMapping(RelationsMapping):
     @staticmethod
     def get_relations():
         relations = [
@@ -699,15 +699,15 @@ class EmployeeDto(Dto):
         ]
         return relations
 
-DTO_MAPPING = {
-    ("/employees", "post"): EmployeeDto,
-    ("/employees/${employee_id}", "put"): EmployeeDto,
-    ("/employees/${employee_id}", "patch"): EmployeeDto,
+RELATIONS_MAPPING = {
+    ("/employees", "post"): EmployeeMapping,
+    ("/employees/${employee_id}", "put"): EmployeeMapping,
+    ("/employees/${employee_id}", "patch"): EmployeeMapping,
 }
 
 </code></pre></div>
 
-Note how this example reuses the <code>EmployeeDto</code> to model the uniqueness constraint for all the operations (<code>post</code>, <code>put</code> and <code>patch</code>) that all relate to the same <code>employee_number</code>.
+Note how this example reuses the <code>EmployeeMapping</code> to model the uniqueness constraint for all the operations (<code>post</code>, <code>put</code> and <code>patch</code>) that all relate to the same <code>employee_number</code>.
 
 <hr>
 
@@ -721,7 +721,7 @@ In our example, the <code>date_of_birth</code> must be a string in a specific fo
 This type of constraint can be modeled as follows:
 
 <div class="code-block"><pre><code class="language-python">
-class EmployeeDto(Dto):
+class EmployeeMapping(RelationsMapping):
     @staticmethod
     def get_relations():
         relations = [
@@ -733,10 +733,10 @@ class EmployeeDto(Dto):
         ]
         return relations
 
-DTO_MAPPING = {
-    ("/employees", "post"): EmployeeDto,
-    ("/employees/${employee_id}", "put"): EmployeeDto,
-    ("/employees/${employee_id}", "patch"): EmployeeDto,
+RELATIONS_MAPPING = {
+    ("/employees", "post"): EmployeeMapping,
+    ("/employees/${employee_id}", "put"): EmployeeMapping,
+    ("/employees/${employee_id}", "patch"): EmployeeMapping,
 }
 
 </code></pre></div>
@@ -745,7 +745,7 @@ Now in addition, there could also be the restriction that the Employee must be 1
 To support additional restrictions like these, the <code class="language-python">PropertyValueConstraint</code> supports two additional properties: <code class="language-python">error_value</code> and <code class="language-python">invalid_value_error_code</code>:
 
 <div class="code-block"><pre><code class="language-python">
-class EmployeeDto(Dto):
+class EmployeeMapping(RelationsMapping):
     @staticmethod
     def get_relations():
         relations = [
@@ -759,10 +759,10 @@ class EmployeeDto(Dto):
         ]
         return relations
 
-DTO_MAPPING = {
-    ("/employees", "post"): EmployeeDto,
-    ("/employees/${employee_id}", "put"): EmployeeDto,
-    ("/employees/${employee_id}", "patch"): EmployeeDto,
+RELATIONS_MAPPING = {
+    ("/employees", "post"): EmployeeMapping,
+    ("/employees/${employee_id}", "put"): EmployeeMapping,
+    ("/employees/${employee_id}", "patch"): EmployeeMapping,
 }
 
 </code></pre></div>
@@ -774,7 +774,7 @@ This means that sending e.g. an invalid type of value will not result in the def
 This situation can be handled by use of the special <code class="language-python">IGNORE</code> value (see below for other uses):
 
 <div class="code-block"><pre><code class="language-python">
-class EmployeeDto(Dto):
+class EmployeeMapping(RelationsMapping):
     @staticmethod
     def get_relations():
         relations = [
@@ -788,10 +788,10 @@ class EmployeeDto(Dto):
         ]
         return relations
 
-DTO_MAPPING = {
-    ("/employees", "post"): EmployeeDto,
-    ("/employees/${employee_id}", "put"): EmployeeDto,
-    ("/employees/${employee_id}", "patch"): EmployeeDto,
+RELATIONS_MAPPING = {
+    ("/employees", "post"): EmployeeMapping,
+    ("/employees/${employee_id}", "put"): EmployeeMapping,
+    ("/employees/${employee_id}", "patch"): EmployeeMapping,
 }
 
 </code></pre></div>
@@ -804,7 +804,7 @@ Note that while this configuration will prevent failing test cases generated by 
 <blockquote><u>Just use this for the <code>path</code></u></blockquote>
 
 <blockquote><i>
-Note: The <code class="language-python">PathPropertiesConstraint</code> is only applicable to the <code class="language-python">get_path_relations</code> in a <code class="language-python">Dto</code> and only the <code class="language-python">PATH_MAPPING</code> uses the <code class="language-python">get_path_relations</code>.
+Note: The <code class="language-python">PathPropertiesConstraint</code> is only applicable to the <code class="language-python">get_path_relations</code> in a <code class="language-python">RelationsMapping</code> and only the <code class="language-python">PATH_MAPPING</code> uses the <code class="language-python">get_path_relations</code>.
 </i></blockquote>
 
 To be able to automatically perform endpoint validations, the OpenApiLibCore has to construct the <code>url</code> for the resource from the <code>path</code> as found in the openapi document.
@@ -824,7 +824,7 @@ Imagine we want to extend the API from our example with an endpoint that returns
 It should be clear that the OpenApiLibCore won't be able to acquire a valid <code>month</code> and <code>date</code>. The <code class="language-python">PathPropertiesConstraint</code> can be used in this case:
 
 <div class="code-block"><pre><code class="language-python">
-class BirthdaysDto(Dto):
+class BirthdaysMapping(RelationsMapping):
     @staticmethod
     def get_path_relations():
         relations = [
@@ -833,7 +833,7 @@ class BirthdaysDto(Dto):
         return relations
 
 PATH_MAPPING = {
-    "/birthdays/{month}/{date}": BirthdaysDto
+    "/birthdays/{month}/{date}": BirthdaysMapping
 }
 
 </code></pre></div>
@@ -853,7 +853,7 @@ The extension may not be limited to a fixed pattern / range and if an address ha
 To prevent OpenApiLibCore from generating invalid combinations of path and query parameters in this type of endpoint, the <code class="language-python">IGNORE</code> special value can be used to ensure the related query parameter is never send in a request.
 
 <div class="code-block"><pre><code class="language-python">
-class EnergyLabelDto(Dto):
+class EnergyLabelMapping(RelationsMapping):
     @staticmethod
     def get_parameter_relations():
         relations = [
@@ -872,8 +872,8 @@ class EnergyLabelDto(Dto):
         ]
         return relations
 
-DTO_MAPPING = {
-    ("/energy_label/{zipcode}/{home_number}", "get"): EnergyLabelDto,
+RELATIONS_MAPPING = {
+    ("/energy_label/{zipcode}/{home_number}", "get"): EnergyLabelMapping,
 }
 
 </code></pre></div>
@@ -886,7 +886,7 @@ Another use case for <code>IGNORE</code> is in situations where a certain <code>
 Such situations can be handled by a mapping as shown below:
 </p>
 <div class="code-block"><pre><code class="language-python">
-class PatchEmployeeDto(Dto):
+class PatchEmployeeMapping(RelationsMapping):
     @staticmethod
     def get_parameter_relations() -> list[ResourceRelation]:
         relations: list[ResourceRelation] = [
@@ -905,8 +905,8 @@ class PatchEmployeeDto(Dto):
         ]
         return relations
 
-DTO_MAPPING = {
-    ("/employees/{employee_id}", "patch"): PatchEmployeeDto,
+RELATIONS_MAPPING = {
+    ("/employees/{employee_id}", "patch"): PatchEmployeeMapping,
 }
 
 </code></pre></div>

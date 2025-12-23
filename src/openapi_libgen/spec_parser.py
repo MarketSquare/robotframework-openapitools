@@ -2,14 +2,14 @@ from string import Template
 from typing import Generator
 
 from openapi_libgen.parsing_utils import remove_unsafe_characters_from_string
-from OpenApiLibCore.models import (
+from OpenApiLibCore.models.oas_models import (
     ObjectSchema,
     OpenApiObject,
     OperationObject,
     PathItemObject,
     SchemaObjectTypes,
 )
-from OpenApiLibCore.parameter_utils import get_safe_name_for_oas_name
+from OpenApiLibCore.utils.parameter_utils import get_safe_name_for_oas_name
 
 KEYWORD_TEMPLATE = r"""@keyword
     {signature}
@@ -47,7 +47,7 @@ def get_path_items(
     paths: dict[str, PathItemObject],
 ) -> Generator[OperationDetails, None, None]:
     for path, path_item_object in paths.items():
-        operations = path_item_object.get_operations()
+        operations = path_item_object.operations
         for method, operation_object in operations.items():
             operation_details = OperationDetails(
                 path=path,

@@ -1,7 +1,7 @@
 # pylint: disable="missing-class-docstring", "missing-function-docstring"
 import unittest
 
-from OpenApiLibCore import value_utils
+from OpenApiLibCore.data_generation import value_utils
 
 
 class TestTypeNameMappers(unittest.TestCase):

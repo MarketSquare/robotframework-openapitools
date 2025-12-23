@@ -6,15 +6,17 @@ The following classes and constants are exposed to be used by the library user:
 - IdDependency, IdReference, PathPropertiesConstraint, PropertyValueConstraint,
     UniquePropertyValueConstraint: Classes to be subclassed by the library user
     when implementing a custom mapping module (advanced use).
-- Dto, Relation: Base classes that can be used for type annotations.
+- RelationsMapping, Relation: Base classes that can be used for type annotations.
 - IGNORE: A special constant that can be used as a value in the PropertyValueConstraint.
 """
 
 from importlib.metadata import version
 
 from OpenApiDriver.openapidriver import OpenApiDriver
-from OpenApiLibCore.dto_base import (
-    Dto,
+from OpenApiLibCore.data_relations.relations_base import RelationsMapping
+from OpenApiLibCore.keyword_logic.validation import ValidationLevel
+from OpenApiLibCore.models import IGNORE
+from OpenApiLibCore.models.resource_relations import (
     IdDependency,
     IdReference,
     PathPropertiesConstraint,
@@ -22,8 +24,6 @@ from OpenApiLibCore.dto_base import (
     ResourceRelation,
     UniquePropertyValueConstraint,
 )
-from OpenApiLibCore.validation import ValidationLevel
-from OpenApiLibCore.value_utils import IGNORE
 
 try:
     __version__ = version("robotframework-openapidriver")
@@ -33,12 +33,12 @@ except Exception:  # pragma: no cover pylint: disable=broad-exception-caught
 
 __all__ = [
     "IGNORE",
-    "Dto",
     "IdDependency",
     "IdReference",
     "OpenApiDriver",
     "PathPropertiesConstraint",
     "PropertyValueConstraint",
+    "RelationsMapping",
     "ResourceRelation",
     "UniquePropertyValueConstraint",
     "ValidationLevel",
