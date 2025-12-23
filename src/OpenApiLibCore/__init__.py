@@ -41,6 +41,7 @@ KEYWORD_NAMES = [
     "set_extra_headers",
     "get_request_values",
     "get_request_values_object",
+    "convert_request_values_to_dict",
     "get_request_data",
     "get_invalid_body_data",
     "get_invalidated_parameters",

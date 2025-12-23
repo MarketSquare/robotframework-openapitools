@@ -491,7 +491,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         return response
 
     @keyword
-    def perform_authorized_request(  # pylint: disable=too-many-arguments
+    def perform_authorized_request(
         self,
         request_values: RequestValues,
         data: Any = None,
@@ -538,6 +538,11 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
 
         See also the `Get Request Values` keyword.
         """
+        # RequestValues has methods that perform mutations on its values, so
+        # deepcopy to prevent mutation by reference.
+        params = deepcopy(params) if params else {}
+        headers = deepcopy(headers) if headers else {}
+        json_data = deepcopy(json_data)
         return RequestValues(
             url=url,
             method=method,
@@ -545,6 +550,19 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             headers=headers,
             json_data=json_data,
         )
+
+    @keyword
+    def convert_request_values_to_dict(
+        self, request_values: RequestValues
+    ) -> dict[str, JSON]:
+        """Convert a RequestValues object to a dictionary."""
+        return {
+            "url": request_values.url,
+            "method": request_values.method,
+            "params": request_values.params,
+            "headers": request_values.headers,
+            "json_data": request_values.json_data,
+        }
 
     # endregion
     # region: validation keywords
@@ -555,9 +573,9 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         status_code: int,
         url: str,
         method: str,
-        params: dict[str, JSON],
-        headers: dict[str, str],
-        json_data: JSON,
+        params: dict[str, JSON] = {},
+        headers: dict[str, str] = {},
+        json_data: JSON = None,
         original_data: Mapping[str, JSON] = default_json_mapping,
     ) -> None:
         """
@@ -567,6 +585,11 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         arguments where `Perform Validated Request` accepts a `RequestValues` object
         (see the `Get Request Values` keyword for details).
         """
+        # RequestValues has methods that perform mutations on its values, so
+        # deepcopy to prevent mutation by reference.
+        params = deepcopy(params) if params else {}
+        headers = deepcopy(headers) if headers else {}
+        json_data = deepcopy(json_data)
         request_values = RequestValues(
             url=url,
             method=method,

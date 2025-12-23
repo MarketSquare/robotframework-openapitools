@@ -8,6 +8,12 @@
     - The `Relations` still need to be reworked to align with this change.
 - Refactored retrieving / loading of the OpenAPI spec.
     - This closes [issue #93: SSL error even if cert / verify is set](https://github.com/MarketSquare/robotframework-openapitools/issues/93).
+- Added keywords to make it easier to work with the `RequestValues` object:
+    - `Get Request Values Object` can be used to create a `RequestValues` instance from pre-defined values (where `Get Request Values` generates all values automatically).
+    - `Perform Authorized Request` is functionally the same as exisiting `Authorized Request` keyword, but it accepts a `RequestValues` instance as argument.
+    - `Validated Request` is functionally the same as the existing `Perform Validated Request` keyword, but it accepts the data as separate arguments instead of the `RequestValues`.
+    - `Convert Request Values To Dict` can be used to get a (Python) dict represenation of a `RequestValues` object that can be used with e.g. the Collections keywords for working with dictionaries.
+    - Thise closes [issue #98: Add keywords to simplify using Authorized Request and Perform Validated Request](https://github.com/MarketSquare/robotframework-openapitools/issues/98).
 - Improved handling of `treat_as_mandatory` on a `PropertyValueConstraint`.
 - Added support for using `IGNORE` as `invalid_value` on a `PropertyValueConstraint`.
 
