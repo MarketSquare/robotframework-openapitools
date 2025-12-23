@@ -243,7 +243,12 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         method: str,
         overrides: Mapping[str, JSON] = default_json_mapping,
     ) -> RequestValues:
-        """Return an object with all (valid) request values needed to make a request."""
+        """
+        Return an object with all (valid) request values needed to make a request.
+
+        The `overrides` dictionary can be used to pass specific values for parameters
+        instead of having them be generated automatically.
+        """
         json_data: JSON = {}
 
         url = _run_keyword("get_valid_url", path)
@@ -454,15 +459,11 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         files: Any = None,
     ) -> Response:
         """
-        Perform a request using the security token or authentication set in the library.
+        See the `Perform Authorized Request` keyword.
 
-        `json_data`, `data` and `files` are passed to `requests.request`s `json`,
-        `data` and `files` parameters unaltered.
-        See the requests documentation for details:
-        https://requests.readthedocs.io/en/latest/api/#requests.request
-
-        > Note: provided username / password or auth objects take precedence over token
-            based security
+        The difference between these keywords is that this keyword accepts separate
+        arguments where `Perform Validated Request` accepts a `RequestValues` object
+        (see the `Get Request Values` keyword for details).
         """
         headers = deepcopy(headers) if headers else {}
         if self.extra_headers:
@@ -489,8 +490,97 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         logger.debug(f"Response text: {response.text}")
         return response
 
+    @keyword
+    def perform_authorized_request(  # pylint: disable=too-many-arguments
+        self,
+        request_values: RequestValues,
+        data: Any = None,
+        files: Any = None,
+    ) -> Response:
+        """
+        Perform a request using the security token or authentication set in the library.
+
+        `json_data`, `data` and `files` are passed to `requests.request`s `json`,
+        `data` and `files` parameters unaltered.
+        See the requests documentation for details:
+        https://requests.readthedocs.io/en/latest/api/#requests.request
+
+        See also `Authorized Request` and `Get Request Values`.
+
+        > Note: provided username / password or auth objects take precedence over token
+            based security
+        """
+        return self.authorized_request(
+            url=request_values.url,
+            method=request_values.method,
+            params=request_values.params,
+            headers=request_values.headers,
+            json_data=request_values.json_data,
+            data=data,
+            files=files,
+        )
+
+    @keyword
+    def get_request_values_object(
+        self,
+        url: str,
+        method: str,
+        params: dict[str, JSON] = {},
+        headers: dict[str, str] = {},
+        json_data: JSON = None,
+    ) -> RequestValues:
+        """
+        This keyword can be used to instantiate a RequestValues object that can be used
+        with the `Perform Authorized Request` and `Perform Validated Request` keywords.
+
+        This is a utility keyword that can make certain test cases or keywords more
+        concise, but logging and debugging information will be more limited.
+
+        See also the `Get Request Values` keyword.
+        """
+        return RequestValues(
+            url=url,
+            method=method,
+            params=params,
+            headers=headers,
+            json_data=json_data,
+        )
+
     # endregion
     # region: validation keywords
+    @keyword
+    def validated_request(
+        self,
+        path: str,
+        status_code: int,
+        url: str,
+        method: str,
+        params: dict[str, JSON],
+        headers: dict[str, str],
+        json_data: JSON,
+        original_data: Mapping[str, JSON] = default_json_mapping,
+    ) -> None:
+        """
+        See the `Perform Validated Request` keyword.
+
+        The difference between these keywords is that this keyword accepts separate
+        arguments where `Perform Validated Request` accepts a `RequestValues` object
+        (see the `Get Request Values` keyword for details).
+        """
+        request_values = RequestValues(
+            url=url,
+            method=method,
+            params=params,
+            headers=headers,
+            json_data=json_data,
+        )
+        _validation.perform_validated_request(
+            path=path,
+            status_code=status_code,
+            request_values=request_values,
+            original_data=original_data,
+        )
+
     @keyword
     def perform_validated_request(
         self,
@@ -503,6 +593,8 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         This keyword first calls the Authorized Request keyword, then the Validate
         Response keyword and finally validates, for `DELETE` operations, whether
         the target resource was indeed deleted (OK response) or not (error responses).
+
+        See also `Validated Request` and `Get Request Values`.
         """
         _validation.perform_validated_request(
             path=path,
