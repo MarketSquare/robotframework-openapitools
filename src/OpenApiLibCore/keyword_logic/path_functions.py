@@ -149,7 +149,9 @@ def get_valid_id_for_path(
         request_data.get_required_properties_dict(),
     )
 
-    path_item = openapi_spec.paths[path]
+    # path can be partially resolved or provided by a PathPropertiesConstraint
+    parametrized_path = get_parametrized_path(path=path, openapi_spec=openapi_spec)
+    path_item = openapi_spec.paths[parametrized_path]
     id_property, id_transformer = path_item.id_mapper
 
     if not response.ok:
