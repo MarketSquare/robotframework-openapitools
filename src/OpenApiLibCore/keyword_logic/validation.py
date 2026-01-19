@@ -19,6 +19,7 @@ from robot.api.exceptions import Failure
 from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore.annotations import JSON
+from OpenApiLibCore.keyword_logic.path_functions import get_parametrized_path
 from OpenApiLibCore.models.oas_models import (
     OpenApiObject,
     ResponseObject,
@@ -419,7 +420,9 @@ def _get_response_object(
 ) -> ResponseObject:
     method = method.lower()
     status = str(status_code)
-    path_item = openapi_spec.paths[path]
+    # path can be partially resolved or provided by a PathPropertiesConstraint
+    spec_path = get_parametrized_path(path=path, openapi_spec=openapi_spec)
+    path_item = openapi_spec.paths[spec_path]
     path_operations = path_item.operations
     operation_data = path_operations.get(method)
     if operation_data is None:
