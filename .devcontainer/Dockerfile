@@ -36,5 +36,8 @@ RUN poetry self update
 # This is done to be compatible with how uv and PDM set up the venvs.
 RUN poetry config virtualenvs.in-project true
 
+# Ensure the latest pyright version is used within the container.
+ENV PYRIGHT_PYTHON_FORCE_VERSION="latest"
+
 EXPOSE 8888
 ENTRYPOINT ["/bin/sh"]
