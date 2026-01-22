@@ -119,6 +119,7 @@ def get_valid_url(
     if paths:
         url = f"{base_url}{choice(paths)}"
         return url
+
     path_parts = list(path.split("/"))
     for index, part in enumerate(path_parts):
         if part.startswith("{") and part.endswith("}"):
@@ -126,6 +127,7 @@ def get_valid_url(
             type_path = "/".join(type_path_parts)
             existing_id = _run_keyword("get_valid_id_for_path", type_path)
             path_parts[index] = str(existing_id)
+
     resolved_path = "/".join(path_parts)
     url = f"{base_url}{resolved_path}"
     return url
@@ -165,6 +167,16 @@ def get_valid_id_for_path(
                 f"Failed to get a valid id using GET on {url}"
             ) from exception
 
+    # If the response contains a Location header, the id can be extracted from the
+    # returned url
+    location_lower = response.headers.get("location")
+    location_upper = response.headers.get("Location")
+    new_resource_url = location_lower or location_upper
+    if new_resource_url:
+        # TODO: Check parametrized path for more precise extraction of id
+        new_id = new_resource_url.rsplit("/", maxsplit=1)[-1]
+        return id_transformer(new_id)
+
     response_data = response.json()
     if prepared_body := response.request.body:
         if isinstance(prepared_body, bytes):
@@ -181,10 +193,12 @@ def get_valid_id_for_path(
             f"received an array ({response_data})"
         )
 
-    # POST on /resource_type/{id}/array_item/ will return the updated {id} resource
-    # instead of a newly created resource. In this case, the send_json must be
-    # in the array of the 'array_item' property on {id}
+    # POST on /resource_type/{id}/array_item/ will often return the updated {id}
+    # resource instead of a newly created resource. In this case, the send_json must
+    # be in the array of the 'array_item' property on {id}
     send_path: str = response.request.path_url
+    # NOTE: href is technically an html attribute, but it's used in JSON API calls
+    # often enough that supporting this use case is warranted
     response_href: str = response_data.get("href", "")
     if response_href and (send_path not in response_href) and send_json:
         try:
