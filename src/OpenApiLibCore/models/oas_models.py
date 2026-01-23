@@ -1351,7 +1351,10 @@ class PathItemObject(BaseModel):
     description: str = ""
     parameters: list[ParameterObject] = []
     relations_mapping: RelationsMappingType | None = None
-    id_mapper: tuple[str, Callable[[str], str]] = (
+    id_mapper: (
+        tuple[str, Callable[[str], str]]
+        | tuple[Literal[""], Callable[[object], list[str]]]
+    ) = (
         "id",
         dummy_transformer,
     )

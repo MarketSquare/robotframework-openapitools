@@ -9,6 +9,7 @@ from random import choice
 from typing import Any, cast
 
 from robot.api import logger
+from robot.libraries.BuiltIn import BuiltIn
 
 import OpenApiLibCore.keyword_logic.path_functions as _path_functions
 from OpenApiLibCore.annotations import JSON
@@ -25,11 +26,14 @@ from OpenApiLibCore.models.oas_models import (
 )
 from OpenApiLibCore.models.request_data import RequestData
 from OpenApiLibCore.models.resource_relations import (
+    IdDependency,
     PropertyValueConstraint,
     ResourceRelation,
 )
 from OpenApiLibCore.protocols import RelationsMappingType
 from OpenApiLibCore.utils.parameter_utils import get_safe_name_for_oas_name
+
+run_keyword = BuiltIn().run_keyword
 
 
 def get_request_data(
@@ -238,6 +242,17 @@ def get_parameter_data(
         relations = [
             r for r in parameter_relations if r.property_name == parameter_name
         ]
+        if id_dependency_get_path_list := [
+            r.get_path for r in relations if isinstance(r, IdDependency)
+        ]:
+            id_dependency_get_path = id_dependency_get_path_list[0]
+            valid_id: str = run_keyword("get_valid_id_for_path", id_dependency_get_path)
+            logger.debug(
+                f"get_dependent_id for {id_dependency_get_path} returned {valid_id}"
+            )
+            result[parameter_name] = valid_id
+            continue
+
         if constrained_values := [
             r.values for r in relations if isinstance(r, PropertyValueConstraint)
         ]:
