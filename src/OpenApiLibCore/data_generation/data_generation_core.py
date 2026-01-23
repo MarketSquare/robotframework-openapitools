@@ -246,7 +246,7 @@ def get_parameter_data(
             r.get_path for r in relations if isinstance(r, IdDependency)
         ]:
             id_dependency_get_path = id_dependency_get_path_list[0]
-            valid_id: str = run_keyword("get_valid_id_for_path", id_dependency_get_path)
+            valid_id: str = run_keyword("get_valid_id_for_path", id_dependency_get_path)  # pyright: ignore[reportAssignmentType, reportArgumentType]
             logger.debug(
                 f"get_dependent_id for {id_dependency_get_path} returned {valid_id}"
             )
