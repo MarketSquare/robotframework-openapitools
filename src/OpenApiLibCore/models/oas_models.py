@@ -138,7 +138,7 @@ class SchemaBase(BaseModel, Generic[O], frozen=True):
 
     def attach_relations_mapping(self, relations_mapping: RelationsMappingType) -> None:
         # NOTE: https://github.com/pydantic/pydantic/issues/11495
-        self.__dict__["relations_mapping"] = relations_mapping
+        self.__dict__["relations_mapping"] = relations_mapping  # pyright: ignore[reportIndexIssue]
 
 
 class NullSchema(SchemaBase[None], frozen=True):
@@ -576,6 +576,17 @@ class ArraySchema(SchemaBase[list[AI]], frozen=True):
         self,
         operation_id: str | None = None,
     ) -> tuple[list[AI], ArraySchema[AI]]:
+        # A PropertyValueConstraint with empty property_name can be used to override
+        # the random generation. Only the first is considered if multiple are defined.
+        if relations := self.relations_mapping.get_relations():
+            non_property_constraints = [
+                r
+                for r in relations
+                if isinstance(r, PropertyValueConstraint) and not r.property_name
+            ]
+            valid_values = non_property_constraints[0].values
+            return choice(valid_values), self
+
         if self.const is not None:
             return self.const, self
 
@@ -661,6 +672,19 @@ class ArraySchema(SchemaBase[list[AI]], frozen=True):
             error_code=status_code
         )
         # TODO: handle relations applicable to arrays / lists
+
+        # A PropertyValueConstraint with empty property_name can be used to override
+        # the random generation. Only the first is considered if multiple are defined.
+        if relations := self.relations_mapping.get_relations():
+            non_property_constraints = [
+                r
+                for r in relations
+                if isinstance(r, PropertyValueConstraint)
+                and not r.property_name
+                and r.invalid_value_error_code == status_code
+            ]
+            invalid_value = non_property_constraints[0].invalid_value
+            invalid_values.append(invalid_value)
 
         if status_code == invalid_property_default_code:
             try:
@@ -1196,7 +1220,7 @@ class UnionTypeSchema(SchemaBase[JSON], frozen=True):
             for schema in self.anyOf + self.oneOf:
                 if isinstance(schema, RESOLVED_SCHEMA_CLASS_TUPLE):
                     if schema.nullable:
-                        schema.__dict__["nullable"] = False
+                        schema.__dict__["nullable"] = False  # pyright: ignore[reportIndexIssue]
                         null_schema = NullSchema()
                         null_schema.attach_relations_mapping(self.relations_mapping)
                         yield null_schema
@@ -1399,7 +1423,7 @@ def nullable_schema_to_union_schema(schema: SchemaObjectTypes) -> SchemaObjectTy
     if not schema.nullable:
         return schema
 
-    schema.__dict__["nullable"] = False
+    schema.__dict__["nullable"] = False  # pyright: ignore[reportIndexIssue]
     null_schema = NullSchema()
     null_schema.attach_relations_mapping(schema.relations_mapping)
     union_schema = UnionTypeSchema(oneOf=[schema, null_schema])
