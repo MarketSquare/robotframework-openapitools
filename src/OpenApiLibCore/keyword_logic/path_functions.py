@@ -160,8 +160,10 @@ def get_valid_id_for_path(
         # If a new resource cannot be created using POST, try to retrieve a
         # valid id using a GET request.
         try:
-            valid_id = choice(_run_keyword("get_ids_from_url", url))
-            return id_transformer(valid_id)
+            valid_ids = _run_keyword("get_ids_from_url", url)
+            valid_id = choice(valid_ids)
+            # If id_property is "", the result from get_ids_from_url is already valid
+            return id_transformer(valid_id) if id_property else valid_id
         except Exception as exception:
             raise AssertionError(
                 f"Failed to get a valid id using GET on {url}"
@@ -192,6 +194,12 @@ def get_valid_id_for_path(
             f"Unexpected response body for POST request: expected an object but "
             f"received an array ({response_data})"
         )
+
+    # if there is response_data and the id_property has no value, the transformer
+    # should return a list of valid ids
+    if response_data and not id_property:
+        valid_ids = id_transformer(response_data)
+        return choice(valid_ids)
 
     # POST on /resource_type/{id}/array_item/ will often return the updated {id}
     # resource instead of a newly created resource. In this case, the send_json must
@@ -242,7 +250,11 @@ def get_ids_from_url(
 
     # determine the property name to use
     path_item = openapi_spec.paths[path]
-    id_property, _ = path_item.id_mapper
+    id_property, transformer = path_item.id_mapper
+
+    # if id_property has no value, the transformer should return a list of valid ids
+    if not id_property:
+        return transformer(response_data)
 
     if isinstance(response_data, list):
         valid_ids: list[str] = [item[id_property] for item in response_data]
