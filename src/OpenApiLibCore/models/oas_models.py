@@ -584,8 +584,9 @@ class ArraySchema(SchemaBase[list[AI]], frozen=True):
                 for r in relations
                 if isinstance(r, PropertyValueConstraint) and not r.property_name
             ]
-            valid_values = non_property_constraints[0].values
-            return choice(valid_values), self
+            if non_property_constraints:
+                valid_values = non_property_constraints[0].values
+                return choice(valid_values), self
 
         if self.const is not None:
             return self.const, self
@@ -683,8 +684,9 @@ class ArraySchema(SchemaBase[list[AI]], frozen=True):
                 and not r.property_name
                 and r.invalid_value_error_code == status_code
             ]
-            invalid_value = non_property_constraints[0].invalid_value
-            invalid_values.append(invalid_value)
+            if non_property_constraints:
+                invalid_value = non_property_constraints[0].invalid_value
+                invalid_values.append(invalid_value)
 
         if status_code == invalid_property_default_code:
             try:
