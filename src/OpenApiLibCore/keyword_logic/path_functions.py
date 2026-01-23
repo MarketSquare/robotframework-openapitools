@@ -195,6 +195,12 @@ def get_valid_id_for_path(
             f"received an array ({response_data})"
         )
 
+    # if there is response_data and the id_property has no value, the transformer
+    # should return a list of valid ids
+    if response_data and not id_property:
+        valid_ids = id_transformer(response_data)
+        return choice(valid_ids)
+
     # POST on /resource_type/{id}/array_item/ will often return the updated {id}
     # resource instead of a newly created resource. In this case, the send_json must
     # be in the array of the 'array_item' property on {id}
