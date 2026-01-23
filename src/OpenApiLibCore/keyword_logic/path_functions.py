@@ -163,7 +163,7 @@ def get_valid_id_for_path(
             valid_ids = _run_keyword("get_ids_from_url", url)
             valid_id = choice(valid_ids)
             # If id_property is "", the result from get_ids_from_url is already valid
-            return id_transformer(valid_id) if id_property else valid_id
+            return id_transformer(valid_id) if id_property else valid_id  # type: ignore[return-value]
         except Exception as exception:
             raise AssertionError(
                 f"Failed to get a valid id using GET on {url}"
@@ -177,7 +177,7 @@ def get_valid_id_for_path(
     if new_resource_url:
         # TODO: Check parametrized path for more precise extraction of id
         new_id = new_resource_url.rsplit("/", maxsplit=1)[-1]
-        return id_transformer(new_id)
+        return id_transformer(new_id)  # type: ignore[return-value]
 
     response_data = response.json()
     if prepared_body := response.request.body:
@@ -198,7 +198,7 @@ def get_valid_id_for_path(
     # if there is response_data and the id_property has no value, the transformer
     # should return a list of valid ids
     if response_data and not id_property:
-        valid_ids = id_transformer(response_data)
+        valid_ids = id_transformer(response_data)  # type: ignore[assignment]
         return choice(valid_ids)
 
     # POST on /resource_type/{id}/array_item/ will often return the updated {id}
@@ -229,7 +229,7 @@ def get_valid_id_for_path(
             raise AssertionError(
                 f"Failed to get a valid id from {response_data}"
             ) from None
-    return id_transformer(valid_id)
+    return id_transformer(valid_id)  # type: ignore[return-value]
 
 
 def get_ids_from_url(
@@ -254,7 +254,7 @@ def get_ids_from_url(
 
     # if id_property has no value, the transformer should return a list of valid ids
     if not id_property:
-        return transformer(response_data)
+        return transformer(response_data)  # type: ignore[arg-type, return-value]
 
     if isinstance(response_data, list):
         valid_ids: list[str] = [item[id_property] for item in response_data]
