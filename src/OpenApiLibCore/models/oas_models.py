@@ -847,6 +847,17 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
                 operation_id=operation_id,
             )
         ) is not None:
+            if isinstance(property_schema, ArraySchema):
+                min_items = property_schema.minItems or 1
+                result = [dependent_id]
+                while len(result) < min_items:
+                    dependent_id = get_dependent_id(
+                        relations_mapping=self.relations_mapping,
+                        property_name=property_name,
+                        operation_id=operation_id,
+                    )
+                    result.append(dependent_id)  # type: ignore[arg-type]
+                return result  # type: ignore[return-value]
             return dependent_id
 
         # Relations are mapped to endpoints; they are not attached to the property
