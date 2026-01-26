@@ -115,7 +115,7 @@ def get_valid_url(
 
     relations_mapping = path_item.relations_mapping
     relations = relations_mapping.get_path_relations() if relations_mapping else []
-    paths = [p.path for p in relations]
+    paths = [p.path for p in relations if p.path]
     if paths:
         url = f"{base_url}{choice(paths)}"
         return url
