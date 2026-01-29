@@ -126,13 +126,14 @@ class SchemaBase(BaseModel, Generic[O], frozen=True):
             pass
 
         # No value constraints or min / max ranges to violate, so change the data type
-        if value_type == "string":
-            # Since int / float / bool can always be cast to sting, change
-            # the string to a nested object.
-            # An array gets exploded in query strings, "null" is then often invalid
-            invalid_values.append([{"invalid": [None, False]}, "null", None, True])
-        else:
-            invalid_values.append(FAKE.uuid())
+        if not invalid_values:
+            if value_type == "string":
+                # Since int / float / bool can always be cast to sting, change
+                # the string to a nested object.
+                # An array gets exploded in query strings, "null" is then often invalid
+                invalid_values.append([{"invalid": [None, False]}, "null", None, True])
+            else:
+                invalid_values.append(FAKE.uuid())
 
         return choice(invalid_values)
 
