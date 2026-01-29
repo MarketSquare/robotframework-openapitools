@@ -743,7 +743,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             try:
                 operation_item = getattr(spec_model.paths[path], operation.lower())
                 operation_item.relations_mapping = data_relations
-            except KeyError:
+            except (KeyError, AttributeError):
                 logger.warn(
                     f"The RELATIONS_MAPPING contains a path that is not found in the OpenAPI spec: {path}"
                 )
