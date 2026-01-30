@@ -586,8 +586,18 @@ class ArraySchema(SchemaBase[list[AI]], frozen=True):
                 if isinstance(r, PropertyValueConstraint) and not r.property_name
             ]
             if non_property_constraints:
-                valid_values = non_property_constraints[0].values
-                return choice(valid_values), self
+                constrained_values = non_property_constraints[0].values
+                # If the .values is IGNORE, regular generation of a valid value should
+                # be used; the PropertyValueConstraint only applies to invalid values.
+                if not isinstance(constrained_values, Ignore):
+                    constrained_value = choice(constrained_values)
+                    if isinstance(constrained_value, type):
+                        # Attach the nested relation to the items schema and continue
+                        # with normal generation of values to ensure min/max constraints
+                        # are take into account.
+                        self.items.attach_relations_mapping(constrained_value)
+                    else:
+                        return constrained_value, self
 
         if self.const is not None:
             return self.const, self
@@ -876,6 +886,7 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
             if (
                 isinstance(c, PropertyValueConstraint)
                 and c.property_name == property_name
+                and not isinstance(c.values, Ignore)
             )
         ]
         # values should be empty or contain 1 list of allowed values
@@ -1013,6 +1024,7 @@ class ObjectSchema(SchemaBase[dict[str, JSON]], frozen=True):
             for r in relations
             if isinstance(r, PropertyValueConstraint)
             and r.property_name == property_name
+            and not isinstance(r.values, Ignore)
         ]
 
         invalid_value = value_schema.get_invalid_value(

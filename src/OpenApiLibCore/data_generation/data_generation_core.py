@@ -14,7 +14,7 @@ from robot.libraries.BuiltIn import BuiltIn
 import OpenApiLibCore.keyword_logic.path_functions as _path_functions
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.data_relations.relations_base import RelationsMapping
-from OpenApiLibCore.models import IGNORE
+from OpenApiLibCore.models import Ignore
 from OpenApiLibCore.models.oas_models import (
     ArraySchema,
     ObjectSchema,
@@ -254,12 +254,20 @@ def get_parameter_data(
             continue
 
         if constrained_values := [
-            r.values for r in relations if isinstance(r, PropertyValueConstraint)
+            r.values
+            for r in relations
+            if isinstance(r, PropertyValueConstraint)
+            and not isinstance(r.values, Ignore)
         ]:
             values_to_choose_from = list(chain.from_iterable(constrained_values))
             value = choice(values_to_choose_from)
-            if value is IGNORE:
+
+            if isinstance(value, Ignore):
                 continue
+            # Handle nested ResourceRelation mappings
+            if isinstance(value, type) and parameter.schema_:
+                parameter.schema_.attach_relations_mapping(value)
+                value = parameter.schema_.get_valid_value()[0]
             result[parameter_name] = value
             continue
 

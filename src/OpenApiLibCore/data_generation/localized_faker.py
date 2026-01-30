@@ -83,7 +83,7 @@ class LocalizedFaker:
     @property
     def description(self) -> Callable[[], str]:
         return self.fake.paragraph
-    
+
     @property
     def title(self) -> Callable[[], str]:
         return self.fake.sentence

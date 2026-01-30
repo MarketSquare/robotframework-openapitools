@@ -2,6 +2,8 @@ from abc import ABC
 from dataclasses import dataclass
 from typing import Any
 
+from OpenApiLibCore.models import Ignore
+
 NOT_SET = object()
 
 
@@ -28,7 +30,7 @@ class PropertyValueConstraint(ResourceRelation):
     """The allowed values for property_name."""
 
     property_name: str
-    values: list[Any]
+    values: list[Any] | Ignore
     invalid_value: Any = NOT_SET
     invalid_value_error_code: int = 422
     error_code: int = 422
