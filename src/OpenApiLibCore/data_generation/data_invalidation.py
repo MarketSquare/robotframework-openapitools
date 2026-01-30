@@ -13,7 +13,7 @@ from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.data_relations.relations_base import RelationsMapping
-from OpenApiLibCore.models import IGNORE
+from OpenApiLibCore.models import Ignore
 from OpenApiLibCore.models.oas_models import (
     ArraySchema,
     ObjectSchema,
@@ -157,7 +157,8 @@ def get_invalidated_parameters(
     parameters_to_ignore = {
         r.property_name
         for r in relations_for_status_code
-        if r.invalid_value_error_code == status_code and r.invalid_value == IGNORE
+        if r.invalid_value_error_code == status_code
+        and isinstance(r.invalid_value, Ignore)
     }
     relation_property_names = {r.property_name for r in relations_for_status_code}
     if not relation_property_names:
@@ -239,6 +240,7 @@ def get_invalidated_parameters(
             r.values
             for r in relations_for_status_code
             if r.property_name == parameter_to_invalidate
+            and not isinstance(r.values, Ignore)
         ]
     except ValueError:
         values_from_constraint = []
