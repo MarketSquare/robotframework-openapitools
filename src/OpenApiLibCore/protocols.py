@@ -37,7 +37,7 @@ class IGetIdPropertyName(Protocol):
     @property
     def id_mapping(
         self,
-    ) -> dict[str, str | tuple[str, Callable[[str], str]]]: ...
+    ) -> dict[str, str | tuple[str, Callable[[object], str]]]: ...
 
 
 class IRelationsMapping(Protocol):

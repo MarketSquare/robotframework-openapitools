@@ -1401,13 +1401,7 @@ class PathItemObject(BaseModel):
     description: str = ""
     parameters: list[ParameterObject] = []
     relations_mapping: RelationsMappingType | None = None
-    id_mapper: (
-        tuple[str, Callable[[str], str]]
-        | tuple[Literal[""], Callable[[object], list[str]]]
-    ) = (
-        "id",
-        dummy_transformer,
-    )
+    id_mapper: tuple[str, Callable[[Any], str]] = ("id", dummy_transformer)
 
     @property
     def operations(self) -> dict[str, OperationObject]:

@@ -8,6 +8,7 @@ from typing import Any, Literal, overload
 from requests import Response
 from robot.libraries.BuiltIn import BuiltIn
 
+from OpenApiLibCore.annotations import JSON
 from OpenApiLibCore.models import oas_models
 from OpenApiLibCore.models.request_data import RequestData
 
@@ -163,7 +164,7 @@ def get_valid_id_for_path(
             valid_ids = _run_keyword("get_ids_from_url", url)
             valid_id = choice(valid_ids)
             # If id_property is "", the result from get_ids_from_url is already valid
-            return id_transformer(valid_id) if id_property else valid_id  # type: ignore[return-value]
+            return id_transformer(valid_id) if id_property else valid_id
         except Exception as exception:
             raise AssertionError(
                 f"Failed to get a valid id using GET on {url}"
@@ -177,7 +178,7 @@ def get_valid_id_for_path(
     if new_resource_url:
         # TODO: Check parametrized path for more precise extraction of id
         new_id = new_resource_url.rsplit("/", maxsplit=1)[-1]
-        return id_transformer(new_id)  # type: ignore[return-value]
+        return id_transformer(new_id)
 
     response_data = response.json()
     if prepared_body := response.request.body:
@@ -196,10 +197,10 @@ def get_valid_id_for_path(
         )
 
     # if there is response_data and the id_property has no value, the transformer
-    # should return a list of valid ids
+    # should return a valid id
     if response_data and not id_property:
-        valid_ids = id_transformer(response_data)  # type: ignore[assignment]
-        return choice(valid_ids)
+        valid_id = id_transformer(response_data)
+        return valid_id
 
     # POST on /resource_type/{id}/array_item/ will often return the updated {id}
     # resource instead of a newly created resource. In this case, the send_json must
@@ -229,7 +230,7 @@ def get_valid_id_for_path(
             raise AssertionError(
                 f"Failed to get a valid id from {response_data}"
             ) from None
-    return id_transformer(valid_id)  # type: ignore[return-value]
+    return id_transformer(valid_id)
 
 
 def get_ids_from_url(
@@ -246,29 +247,58 @@ def get_ids_from_url(
         request_data.get_required_headers(),
     )
     response.raise_for_status()
-    response_data: dict[str, Any] | list[dict[str, Any]] = response.json()
+    response_data: JSON = response.json()
 
     # determine the property name to use
     path_item = openapi_spec.paths[path]
     id_property, transformer = path_item.id_mapper
 
-    # if id_property has no value, the transformer should return a list of valid ids
+    valid_ids: list[str] = []
+
+    # If id_property has no value, the transformer should accept any data and return
+    # a string value for the valid id for the give data.
     if not id_property:
-        return transformer(response_data)  # type: ignore[arg-type, return-value]
+        if isinstance(response_data, list):
+            for data_item in response_data:
+                valid_id = transformer(data_item)
+                valid_ids.append(valid_id)
+        else:
+            valid_id = transformer(response_data)
+            valid_ids.append(valid_id)
+        return valid_ids
 
     if isinstance(response_data, list):
-        valid_ids: list[str] = [item[id_property] for item in response_data]
+        for data_item in response_data:
+            if isinstance(data_item, dict):
+                if valid_id := data_item.get(id_property):  # type: ignore[assignment]
+                    valid_ids.append(valid_id)
         return valid_ids
+
+    if not isinstance(response_data, dict):
+        return []
+
     # if the response is an object (dict), check if it's hal+json
     if embedded := response_data.get("_embedded"):
-        # there should be 1 item in the dict that has a value that's a list
-        for value in embedded.values():
-            if isinstance(value, list):
-                valid_ids = [item[id_property] for item in value]
-                return valid_ids
-    if (valid_id := response_data.get(id_property)) is not None:
+        if isinstance(embedded, dict):
+            # there should be 1 item in the dict that has a value that's a list
+            for value in embedded.values():
+                if isinstance(value, list):
+                    for item in value:
+                        if isinstance(item, dict):
+                            if valid_id := item.get(id_property):  # type: ignore[assignment]
+                                valid_ids.append(valid_id)
+                    return valid_ids
+
+    if (valid_id := response_data.get(id_property)) is not None:  # type: ignore[assignment]
         return [valid_id]
-    valid_ids = [item[id_property] for item in response_data["items"]]
+
+    if items := response_data.get("items"):
+        if isinstance(items, list):
+            for item in items:
+                if isinstance(item, dict):
+                    if valid_id := item.get(id_property):  # type: ignore[assignment]
+                        valid_ids.append(valid_id)
+
     return valid_ids
 
 

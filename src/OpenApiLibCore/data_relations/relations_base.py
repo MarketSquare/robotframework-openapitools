@@ -7,7 +7,7 @@ test and constraints / restrictions on properties of the resources.
 from abc import ABC
 from dataclasses import dataclass
 from importlib import import_module
-from typing import Callable
+from typing import Any, Callable
 
 from robot.api import logger
 
@@ -123,16 +123,15 @@ class GetIdPropertyName:
         self.default_id_property_name = default_id_property_name
         try:
             mappings_module = import_module(mappings_module_name)
-            self.id_mapping: dict[
-                str,
-                str | tuple[str, Callable[[str], str]],
-            ] = mappings_module.ID_MAPPING
+            self.id_mapping: dict[str, str | tuple[str, Callable[[Any], str]]] = (
+                mappings_module.ID_MAPPING
+            )
         except (ImportError, AttributeError, ValueError) as exception:
             if mappings_module_name != "no mapping":
                 logger.error(f"ID_MAPPING was not imported: {exception}")
             self.id_mapping = {}
 
-    def __call__(self, path: str) -> tuple[str, Callable[[str], str]]:
+    def __call__(self, path: str) -> tuple[str, Callable[[Any], str]]:
         try:
             value_or_mapping = self.id_mapping[path]
             if isinstance(value_or_mapping, str):
