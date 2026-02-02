@@ -52,6 +52,11 @@ class IRelationsMapping(Protocol):
     @staticmethod
     def get_path_relations() -> list[PathPropertiesConstraint]: ...
 
+    @classmethod
+    def get_path_relations_for_error_code(
+        cls, error_code: int
+    ) -> list[ResourceRelation]: ...
+
     @staticmethod
     def get_parameter_relations() -> list[ResourceRelation]: ...
 

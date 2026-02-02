@@ -32,6 +32,22 @@ class RelationsMapping(ABC):
         """Return the list of path-related Relations."""
         return []
 
+    @classmethod
+    def get_path_relations_for_error_code(
+        cls, error_code: int
+    ) -> list[ResourceRelation]:
+        """Return the list of Relations associated with the given error_code."""
+        relations: list[ResourceRelation] = [
+            r
+            for r in cls.get_path_relations()
+            if r.error_code == error_code
+            or (
+                getattr(r, "invalid_value_error_code", None) == error_code
+                and getattr(r, "invalid_value", None) != NOT_SET
+            )
+        ]
+        return relations
+
     @staticmethod
     def get_parameter_relations() -> list[ResourceRelation]:
         """Return the list of Relations for the header and query parameters."""
