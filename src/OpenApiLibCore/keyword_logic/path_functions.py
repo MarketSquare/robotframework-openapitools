@@ -9,7 +9,7 @@ from requests import Response
 from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore.annotations import JSON
-from OpenApiLibCore.models import oas_models
+from OpenApiLibCore.models import Ignore, oas_models
 from OpenApiLibCore.models.request_data import RequestData
 
 run_keyword = BuiltIn().run_keyword
@@ -261,7 +261,8 @@ def get_ids_from_url(
         if isinstance(response_data, list):
             for data_item in response_data:
                 valid_id = transformer(data_item)
-                valid_ids.append(valid_id)
+                if not isinstance(valid_id, Ignore):
+                    valid_ids.append(valid_id)
         else:
             valid_id = transformer(response_data)
             valid_ids.append(valid_id)

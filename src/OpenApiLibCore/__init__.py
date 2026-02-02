@@ -15,7 +15,7 @@ from importlib.metadata import version
 
 from OpenApiLibCore.data_relations.relations_base import RelationsMapping
 from OpenApiLibCore.keyword_logic.validation import ValidationLevel
-from OpenApiLibCore.models import IGNORE, UNSET
+from OpenApiLibCore.models import IGNORE, UNSET, Ignore
 from OpenApiLibCore.models.request_data import RequestData, RequestValues
 from OpenApiLibCore.models.resource_relations import (
     IdDependency,
@@ -68,6 +68,7 @@ __all__ = [
     "UNSET",
     "IdDependency",
     "IdReference",
+    "Ignore",
     "OpenApiLibCore",
     "PathPropertiesConstraint",
     "PropertyValueConstraint",

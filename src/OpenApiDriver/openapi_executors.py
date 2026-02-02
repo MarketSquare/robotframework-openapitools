@@ -249,28 +249,31 @@ class OpenApiExecutors(OpenApiLibCore):
         if status_code >= int(HTTPStatus.BAD_REQUEST):
             invalidation_keywords: list[str] = []
 
-            if request_data.relations_mapping.get_body_relations_for_error_code(
-                status_code
-            ):
+            mapping = request_data.relations_mapping
+            if mapping.get_body_relations_for_error_code(status_code):
                 invalidation_keywords.append("get_invalid_body_data")
-            if request_data.relations_mapping.get_parameter_relations_for_error_code(
-                status_code
-            ):
+            if mapping.get_parameter_relations_for_error_code(status_code):
                 invalidation_keywords.append("get_invalidated_parameters")
+            if mapping.get_path_relations_for_error_code(status_code):
+                invalidation_keywords.append("get_invalidated_url")
+
             if invalidation_keywords:
-                invalidation_keyword = choice(invalidation_keywords)
-                if invalidation_keyword == "get_invalid_body_data":
-                    json_data = _run_keyword(
-                        "get_invalid_body_data",
-                        url,
-                        method,
-                        status_code,
-                        request_data,
-                    )
-                else:
-                    params, headers = _run_keyword(
-                        "get_invalidated_parameters", status_code, request_data
-                    )
+                match choice(invalidation_keywords):
+                    case "get_invalid_body_data":
+                        json_data = _run_keyword(
+                            "get_invalid_body_data",
+                            url,
+                            method,
+                            status_code,
+                            request_data,
+                        )
+                    case "get_invalidated_parameters":
+                        params, headers = _run_keyword(
+                            "get_invalidated_parameters", status_code, request_data
+                        )
+                    case "get_invalidated_url":
+                        url = _run_keyword("get_invalidated_url", url, status_code)
+
             # if there are no relations to invalide and the status_code is the default
             # response_code for invalid properties, invalidate properties instead
             elif status_code == self.invalid_data_default_response:
