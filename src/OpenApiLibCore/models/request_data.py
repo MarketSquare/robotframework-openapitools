@@ -57,6 +57,7 @@ class RequestData:
 
     valid_data: JSON
     relations_mapping: RelationsMappingType
+    path_mapping: RelationsMappingType
     body_schema: ResolvedSchemaObjectTypes | None = None
     parameters: list[ParameterObject] = field(default_factory=list)
     params: dict[str, JSON] = field(default_factory=dict)

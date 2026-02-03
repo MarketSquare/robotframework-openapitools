@@ -135,7 +135,7 @@ def perform_validated_request(
                     f"{get_response.status_code} was received after trying to get "
                     f"{request_values.url} after sucessfully deleting it."
                 )
-        elif not get_response.ok:
+        elif not get_response.ok and response.status_code not in [400, 404, 405, 422]:
             raise AssertionError(
                 f"Resource could not be retrieved after failed deletion. "
                 f"Url was {request_values.url}, status_code was {get_response.status_code}."

@@ -1369,6 +1369,7 @@ class OperationObject(BaseModel):
     requestBody: RequestBodyObject | None = None
     responses: dict[str, ResponseObject] = {}
     relations_mapping: RelationsMappingType | None = None
+    path_mapping: RelationsMappingType | None = None
 
     def update_parameters(self, parameters: list[ParameterObject]) -> None:
         self.parameters.extend(parameters)
@@ -1382,6 +1383,9 @@ class OperationObject(BaseModel):
 
         for parameter_object in self.parameters:
             parameter_object.attach_relations_mapping(self.relations_mapping)
+
+    def attach_path_mappings(self, path_mapping: RelationsMappingType | None) -> None:
+        self.path_mapping = path_mapping
 
     def replace_nullable_with_union(self) -> None:
         if self.requestBody:
@@ -1401,6 +1405,7 @@ class PathItemObject(BaseModel):
     description: str = ""
     parameters: list[ParameterObject] = []
     relations_mapping: RelationsMappingType | None = None
+    path_mapping: RelationsMappingType | None = None
     id_mapper: tuple[str, Callable[[Any], str]] = ("id", dummy_transformer)
 
     @property
@@ -1420,6 +1425,7 @@ class PathItemObject(BaseModel):
     def attach_relations_mappings(self) -> None:
         for operation_object in self.operations.values():
             operation_object.attach_relations_mappings()
+            operation_object.attach_path_mappings(self.path_mapping)
 
     def replace_nullable_with_union(self) -> None:
         for operation_object in self.operations.values():

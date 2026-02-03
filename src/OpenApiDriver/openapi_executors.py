@@ -249,12 +249,13 @@ class OpenApiExecutors(OpenApiLibCore):
         if status_code >= int(HTTPStatus.BAD_REQUEST):
             invalidation_keywords: list[str] = []
 
-            mapping = request_data.relations_mapping
-            if mapping.get_body_relations_for_error_code(status_code):
+            relations_mapping = request_data.relations_mapping
+            path_mapping = request_data.path_mapping
+            if relations_mapping.get_body_relations_for_error_code(status_code):
                 invalidation_keywords.append("get_invalid_body_data")
-            if mapping.get_parameter_relations_for_error_code(status_code):
+            if relations_mapping.get_parameter_relations_for_error_code(status_code):
                 invalidation_keywords.append("get_invalidated_parameters")
-            if mapping.get_path_relations_for_error_code(status_code):
+            if path_mapping.get_path_relations_for_error_code(status_code):
                 invalidation_keywords.append("get_invalidated_url")
 
             if invalidation_keywords:

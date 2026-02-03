@@ -155,8 +155,9 @@ class EnergyLabelMapping(RelationsMapping):
         relations: list[PathPropertiesConstraint] = [
             PathPropertiesConstraint(
                 path="/energy_label/1111AA/10",
-                invalid_value="/energy_label/0123AA",
+                invalid_value="/energy_label/0123AA/10",
                 invalid_value_error_code=422,
+                error_code=422
             ),
         ]
         return relations
@@ -212,7 +213,7 @@ def my_transformer(identifier_name: str) -> str:
 
 
 # NOTE: "/available_employees": "identification" is not mapped for testing purposes
-ID_MAPPING: dict[str, str | tuple[str, Callable[[str], str] | Callable[[int], int]]] = {
+ID_MAPPING: dict[str, str | tuple[str, Callable[[str], str]]] = {
     "/employees": "identification",
     "/employees/{employee_id}": "identification",
     "/wagegroups": "wagegroup_id",

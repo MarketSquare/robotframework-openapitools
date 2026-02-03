@@ -36,8 +36,8 @@ def get_invalidated_url(
     path = _run_keyword("get_parameterized_path_from_url", valid_url)
     path_item = openapi_spec.paths[path]
 
-    relations_mapping = path_item.relations_mapping
-    relations = relations_mapping.get_path_relations() if relations_mapping else []
+    path_mapping = path_item.path_mapping
+    relations = path_mapping.get_path_relations() if path_mapping else []
     paths = [
         p.invalid_value
         for p in relations
