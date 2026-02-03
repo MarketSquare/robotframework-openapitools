@@ -6,7 +6,8 @@ from robot.api.deco import keyword, library
 from robot.libraries.BuiltIn import BuiltIn
 
 from OpenApiLibCore import UNSET, OpenApiLibCore, RequestValues
-from OpenApiLibCore.path_functions import substitute_path_parameters
+from OpenApiLibCore.annotations import JSON
+from OpenApiLibCore.keyword_logic.path_functions import substitute_path_parameters
 
 run_keyword = BuiltIn().run_keyword
 
@@ -20,7 +21,7 @@ class {{ library_name }}(OpenApiLibCore):
     @staticmethod
     def _perform_request(request_values: RequestValues) -> Response:
         response: Response = run_keyword(
-            "authorized_request",
+            "Authorized Request",
             request_values.url,
             request_values.method,
             request_values.params,

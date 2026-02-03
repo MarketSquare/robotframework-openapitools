@@ -25,9 +25,10 @@ coverage.xml
 env/
 venv/
 
-# IDE config
+# IDE config and local tool settings
 .vscode/launch.json
 .vscode/settings.json
+.robot.toml
 
 # default logs location for the repo
 tests/logs

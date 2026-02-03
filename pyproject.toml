@@ -1,6 +1,6 @@
 [project]
 name="robotframework-openapitools"
-version = "1.0.5"
+version = "2.0.0"
 description = "A set of Robot Framework libraries to test APIs for which the OAS is available."
 authors = [
     {name = "Robin Mackaij", email = "r.a.mackaij@gmail.com"},
@@ -28,12 +28,11 @@ dependencies = [
     "robotframework >= 6.0.0, !=7.0.0",
     "robotframework-datadriver >= 1.10.0",
     "requests >= 2.31.0",
-    "prance[CLI] >= 23",
-    "Faker >= 23.1.0",
+    "prance[CLI] >= 25",
+    "Faker >= 38.0.0",
     "rstr >= 3.2.0",
     "openapi-core >= 0.19.0",
     "rich_click >= 1.7.0",
-    "black >= 24.1.0",
     "Jinja2 >= 3.1.2",
     "pydantic >= 2.11.0",
 ]
@@ -42,23 +41,23 @@ dependencies = [
 dev = [
     "invoke >= 2.2.0",
     "robotframework-stacktrace >= 0.4.0",
-    "uvicorn >= 0.27.0",
-    "fastapi >= 0.109.0",
+    "uvicorn >= 0.38.0",
+    "fastapi >= 0.122.0",
     "coverage[toml] >= 7.2.0",
-    "robotcode-runner >= 1.0.3",
+    "robotcode-runner >= 2.0.0",
     "genbadge[coverage] >= 1.1.2",
 ]
 type-checking = [
     "mypy >= 1.14.1",
     "types-requests >= 2.31.0",
     "types-invoke >= 2.0.0.0",
-    "pyright >= 1.1.350",
-    "robotcode-analyze >= 1.0.3",
+    "pyright >= 1.1.400",
+    "robotcode-analyze >= 2.0.0",
 ]
 lint-and-format = [
-    "ruff >= 0.9.0",
-    "pylint >= 3.3.3",
-    "robotframework-robocop >= 5.7.0",
+    "ruff >= 0.14.0",
+    "pylint >= 4.0.0",
+    "robotframework-robocop >= 6.0.0",
 ]
 
 [project.urls]
@@ -108,7 +107,7 @@ build-backend = "poetry.core.masonry.api"
 branch = true
 parallel = true
 source = ["src/OpenApiDriver", "src/OpenApiLibCore", "src/openapi_libgen"]
-omit = ["src/openapi_libgen/command_line.py"]
+omit = ["src/openapi_libgen/command_line.py", "src/OpenApiLibCore/protocols.py"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -126,6 +125,7 @@ disallow_untyped_defs = true
 strict = true
 show_error_codes = true
 exclude = []
+follow_untyped_imports = true
 
 [[tool.mypy.overrides]]
 module = [

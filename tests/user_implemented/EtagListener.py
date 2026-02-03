@@ -33,5 +33,8 @@ class EtagListener(ListenerV3):
             return
 
         get_result = run_keyword("authorized_request", url, "GET", params, headers)
-        etag = get_result.headers.get("etag")
+        lower_case_headers = {
+            key.lower(): value for key, value in get_result.headers.items()
+        }
+        etag = lower_case_headers.get("etag")
         result.args[3]["If-Match"] = etag

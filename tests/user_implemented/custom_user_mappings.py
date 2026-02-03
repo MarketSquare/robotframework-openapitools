@@ -1,19 +1,19 @@
 # pylint: disable=invalid-name
-from typing import Type
+from typing import Callable
 
 from OpenApiLibCore import (
     IGNORE,
-    Dto,
     IdDependency,
     IdReference,
     PathPropertiesConstraint,
     PropertyValueConstraint,
+    RelationsMapping,
     ResourceRelation,
     UniquePropertyValueConstraint,
 )
 
 
-class WagegroupDto(Dto):
+class WagegroupMapping(RelationsMapping):
     @staticmethod
     def get_relations() -> list[ResourceRelation]:
         relations: list[ResourceRelation] = [
@@ -42,7 +42,7 @@ class WagegroupDto(Dto):
         return relations
 
 
-class WagegroupDeleteDto(Dto):
+class WagegroupDeleteMapping(RelationsMapping):
     @staticmethod
     def get_relations() -> list[ResourceRelation]:
         relations: list[ResourceRelation] = [
@@ -60,7 +60,7 @@ class WagegroupDeleteDto(Dto):
         return relations
 
 
-class ParttimeDayDto(Dto):
+class ParttimeDayMapping(RelationsMapping):
     @staticmethod
     def get_relations() -> list[ResourceRelation]:
         relations: list[ResourceRelation] = [
@@ -72,19 +72,19 @@ class ParttimeDayDto(Dto):
         return relations
 
 
-class ParttimeScheduleDto(Dto):
+class ParttimeScheduleMapping(RelationsMapping):
     @staticmethod
     def get_relations() -> list[ResourceRelation]:
         relations: list[ResourceRelation] = [
             PropertyValueConstraint(
                 property_name="parttime_days",
-                values=[ParttimeDayDto],
+                values=[ParttimeDayMapping],
             ),
         ]
         return relations
 
 
-class EmployeeDto(Dto):
+class EmployeeMapping(RelationsMapping):
     @staticmethod
     def get_relations() -> list[ResourceRelation]:
         relations: list[ResourceRelation] = [
@@ -102,14 +102,16 @@ class EmployeeDto(Dto):
             ),
             PropertyValueConstraint(
                 property_name="parttime_schedule",
-                values=[ParttimeScheduleDto],
+                values=[ParttimeScheduleMapping],
                 treat_as_mandatory=True,
+                invalid_value=IGNORE,
+                invalid_value_error_code=400,
             ),
         ]
         return relations
 
 
-class PatchEmployeeDto(EmployeeDto):
+class PatchEmployeeMapping(RelationsMapping):
     @staticmethod
     def get_parameter_relations() -> list[ResourceRelation]:
         relations: list[ResourceRelation] = [
@@ -128,15 +130,34 @@ class PatchEmployeeDto(EmployeeDto):
         ]
         return relations
 
+    @staticmethod
+    def get_relations() -> list[ResourceRelation]:
+        relations: list[ResourceRelation] = [
+            IdDependency(
+                property_name="wagegroup_id",
+                get_path="/wagegroups",
+                error_code=451,
+            ),
+            PropertyValueConstraint(
+                property_name="date_of_birth",
+                values=["1970-07-07", "1980-08-08", "1990-09-09"],
+                invalid_value="2020-02-20",
+                invalid_value_error_code=403,
+                error_code=422,
+            ),
+        ]
+        return relations
 
-class EnergyLabelDto(Dto):
+
+class EnergyLabelMapping(RelationsMapping):
     @staticmethod
     def get_path_relations() -> list[PathPropertiesConstraint]:
         relations: list[PathPropertiesConstraint] = [
             PathPropertiesConstraint(
                 path="/energy_label/1111AA/10",
-                invalid_value="/energy_label/0123AA",
+                invalid_value="/energy_label/0123AA/10",
                 invalid_value_error_code=422,
+                error_code=422,
             ),
         ]
         return relations
@@ -153,7 +174,7 @@ class EnergyLabelDto(Dto):
         return relations
 
 
-class MessageDto(Dto):
+class MessageMapping(RelationsMapping):
     @staticmethod
     def get_parameter_relations() -> list[ResourceRelation]:
         relations: list[ResourceRelation] = [
@@ -176,26 +197,32 @@ class MessageDto(Dto):
         return relations
 
 
-DTO_MAPPING: dict[tuple[str, str], Type[Dto]] = {
-    ("/wagegroups", "post"): WagegroupDto,
-    ("/wagegroups/{wagegroup_id}", "delete"): WagegroupDeleteDto,
-    ("/wagegroups/{wagegroup_id}", "put"): WagegroupDto,
-    ("/employees", "post"): EmployeeDto,
-    ("/employees/{employee_id}", "patch"): PatchEmployeeDto,
-    ("/energy_label/{zipcode}/{home_number}", "get"): EnergyLabelDto,
-    ("/secret_message", "get"): MessageDto,
+RELATIONS_MAPPING: dict[tuple[str, str], type[RelationsMapping]] = {
+    ("/wagegroups", "post"): WagegroupMapping,
+    ("/wagegroups/{wagegroup_id}", "delete"): WagegroupDeleteMapping,
+    ("/wagegroups/{wagegroup_id}", "put"): WagegroupMapping,
+    ("/employees", "post"): EmployeeMapping,
+    ("/employees/{employee_id}", "patch"): PatchEmployeeMapping,
+    ("/energy_label/{zipcode}/{home_number}", "get"): EnergyLabelMapping,
+    ("/secret_message", "get"): MessageMapping,
 }
 
+
+def my_transformer(identifier_name: str) -> str:
+    return identifier_name.replace("/", "_")
+
+
 # NOTE: "/available_employees": "identification" is not mapped for testing purposes
-ID_MAPPING: dict[str, str] = {
+ID_MAPPING: dict[str, str | tuple[str, Callable[[str], str]]] = {
     "/employees": "identification",
     "/employees/{employee_id}": "identification",
     "/wagegroups": "wagegroup_id",
-    "/wagegroups/{wagegroup_id}": "wagegroup_id",
+    "/wagegroups/{wagegroup_id}": ("wagegroup_id", my_transformer),
     "/wagegroups/{wagegroup_id}/employees": "identification",
 }
 
-
-PATH_MAPPING: dict[str, Type[Dto]] = {
-    "/energy_label/{zipcode}/{home_number}": EnergyLabelDto,
+# NOTE: WagegroupDeleteMapping does not have path mappings for testing purposes
+PATH_MAPPING: dict[str, type[RelationsMapping]] = {
+    "/energy_label/{zipcode}/{home_number}": EnergyLabelMapping,
+    "/wagegroups/{wagegroup_id}": WagegroupDeleteMapping,
 }

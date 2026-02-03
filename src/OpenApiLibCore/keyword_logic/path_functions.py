@@ -3,16 +3,56 @@
 import json as _json
 from itertools import zip_longest
 from random import choice
-from typing import Any
+from typing import Any, Literal, overload
 
 from requests import Response
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore.models import OpenApiObject
-from OpenApiLibCore.protocols import GetIdPropertyNameType, GetPathDtoClassType
-from OpenApiLibCore.request_data import RequestData
+from OpenApiLibCore.annotations import JSON
+from OpenApiLibCore.models import Ignore, oas_models
+from OpenApiLibCore.models.request_data import RequestData
 
 run_keyword = BuiltIn().run_keyword
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_valid_id_for_path"], *args: str
+) -> str: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_ids_from_url"], *args: str
+) -> list[str]: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_valid_url"], *args: str
+) -> str: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_parameterized_path_from_url"], *args: str
+) -> str: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_request_data"], *args: str
+) -> RequestData: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["authorized_request"], *args: object
+) -> Response: ...  # pragma: no cover
+
+
+def _run_keyword(keyword_name: str, *args: object) -> object:
+    return run_keyword(keyword_name, *args)  # pyright: ignore[reportArgumentType]
 
 
 def match_parts(parts: list[str], spec_parts: list[str]) -> bool:
@@ -24,14 +64,14 @@ def match_parts(parts: list[str], spec_parts: list[str]) -> bool:
     return True
 
 
-def get_parametrized_path(path: str, openapi_spec: OpenApiObject) -> str:
+def get_parametrized_path(path: str, openapi_spec: oas_models.OpenApiObject) -> str:
     path_parts = path.split("/")
     # if the last part is empty, the path has a trailing `/` that
     # should be ignored during matching
     if path_parts[-1] == "":
         _ = path_parts.pop(-1)
 
-    spec_paths: list[str] = list(openapi_spec.paths.keys())
+    spec_paths = list(openapi_spec.paths.keys())
 
     candidates: list[str] = []
 
@@ -63,32 +103,32 @@ def get_parametrized_path(path: str, openapi_spec: OpenApiObject) -> str:
 def get_valid_url(
     path: str,
     base_url: str,
-    get_path_dto_class: GetPathDtoClassType,
-    openapi_spec: OpenApiObject,
+    openapi_spec: oas_models.OpenApiObject,
 ) -> str:
     try:
         # path can be partially resolved or provided by a PathPropertiesConstraint
         parametrized_path = get_parametrized_path(path=path, openapi_spec=openapi_spec)
-        _ = openapi_spec.paths[parametrized_path]
+        path_item = openapi_spec.paths[parametrized_path]
     except KeyError:
         raise ValueError(
             f"{path} not found in paths section of the OpenAPI document."
         ) from None
-    dto_class = get_path_dto_class(path=path)
-    relations = dto_class.get_path_relations()
-    paths = [p.path for p in relations]
+
+    path_mapping = path_item.path_mapping
+    relations = path_mapping.get_path_relations() if path_mapping else []
+    paths = [p.path for p in relations if p.path]
     if paths:
         url = f"{base_url}{choice(paths)}"
         return url
+
     path_parts = list(path.split("/"))
     for index, part in enumerate(path_parts):
         if part.startswith("{") and part.endswith("}"):
             type_path_parts = path_parts[slice(index)]
             type_path = "/".join(type_path_parts)
-            existing_id: str | int | float = run_keyword(
-                "get_valid_id_for_path", type_path
-            )
+            existing_id = _run_keyword("get_valid_id_for_path", type_path)
             path_parts[index] = str(existing_id)
+
     resolved_path = "/".join(path_parts)
     url = f"{base_url}{resolved_path}"
     return url
@@ -96,14 +136,14 @@ def get_valid_url(
 
 def get_valid_id_for_path(
     path: str,
-    get_id_property_name: GetIdPropertyNameType,
-) -> str | int:
-    url: str = run_keyword("get_valid_url", path)
+    openapi_spec: oas_models.OpenApiObject,
+) -> str:
+    url = _run_keyword("get_valid_url", path)
     # Try to create a new resource to prevent conflicts caused by
     # operations performed on the same resource by other test cases
-    request_data: RequestData = run_keyword("get_request_data", path, "post")
+    request_data = _run_keyword("get_request_data", path, "post")
 
-    response: Response = run_keyword(
+    response = _run_keyword(
         "authorized_request",
         url,
         "post",
@@ -112,18 +152,33 @@ def get_valid_id_for_path(
         request_data.get_required_properties_dict(),
     )
 
-    id_property, id_transformer = get_id_property_name(path=path)
+    # path can be partially resolved or provided by a PathPropertiesConstraint
+    parametrized_path = get_parametrized_path(path=path, openapi_spec=openapi_spec)
+    path_item = openapi_spec.paths[parametrized_path]
+    id_property, id_transformer = path_item.id_mapper
 
     if not response.ok:
         # If a new resource cannot be created using POST, try to retrieve a
         # valid id using a GET request.
         try:
-            valid_id = choice(run_keyword("get_ids_from_url", url))
-            return id_transformer(valid_id)
+            valid_ids = _run_keyword("get_ids_from_url", url)
+            valid_id = choice(valid_ids)
+            # If id_property is "", the result from get_ids_from_url is already valid
+            return id_transformer(valid_id) if id_property else valid_id
         except Exception as exception:
             raise AssertionError(
                 f"Failed to get a valid id using GET on {url}"
             ) from exception
+
+    # If the response contains a Location header, the id can be extracted from the
+    # returned url
+    location_lower = response.headers.get("location")
+    location_upper = response.headers.get("Location")
+    new_resource_url = location_lower or location_upper
+    if new_resource_url:
+        # TODO: Check parametrized path for more precise extraction of id
+        new_id = new_resource_url.rsplit("/", maxsplit=1)[-1]
+        return id_transformer(new_id)
 
     response_data = response.json()
     if prepared_body := response.request.body:
@@ -141,10 +196,18 @@ def get_valid_id_for_path(
             f"received an array ({response_data})"
         )
 
-    # POST on /resource_type/{id}/array_item/ will return the updated {id} resource
-    # instead of a newly created resource. In this case, the send_json must be
-    # in the array of the 'array_item' property on {id}
+    # if there is response_data and the id_property has no value, the transformer
+    # should return a valid id
+    if response_data and not id_property:
+        valid_id = id_transformer(response_data)
+        return valid_id
+
+    # POST on /resource_type/{id}/array_item/ will often return the updated {id}
+    # resource instead of a newly created resource. In this case, the send_json must
+    # be in the array of the 'array_item' property on {id}
     send_path: str = response.request.path_url
+    # NOTE: href is technically an html attribute, but it's used in JSON API calls
+    # often enough that supporting this use case is warranted
     response_href: str = response_data.get("href", "")
     if response_href and (send_path not in response_href) and send_json:
         try:
@@ -172,11 +235,11 @@ def get_valid_id_for_path(
 
 def get_ids_from_url(
     url: str,
-    get_id_property_name: GetIdPropertyNameType,
+    openapi_spec: oas_models.OpenApiObject,
 ) -> list[str]:
-    path: str = run_keyword("get_parameterized_path_from_url", url)
-    request_data: RequestData = run_keyword("get_request_data", path, "get")
-    response = run_keyword(
+    path = _run_keyword("get_parameterized_path_from_url", url)
+    request_data = _run_keyword("get_request_data", path, "get")
+    response = _run_keyword(
         "authorized_request",
         url,
         "get",
@@ -184,28 +247,59 @@ def get_ids_from_url(
         request_data.get_required_headers(),
     )
     response.raise_for_status()
-    response_data: dict[str, Any] | list[dict[str, Any]] = response.json()
+    response_data: JSON = response.json()
 
     # determine the property name to use
-    mapping = get_id_property_name(path=path)
-    if isinstance(mapping, str):
-        id_property = mapping
-    else:
-        id_property, _ = mapping
+    path_item = openapi_spec.paths[path]
+    id_property, transformer = path_item.id_mapper
+
+    valid_ids: list[str] = []
+
+    # If id_property has no value, the transformer should accept any data and return
+    # a string value for the valid id for the give data.
+    if not id_property:
+        if isinstance(response_data, list):
+            for data_item in response_data:
+                valid_id = transformer(data_item)
+                if not isinstance(valid_id, Ignore):
+                    valid_ids.append(valid_id)
+        else:
+            valid_id = transformer(response_data)
+            valid_ids.append(valid_id)
+        return valid_ids
 
     if isinstance(response_data, list):
-        valid_ids: list[str] = [item[id_property] for item in response_data]
+        for data_item in response_data:
+            if isinstance(data_item, dict):
+                if valid_id := data_item.get(id_property):  # type: ignore[assignment]
+                    valid_ids.append(valid_id)
         return valid_ids
+
+    if not isinstance(response_data, dict):
+        return []
+
     # if the response is an object (dict), check if it's hal+json
     if embedded := response_data.get("_embedded"):
-        # there should be 1 item in the dict that has a value that's a list
-        for value in embedded.values():
-            if isinstance(value, list):
-                valid_ids = [item[id_property] for item in value]
-                return valid_ids
-    if (valid_id := response_data.get(id_property)) is not None:
+        if isinstance(embedded, dict):
+            # there should be 1 item in the dict that has a value that's a list
+            for value in embedded.values():
+                if isinstance(value, list):
+                    for item in value:
+                        if isinstance(item, dict):
+                            if valid_id := item.get(id_property):  # type: ignore[assignment]
+                                valid_ids.append(valid_id)
+                    return valid_ids
+
+    if (valid_id := response_data.get(id_property)) is not None:  # type: ignore[assignment]
         return [valid_id]
-    valid_ids = [item[id_property] for item in response_data["items"]]
+
+    if items := response_data.get("items"):
+        if isinstance(items, list):
+            for item in items:
+                if isinstance(item, dict):
+                    if valid_id := item.get(id_property):  # type: ignore[assignment]
+                        valid_ids.append(valid_id)
+
     return valid_ids
 
 

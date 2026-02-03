@@ -1,7 +1,7 @@
 # pylint: disable="missing-class-docstring", "missing-function-docstring"
 import unittest
 
-from OpenApiLibCore.models import (
+from OpenApiLibCore.models.oas_models import (
     ArraySchema,
     BooleanSchema,
     IntegerSchema,
@@ -16,27 +16,27 @@ from OpenApiLibCore.models import (
 class TestResolvedSchemasPropery(unittest.TestCase):
     def test_allof_only_supports_object_schemas(self) -> None:
         schema = UnionTypeSchema(allOf=[NullSchema()])
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(ValueError):
             schema.resolved_schemas
 
         schema = UnionTypeSchema(allOf=[BooleanSchema()])
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(ValueError):
             schema.resolved_schemas
 
         schema = UnionTypeSchema(allOf=[StringSchema()])
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(ValueError):
             schema.resolved_schemas
 
         schema = UnionTypeSchema(allOf=[IntegerSchema()])
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(ValueError):
             schema.resolved_schemas
 
         schema = UnionTypeSchema(allOf=[NumberSchema()])
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(ValueError):
             schema.resolved_schemas
 
         schema = UnionTypeSchema(allOf=[ArraySchema(items=StringSchema())])
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(ValueError):
             schema.resolved_schemas
 
     def test_allof_not_compatible_with_const(self) -> None:

@@ -44,7 +44,6 @@ Test Get Invalidated Url For PathPropertiesConstraint Invalid Value Status Code
     ${url}=    Get Valid Url    path=/energy_label/{zipcode}/{home_number}
     ${invalidated}=    Get Invalidated Url
     ...    valid_url=${url}
-    ...    path=/energy_label/{zipcode}/{home_number}
     ...    expected_status_code=422
     Should Not Be Equal    ${url}    ${invalidated}
     Should Start With    ${invalidated}    http://localhost:8000/energy_label/0123AA

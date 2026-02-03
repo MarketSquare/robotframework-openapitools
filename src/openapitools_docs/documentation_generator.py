@@ -26,7 +26,7 @@ def generate(output_folder: Path) -> None:
         libcore_documentation=OPENAPILIBCORE_DOCUMENTATION,
         advanced_use_documentation=ADVANCED_USE_DOCUMENTATION,
     )
-    with open(output_file_path, mode="w", encoding="utf-8") as html_file:
+    with open(output_file_path, mode="w", encoding="UTF-8") as html_file:
         html_file.write(documentation_content)
 
 

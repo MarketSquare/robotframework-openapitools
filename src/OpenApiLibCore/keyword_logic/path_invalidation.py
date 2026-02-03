@@ -1,24 +1,43 @@
 """Module holding functions related to invalidation of paths and urls."""
 
 from random import choice
+from typing import Literal, overload
 from uuid import uuid4
 
 from robot.libraries.BuiltIn import BuiltIn
 
-from OpenApiLibCore.protocols import GetPathDtoClassType
+from OpenApiLibCore.models import oas_models
 
 run_keyword = BuiltIn().run_keyword
 
 
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_parameterized_path_from_url"], *args: str
+) -> str: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["overload_default"], *args: object
+) -> object: ...  # pragma: no cover
+
+
+def _run_keyword(keyword_name: str, *args: object) -> object:
+    return run_keyword(keyword_name, *args)  # pyright: ignore[reportArgumentType]
+
+
 def get_invalidated_url(
     valid_url: str,
-    path: str,
     base_url: str,
-    get_path_dto_class: GetPathDtoClassType,
+    openapi_spec: oas_models.OpenApiObject,
     expected_status_code: int,
 ) -> str:
-    dto_class = get_path_dto_class(path=path)
-    relations = dto_class.get_path_relations()
+    path = _run_keyword("get_parameterized_path_from_url", valid_url)
+    path_item = openapi_spec.paths[path]
+
+    path_mapping = path_item.path_mapping
+    relations = path_mapping.get_path_relations() if path_mapping else []
     paths = [
         p.invalid_value
         for p in relations
@@ -27,7 +46,7 @@ def get_invalidated_url(
     if paths:
         url = f"{base_url}{choice(paths)}"
         return url
-    parameterized_path: str = run_keyword("get_parameterized_path_from_url", valid_url)
+    parameterized_path = _run_keyword("get_parameterized_path_from_url", valid_url)
     parameterized_url = base_url + parameterized_path
     valid_url_parts = list(reversed(valid_url.split("/")))
     parameterized_parts = reversed(parameterized_url.split("/"))

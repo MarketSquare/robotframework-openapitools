@@ -6,6 +6,7 @@ from os import getenv
 from pathlib import Path
 from random import choice
 from types import MappingProxyType
+from typing import Literal, overload
 
 from requests import Response
 from requests.auth import AuthBase
@@ -21,10 +22,10 @@ from OpenApiLibCore import (
 from OpenApiLibCore import (
     OpenApiLibCore,
     RequestData,
-    RequestValues,
     ValidationLevel,
 )
 from OpenApiLibCore.annotations import JSON
+from OpenApiLibCore.models.oas_models import ObjectSchema
 
 run_keyword = BuiltIn().run_keyword
 default_str_mapping: Mapping[str, str] = MappingProxyType({})
@@ -36,6 +37,52 @@ KEYWORD_NAMES = [
     "test_invalid_url",
     "test_endpoint",
 ]
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_valid_url"], *args: str
+) -> str: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_invalidated_url"], *args: str | int
+) -> str: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["authorized_request"], *args: object
+) -> Response: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_request_data"], *args: str
+) -> RequestData: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_invalid_body_data"], *args: object
+) -> dict[str, JSON] | list[JSON]: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["get_invalidated_parameters"], *args: object
+) -> tuple[dict[str, JSON], dict[str, str]]: ...  # pragma: no cover
+
+
+@overload
+def _run_keyword(
+    keyword_name: Literal["validated_request"], *args: object
+) -> None: ...  # pragma: no cover
+
+
+def _run_keyword(keyword_name: str, *args: object) -> object:
+    return run_keyword(keyword_name, *args)  # pyright: ignore[reportArgumentType]
 
 
 @library(scope="SUITE", doc_format="ROBOT")
@@ -50,7 +97,7 @@ class OpenApiExecutors(OpenApiLibCore):
         response_validation: ValidationLevel = ValidationLevel.WARN,
         disable_server_validation: bool = True,
         mappings_path: str | Path = "",
-        invalid_property_default_response: int = 422,
+        invalid_data_default_response: int = 422,
         default_id_property_name: str = "id",
         faker_locale: str | list[str] = "",
         require_body_for_invalid_url: bool = False,
@@ -74,7 +121,7 @@ class OpenApiExecutors(OpenApiLibCore):
             disable_server_validation=disable_server_validation,
             mappings_path=mappings_path,
             default_id_property_name=default_id_property_name,
-            invalid_property_default_response=invalid_property_default_response,
+            invalid_data_default_response=invalid_data_default_response,
             faker_locale=faker_locale,
             require_body_for_invalid_url=require_body_for_invalid_url,
             recursion_limit=recursion_limit,
@@ -102,7 +149,7 @@ class OpenApiExecutors(OpenApiLibCore):
         > Note: No headers or (json) body are send with the request. For security
         reasons, the authorization validation should be checked first.
         """
-        url: str = run_keyword("get_valid_url", path)
+        url = _run_keyword("get_valid_url", path)
         response = self.session.request(
             method=method,
             url=url,
@@ -123,8 +170,8 @@ class OpenApiExecutors(OpenApiLibCore):
         > Note: No headers or (json) body are send with the request. For security
         reasons, the access rights validation should be checked first.
         """
-        url: str = run_keyword("get_valid_url", path)
-        response: Response = run_keyword("authorized_request", url, method)
+        url = _run_keyword("get_valid_url", path)
+        response = _run_keyword("authorized_request", url, method)
         if response.status_code != int(HTTPStatus.FORBIDDEN):
             raise AssertionError(f"Response {response.status_code} was not 403.")
 
@@ -148,12 +195,10 @@ class OpenApiExecutors(OpenApiLibCore):
         parameters are send with the request. The `require_body_for_invalid_url`
         parameter can be set to `True` if needed.
         """
-        valid_url: str = run_keyword("get_valid_url", path)
+        valid_url = _run_keyword("get_valid_url", path)
 
         try:
-            url = run_keyword(
-                "get_invalidated_url", valid_url, path, expected_status_code
-            )
+            url = _run_keyword("get_invalidated_url", valid_url, expected_status_code)
         except Exception as exception:
             message = getattr(exception, "message", "")
             if not message.startswith("ValueError"):
@@ -166,12 +211,11 @@ class OpenApiExecutors(OpenApiLibCore):
 
         params, headers, json_data = None, None, None
         if self.require_body_for_invalid_url:
-            request_data: RequestData = run_keyword("get_request_data", path, method)
+            request_data = _run_keyword("get_request_data", path, method)
             params = request_data.params
             headers = request_data.headers
-            dto = request_data.dto
-            json_data = dto.as_dict()
-        response: Response = run_keyword(
+            json_data = request_data.valid_data
+        response = _run_keyword(
             "authorized_request", url, method, params, headers, json_data
         )
         if response.status_code != expected_status_code:
@@ -191,68 +235,67 @@ class OpenApiExecutors(OpenApiLibCore):
         The keyword calls other keywords to generate the neccesary data to perform
         the desired operation and validate the response against the openapi document.
         """
-        json_data: dict[str, JSON] = {}
         original_data = {}
 
-        url: str = run_keyword("get_valid_url", path)
-        request_data: RequestData = run_keyword("get_request_data", path, method)
+        url = _run_keyword("get_valid_url", path)
+        request_data = _run_keyword("get_request_data", path, method)
         params = request_data.params
         headers = request_data.headers
-        if request_data.has_body:
-            json_data = request_data.dto.as_dict()
+        json_data = request_data.valid_data
         # when patching, get the original data to check only patched data has changed
         if method == "PATCH":
             original_data = self.get_original_data(url=url)
         # in case of a status code indicating an error, ensure the error occurs
         if status_code >= int(HTTPStatus.BAD_REQUEST):
-            invalidation_keyword_data = {
-                "get_invalid_body_data": [
-                    "get_invalid_body_data",
-                    url,
-                    method,
-                    status_code,
-                    request_data,
-                ],
-                "get_invalidated_parameters": [
-                    "get_invalidated_parameters",
-                    status_code,
-                    request_data,
-                ],
-            }
-            invalidation_keywords = []
+            invalidation_keywords: list[str] = []
 
-            if request_data.dto.get_body_relations_for_error_code(status_code):
+            relations_mapping = request_data.relations_mapping
+            path_mapping = request_data.path_mapping
+            if relations_mapping.get_body_relations_for_error_code(status_code):
                 invalidation_keywords.append("get_invalid_body_data")
-            if request_data.dto.get_parameter_relations_for_error_code(status_code):
+            if relations_mapping.get_parameter_relations_for_error_code(status_code):
                 invalidation_keywords.append("get_invalidated_parameters")
+            if path_mapping.get_path_relations_for_error_code(status_code):
+                invalidation_keywords.append("get_invalidated_url")
+
             if invalidation_keywords:
-                if (
-                    invalidation_keyword := choice(invalidation_keywords)
-                ) == "get_invalid_body_data":
-                    json_data = run_keyword(
-                        *invalidation_keyword_data[invalidation_keyword]
-                    )
-                else:
-                    params, headers = run_keyword(
-                        *invalidation_keyword_data[invalidation_keyword]
-                    )
+                match choice(invalidation_keywords):
+                    case "get_invalid_body_data":
+                        json_data = _run_keyword(
+                            "get_invalid_body_data",
+                            url,
+                            method,
+                            status_code,
+                            request_data,
+                        )
+                    case "get_invalidated_parameters":
+                        params, headers = _run_keyword(
+                            "get_invalidated_parameters", status_code, request_data
+                        )
+                    case "get_invalidated_url":
+                        url = _run_keyword("get_invalidated_url", url, status_code)
+
             # if there are no relations to invalide and the status_code is the default
             # response_code for invalid properties, invalidate properties instead
-            elif status_code == self.invalid_property_default_response:
+            elif status_code == self.invalid_data_default_response:
                 if (
                     request_data.params_that_can_be_invalidated
                     or request_data.headers_that_can_be_invalidated
                 ):
-                    params, headers = run_keyword(
-                        *invalidation_keyword_data["get_invalidated_parameters"]
+                    params, headers = _run_keyword(
+                        "get_invalidated_parameters", status_code, request_data
                     )
                     if request_data.body_schema:
-                        json_data = run_keyword(
-                            *invalidation_keyword_data["get_invalid_body_data"]
+                        json_data = _run_keyword(
+                            "get_invalid_body_data",
+                            url,
+                            method,
+                            status_code,
+                            request_data,
                         )
                 elif request_data.body_schema:
-                    json_data = run_keyword(
-                        *invalidation_keyword_data["get_invalid_body_data"]
+                    json_data = _run_keyword(
+                        "get_invalid_body_data", url, method, status_code, request_data
                     )
                 else:
                     raise SkipExecution(
@@ -260,19 +303,17 @@ class OpenApiExecutors(OpenApiLibCore):
                     )
             else:
                 raise AssertionError(
-                    f"No Dto mapping found to cause status_code {status_code}."
+                    f"No relation found to cause status_code {status_code}."
                 )
-        run_keyword(
-            "perform_validated_request",
+        _run_keyword(
+            "validated_request",
             path,
             status_code,
-            RequestValues(
-                url=url,
-                method=method,
-                params=params,
-                headers=headers,
-                json_data=json_data,
-            ),
+            url,
+            method,
+            params,
+            headers,
+            json_data,
             original_data,
         )
         if status_code < int(HTTPStatus.MULTIPLE_CHOICES) and (
@@ -281,27 +322,28 @@ class OpenApiExecutors(OpenApiLibCore):
             or request_data.has_optional_headers
         ):
             logger.info("Performing request without optional properties and parameters")
-            url = run_keyword("get_valid_url", path)
-            request_data = run_keyword("get_request_data", path, method)
+            url = _run_keyword("get_valid_url", path)
+            request_data = _run_keyword("get_request_data", path, method)
             params = request_data.get_required_params()
             headers = request_data.get_required_headers()
-            json_data = (
-                request_data.get_minimal_body_dict() if request_data.has_body else {}
-            )
+            if isinstance(request_data.body_schema, ObjectSchema):
+                json_data = (
+                    request_data.get_minimal_body_dict()
+                    if request_data.has_body
+                    else {}
+                )
             original_data = {}
             if method == "PATCH":
                 original_data = self.get_original_data(url=url)
-            run_keyword(
-                "perform_validated_request",
+            _run_keyword(
+                "validated_request",
                 path,
                 status_code,
-                RequestValues(
-                    url=url,
-                    method=method,
-                    params=params,
-                    headers=headers,
-                    json_data=json_data,
-                ),
+                url,
+                method,
+                params,
+                headers,
+                json_data,
                 original_data,
             )
 
@@ -313,10 +355,10 @@ class OpenApiExecutors(OpenApiLibCore):
         """
         original_data = {}
         path = self.get_parameterized_path_from_url(url)
-        get_request_data: RequestData = run_keyword("get_request_data", path, "GET")
+        get_request_data = _run_keyword("get_request_data", path, "GET")
         get_params = get_request_data.params
         get_headers = get_request_data.headers
-        response: Response = run_keyword(
+        response = _run_keyword(
             "authorized_request", url, "GET", get_params, get_headers
         )
         if response.ok:
@@ -327,5 +369,5 @@ class OpenApiExecutors(OpenApiLibCore):
     def get_keyword_names() -> list[str]:
         """Curated keywords for libdoc and libspec."""
         if getenv("HIDE_INHERITED_KEYWORDS") == "true":
-            return KEYWORD_NAMES
+            return KEYWORD_NAMES  # pragma: no cover
         return KEYWORD_NAMES + LIBCORE_KEYWORD_NAMES

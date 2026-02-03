@@ -5,7 +5,7 @@ from typing import Sequence
 from DataDriver.AbstractReaderClass import AbstractReaderClass
 from DataDriver.ReaderConfig import TestCaseData
 
-from OpenApiLibCore.models import PathItemObject
+from OpenApiLibCore.models.oas_models import PathItemObject
 
 
 class Test:
@@ -45,7 +45,7 @@ class OpenApiReader(AbstractReaderClass):
         ignored_tests = [Test(*test) for test in getattr(self, "ignored_testcases", [])]
 
         for path, path_item in paths.items():
-            path_operations = path_item.get_operations()
+            path_operations = path_item.operations
 
             # by reseversing the items, post/put operations come before get and delete
             for method, operation_data in reversed(path_operations.items()):

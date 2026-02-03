@@ -7,7 +7,7 @@ from prance import ResolvingParser
 from robot.utils import is_truthy
 
 from openapi_libgen.spec_parser import get_keyword_data
-from OpenApiLibCore.models import OpenApiObject
+from OpenApiLibCore.models.oas_models import OpenApiObject
 
 HERE = Path(__file__).parent.resolve()
 
@@ -25,7 +25,7 @@ def load_openapi_spec(
         backend="openapi-spec-validator",
         recursion_limit=recursion_limit,
         recursion_limit_handler=recursion_limit_handler,
-    )
+    )  # type: ignore[no-untyped-call]
     assert parser.specification is not None, (
         "Source was loaded, but no specification was present after parsing."
     )
@@ -81,11 +81,11 @@ if __name__ == "__main__":  # pragma: no cover
 
     use_summary = getenv("USE_SUMMARY_AS_KEYWORD_NAME")
     use_summary = use_summary if use_summary is not None else sys.argv[5]
-    use_summary = is_truthy(use_summary)
+    use_summary = is_truthy(use_summary)  # type: ignore[no-untyped-call]
 
     expand_body = getenv("EXPAND_BODY_ARGUMENTS")
     expand_body = expand_body if expand_body is not None else sys.argv[6]
-    expand_body = is_truthy(expand_body)
+    expand_body = is_truthy(expand_body)  # type: ignore[no-untyped-call]
 
     spec = load_openapi_spec(source=source, recursion_limit=1, recursion_default={})
 
