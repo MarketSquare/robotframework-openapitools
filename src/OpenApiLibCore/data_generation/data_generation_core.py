@@ -54,12 +54,17 @@ def get_request_data(
         if operation_spec is None:
             raise AttributeError
         relations_mapping = operation_spec.relations_mapping
+        path_mapping = operation_spec.path_mapping
     except AttributeError:
         logger.info(
             f"method '{method}' not supported on '{spec_path}, using empty spec."
         )
         operation_spec = OperationObject(operationId="")
         relations_mapping = None
+        path_mapping = None
+
+    if path_mapping is None:
+        path_mapping = _get_mapping_dataclass_for_unmapped_path(path=path)
 
     parameters, params, headers = get_request_parameters(
         relations_mapping=relations_mapping, method_spec=operation_spec
@@ -73,6 +78,7 @@ def get_request_data(
         return RequestData(
             valid_data=None,
             relations_mapping=relations_mapping,
+            path_mapping=path_mapping,
             parameters=parameters,
             params=params,
             headers=headers,
@@ -107,11 +113,22 @@ def get_request_data(
     return RequestData(
         valid_data=valid_data,
         relations_mapping=relations_mapping,
+        path_mapping=path_mapping,
         body_schema=schema_used_for_data_generation,
         parameters=parameters,
         params=params,
         headers=headers,
     )
+
+
+def _get_mapping_dataclass_for_unmapped_path(path: str) -> RelationsMappingType:
+    cls_name = get_mapping_cls_name(path=path, method="")
+    mapping_class = make_dataclass(
+        cls_name=cls_name,
+        fields=[],
+        bases=(RelationsMapping,),
+    )
+    return mapping_class
 
 
 def _get_mapping_dataclass_for_empty_body(

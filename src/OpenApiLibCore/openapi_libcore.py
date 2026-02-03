@@ -751,7 +751,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         for path, path_relation in self.path_mapping_dict.items():
             try:
                 path_item = spec_model.paths[path]
-                path_item.relations_mapping = path_relation
+                path_item.path_mapping = path_relation
             except KeyError:
                 logger.warn(
                     f"The PATH_MAPPING contains a path that is not found in the OpenAPI spec: {path}"

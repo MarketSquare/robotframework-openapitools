@@ -44,7 +44,7 @@ Test Libraries From Same Spec
 
     Get Employees
     Run Keyword And Expect Error    Multiple keywords with name 'Get Employees Employees Get' found. *
-    ...    Get Employees Employees Get
+    ...    Get Employees Employees Get    # robotcode: ignore[MultipleKeywords]
     MyGeneratedLibrary.Get Employees Employees Get
     MyDuplicate.Get Employees Employees Get
 
