@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2026-01-19T12:22:53+00:00" specversion="6" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapidriver.py" lineno="24">
-<version>2.0.0b2</version>
+<keywordspec name="OpenApiDriver" type="LIBRARY" format="HTML" scope="SUITE" generated="2026-02-03T14:03:08+00:00" specversion="6" source="/workspaces/robotframework-openapitools/src/OpenApiDriver/openapidriver.py" lineno="24">
+<version>2.0.0</version>
 <doc>The OpenApiDriver library provides the keywords and logic for execution of generated test cases based on an OpenAPI document.
 
 Visit the &lt;a href="./index.html" target="_blank"&gt;OpenApiTools documentation&lt;/a&gt; for an introduction.</doc>

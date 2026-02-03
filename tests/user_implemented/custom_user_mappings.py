@@ -157,7 +157,7 @@ class EnergyLabelMapping(RelationsMapping):
                 path="/energy_label/1111AA/10",
                 invalid_value="/energy_label/0123AA/10",
                 invalid_value_error_code=422,
-                error_code=422
+                error_code=422,
             ),
         ]
         return relations
