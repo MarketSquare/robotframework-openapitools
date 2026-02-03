@@ -5,7 +5,7 @@
 ### Major changes and new features
 - Request bodies now support all JSON types, not just `objects` (`dicts`).
     - This closes [issue #9: No body generated when root is a list](https://github.com/MarketSquare/robotframework-openapitools/issues/9).
-    - The `Relations` still need to be reworked to align with this change.
+    - Some of the `Relations` still need to be reworked to (fully) align with this change.
 - Refactored retrieving / loading of the OpenAPI spec.
     - This closes [issue #93: SSL error even if cert / verify is set](https://github.com/MarketSquare/robotframework-openapitools/issues/93).
 - Added keywords to make it easier to work with the `RequestValues` object:
@@ -13,15 +13,36 @@
     - `Perform Authorized Request` is functionally the same as exisiting `Authorized Request` keyword, but it accepts a `RequestValues` instance as argument.
     - `Validated Request` is functionally the same as the existing `Perform Validated Request` keyword, but it accepts the data as separate arguments instead of the `RequestValues`.
     - `Convert Request Values To Dict` can be used to get a (Python) dict represenation of a `RequestValues` object that can be used with e.g. the Collections keywords for working with dictionaries.
-    - Thise closes [issue #98: Add keywords to simplify using Authorized Request and Perform Validated Request](https://github.com/MarketSquare/robotframework-openapitools/issues/98).
-- Improved handling of `treat_as_mandatory` on a `PropertyValueConstraint`.
-- Added support for using `IGNORE` as `invalid_value` on a `PropertyValueConstraint`.
+    - This closes [issue #98: Add keywords to simplify using Authorized Request and Perform Validated Request](https://github.com/MarketSquare/robotframework-openapitools/issues/98).
+- `Get Valid Id For Path` now supports the `Location` response header.
+    - This closes [issue #112: Support the Location response header in Get Valid Id For Path](https://github.com/MarketSquare/robotframework-openapitools/issues/112).
+- The `IdDependency` is now taken into account if the value of the `property` to which is applies is a list / ArraySchema.
+    - This closes [issue #122: Support get_dependent_id for properties where the property_schema is an ArraySchema](https://github.com/MarketSquare/robotframework-openapitools/issues/122)
+- Relations have been made more flexible:
+    - Added support for using `IGNORE` as `invalid_value` on a `PropertyValueConstraint`.
+    - Improved handling of `treat_as_mandatory` on a `PropertyValueConstraint`.
+    - `IGNORE` as `values` (instead of a `list`) on a `PropertyValueConstraint` allows only error value mapping while using regular (random) value generation.
+        - This closes [issue #124: Support PropertyValueConstraint only for error codes](https://github.com/MarketSquare/robotframework-openapitools/issues/124).
+    - Support an empty string as value for `property_name` of a `PropertyValueConstraint` to apply it to list / array (body) items.
+        - This closes [issue #118: Support PropertyValueConstraint on Array request bodies](https://github.com/MarketSquare/robotframework-openapitools/issues/118).
+    - Support an empty string as value for the `path` of a `PathPropertyConstraint` to allow only error value mapping while using regular path generation otherwise.
+        - This closes [issue #120: Support empty path in PathPropertiesConstraint to allow specific error scenarios](https://github.com/MarketSquare/robotframework-openapitools/issues/120).
+    - The custom transformer for `ID_MAPPING` was made more flexible.
+        - This closes [issue #114: Make the transformer support for the ID_MAPPING more flexible](https://github.com/MarketSquare/robotframework-openapitools/issues/114).
+- The `Test Endpoint` keyword of OpenApiDriver now also support error codes from a `PathPropertiesConstraint`.
+    - This closes [issue #126: Path invalidation based on error code not supported by OpenApiDriver](https://github.com/MarketSquare/robotframework-openapitools/issues/126).
 
 ### Bugfixes
 - Added support for the `nullable` property in OAS 3.0 schemas when generating data.
     - This closes [issue #81: nullable not taken into account in get_valid_value](https://github.com/MarketSquare/robotframework-openapitools/issues/81).
 - Support added for multiple instances of OpenApiLibCore within the same suite.
     -  This closes [issue #96: Multiple keywords with same name error when using multiple generated libraries](https://github.com/MarketSquare/robotframework-openapitools/issues/96).
+- Fixed a KeyError issue in `Get Valid Id For Path`.
+    - This closes [issue #110: KeyError in Get Valid Id For Path](https://github.com/MarketSquare/robotframework-openapitools/issues/110).
+- Parameter generation did not take the `IdReference` Relation into account.
+    - This closes [issue #115: IdReference is not supported in parameters](https://github.com/MarketSquare/robotframework-openapitools/issues/115).
+- A `PathPropertiesConstraint` mapping could be overridden by another Relations mapping during model generation.
+    - This closes [issue #129: Path mappings get overridden by relation mappings in model post-init](https://github.com/MarketSquare/robotframework-openapitools/issues/129).
 - Fixed validation errors caused by `Content-Type` not being handled case-insensitive.
 - Fixed an exception during validation caused by `charset` being included in the `Content-Type` header for `application/json`.
 
@@ -43,6 +64,10 @@
 - The GitHub pipeline was updated to include Python 3.14.
 - Updated minimum version markers for many dependencies.
 - Annotations are now complete (as far as possible under Python 3.10).
+
+### Notes
+- The documentation is not yet updated with many of the changes / improvements detailed above.
+- While some tests have been updated to check / demonstrate the above changes, more tests need to be added.
 
 <br><br><br>
 
