@@ -748,7 +748,7 @@ This Wagegroup also has a number of required properties: <code>name</code> and <
 
 <hr>
 
-<h3><code>IdReference</code></h3>
+<h3><code>IdDependency</code></h3>
 <blockquote><u>The value for this propery must the the <code>id</code> of another resource</u></blockquote>
 
 To add an Employee, a <code>wagegroup_id</code> is required, the <code>id</code> of a Wagegroup resource that is already present in the system.
@@ -788,7 +788,7 @@ This <code>error_code</code> should be described as one of the <code>responses</
 
 <hr>
 
-<h3><code>IdDependency</code></h3>
+<h3><code>IdReference</code></h3>
 <blockquote><u>This resource may not be DELETED if another resource refers to it</u></blockquote>
 
 If an Employee has been added to the system, this Employee refers to the <code>id</code> of a Wagegroup for its required <code>employee_number</code> property.
