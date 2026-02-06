@@ -39,8 +39,8 @@
     -  This closes [issue #96: Multiple keywords with same name error when using multiple generated libraries](https://github.com/MarketSquare/robotframework-openapitools/issues/96).
 - Fixed a KeyError issue in `Get Valid Id For Path`.
     - This closes [issue #110: KeyError in Get Valid Id For Path](https://github.com/MarketSquare/robotframework-openapitools/issues/110).
-- Parameter generation did not take the `IdReference` Relation into account.
-    - This closes [issue #115: IdReference is not supported in parameters](https://github.com/MarketSquare/robotframework-openapitools/issues/115).
+- Parameter generation did not take the `IdDependency` Relation into account.
+    - This closes [issue #115: IdDependency is not supported in parameters](https://github.com/MarketSquare/robotframework-openapitools/issues/115).
 - A `PathPropertiesConstraint` mapping could be overridden by another Relations mapping during model generation.
     - This closes [issue #129: Path mappings get overridden by relation mappings in model post-init](https://github.com/MarketSquare/robotframework-openapitools/issues/129).
 - Fixed validation errors caused by `Content-Type` not being handled case-insensitive.
