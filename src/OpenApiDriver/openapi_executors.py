@@ -137,7 +137,7 @@ class OpenApiExecutors(OpenApiLibCore):
             proxies=proxies,
         )
 
-    @keyword
+    @keyword(tags=["OpenApiDriver"])
     def test_unauthorized(self, path: str, method: str) -> None:
         """
         Perform a request for `method` on the `path`, with no authorization.
@@ -158,7 +158,7 @@ class OpenApiExecutors(OpenApiLibCore):
         if response.status_code != int(HTTPStatus.UNAUTHORIZED):
             raise AssertionError(f"Response {response.status_code} was not 401.")
 
-    @keyword
+    @keyword(tags=["OpenApiDriver"])
     def test_forbidden(self, path: str, method: str) -> None:
         """
         Perform a request for `method` on the `path`, with the provided authorization.
@@ -175,7 +175,7 @@ class OpenApiExecutors(OpenApiLibCore):
         if response.status_code != int(HTTPStatus.FORBIDDEN):
             raise AssertionError(f"Response {response.status_code} was not 403.")
 
-    @keyword
+    @keyword(tags=["OpenApiDriver"])
     def test_invalid_url(
         self, path: str, method: str, expected_status_code: int = 404
     ) -> None:
@@ -223,7 +223,7 @@ class OpenApiExecutors(OpenApiLibCore):
                 f"Response {response.status_code} was not {expected_status_code}"
             )
 
-    @keyword
+    @keyword(tags=["OpenApiDriver"])
     def test_endpoint(self, path: str, method: str, status_code: int) -> None:
         """
         Validate that performing the `method` operation on `path` results in a
@@ -365,9 +365,9 @@ class OpenApiExecutors(OpenApiLibCore):
             original_data = response.json()
         return original_data
 
-    @staticmethod
-    def get_keyword_names() -> list[str]:
-        """Curated keywords for libdoc and libspec."""
-        if getenv("HIDE_INHERITED_KEYWORDS") == "true":
-            return KEYWORD_NAMES  # pragma: no cover
-        return KEYWORD_NAMES + LIBCORE_KEYWORD_NAMES
+    # @staticmethod
+    # def get_keyword_names() -> list[str]:
+    #     """Curated keywords for libdoc and libspec."""
+    #     if getenv("HIDE_INHERITED_KEYWORDS") == "true":
+    #         return KEYWORD_NAMES  # pragma: no cover
+    #     return KEYWORD_NAMES + LIBCORE_KEYWORD_NAMES

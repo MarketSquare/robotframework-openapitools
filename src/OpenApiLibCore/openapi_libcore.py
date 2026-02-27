@@ -179,7 +179,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             )
 
     # region: library configuration keywords
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def set_origin(self, origin: str) -> None:
         """
         Set the `origin` after the library is imported.
@@ -193,7 +193,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         """
         self._origin = origin
 
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def set_security_token(self, security_token: str) -> None:
         """
         Set the `security_token` after the library is imported.
@@ -202,7 +202,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         """
         self.security_token = security_token
 
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def set_basic_auth(self, username: str, password: str) -> None:
         """
         Set the `username` and `password` used for basic
@@ -214,7 +214,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         if username:
             self.auth = HTTPBasicAuth(username, password)
 
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def set_auth(self, auth: AuthBase) -> None:
         """
         Set the `auth` used for authentication after the library is imported.
@@ -224,7 +224,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         """
         self.auth = auth
 
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def set_extra_headers(self, extra_headers: dict[str, str]) -> None:
         """
         Set the `extra_headers` used in requests after the library is imported.
@@ -236,7 +236,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
 
     # endregion
     # region: data generation keywords
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def get_request_values(
         self,
         path: str,
@@ -284,7 +284,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
 
         return request_values
 
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def get_request_data(self, path: str, method: str) -> RequestData:
         """Return an object with valid request data for body, headers and query params."""
         return _data_generation.get_request_data(
@@ -293,7 +293,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             openapi_spec=self.openapi_spec,
         )
 
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def get_invalid_body_data(
         self,
         url: str,
@@ -316,7 +316,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             invalid_data_default_response=self.invalid_data_default_response,
         )
 
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def get_invalidated_parameters(
         self,
         status_code: int,
@@ -332,7 +332,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             invalid_data_default_response=self.invalid_data_default_response,
         )
 
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def get_json_data_with_conflict(
         self,
         url: str,
@@ -357,7 +357,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
 
     # endregion
     # region: path-related keywords
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def get_valid_url(self, path: str) -> str:
         """
         This keyword returns a valid url for the given `path`.
@@ -375,7 +375,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             openapi_spec=self.openapi_spec,
         )
 
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def get_valid_id_for_path(self, path: str) -> str | int | float:
         """
         Support keyword that returns the `id` for an existing resource at `path`.
@@ -387,7 +387,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             path=path, openapi_spec=self.openapi_spec
         )
 
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def get_parameterized_path_from_url(self, url: str) -> str:
         """
         Return the path as found in the `paths` section based on the given `url`.
@@ -401,7 +401,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         )
         return parameterized_path
 
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def get_ids_from_url(self, url: str) -> list[str]:
         """
         Perform a GET request on the `url` and return the list of resource
@@ -409,7 +409,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         """
         return _path_functions.get_ids_from_url(url=url, openapi_spec=self.openapi_spec)
 
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def get_invalidated_url(
         self,
         valid_url: str,
@@ -432,7 +432,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
 
     # endregion
     # region: resource relations keywords
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def ensure_in_use(self, url: str, resource_relation: IdReference) -> None:
         """
         Ensure that the (right-most) `id` of the resource referenced by the `url`
@@ -447,7 +447,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
 
     # endregion
     # region: request keywords
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def authorized_request(  # pylint: disable=too-many-arguments
         self,
         url: str,
@@ -490,7 +490,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         logger.debug(f"Response text: {response.text}")
         return response
 
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def perform_authorized_request(
         self,
         request_values: RequestValues,
@@ -520,7 +520,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             files=files,
         )
 
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def get_request_values_object(
         self,
         url: str,
@@ -551,7 +551,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             json_data=json_data,
         )
 
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def convert_request_values_to_dict(
         self, request_values: RequestValues
     ) -> dict[str, JSON]:
@@ -566,7 +566,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
 
     # endregion
     # region: validation keywords
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def validated_request(
         self,
         path: str,
@@ -604,7 +604,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             original_data=original_data,
         )
 
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def perform_validated_request(
         self,
         path: str,
@@ -626,7 +626,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             original_data=original_data,
         )
 
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def validate_response_using_validator(self, response: Response) -> None:
         """
         Validate the `response` against the OpenAPI spec that is
@@ -637,7 +637,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             response_validator=self.response_validator,
         )
 
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def assert_href_to_resource_is_valid(
         self, href: str, referenced_resource: JSON
     ) -> None:
@@ -652,7 +652,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
             referenced_resource=referenced_resource,
         )
 
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def validate_response(
         self,
         path: str,
@@ -682,7 +682,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
         )
 
     @staticmethod
-    @keyword
+    @keyword(tags=["OpenApiLibCore"])
     def validate_send_response(
         response: Response,
         original_data: Mapping[str, JSON] = default_json_mapping,
