@@ -41,7 +41,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'
       run: |
         inv build
-    - uses: actions/upload-artifact@v6
+    - uses: actions/upload-artifact@v7
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'
       with:
         name: openapitools-wheel
@@ -108,7 +108,7 @@ jobs:
       if: matrix.robot-version == '6.1.1'
       run: |
         inv atests-rf6
-    - uses: actions/upload-artifact@v6
+    - uses: actions/upload-artifact@v7
       if: ${{ always() }}
       with:
         name: Test results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.robot-version}}
