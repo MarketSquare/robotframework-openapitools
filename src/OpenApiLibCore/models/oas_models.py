@@ -7,6 +7,7 @@ from copy import deepcopy
 from functools import cached_property
 from random import choice, randint, sample, shuffle, uniform
 from sys import float_info
+from decimal import Decimal, ROUND_CEILING, ROUND_FLOOR
 from typing import (
     Annotated,
     Any,
@@ -390,7 +391,29 @@ class IntegerSchema(SchemaBase[int], frozen=True):
         if self.enum is not None:
             return choice(self.enum), self
 
-        return randint(self._min_value, self._max_value), self
+        if self.multipleOf is None:
+            return randint(self._min_value, self._max_value), self
+        
+        step = self.multipleOf
+        if step <= 0:
+            logger.debug(f"multipleOf must be > 0, got {self.multipleOf}")
+            return randint(self._min_value, self._max_value), self
+        
+        # k_min and k_max are the bounds for the integer k, which will be chosen randomly, 
+        # then multiplied by the step (multipleOf) to get a valid value. 
+        k_min = -(-self._min_value // step) # the "double negative" essentially turns floor division into ceiling division
+        k_max = self._max_value // step # floor division
+
+        if k_min > k_max:
+            logger.debug(
+                f"No number satisfies bounds [{self._min_value}, {self._max_value}] "
+                f"and multipleOf {self.multipleOf}"
+            )
+            return randint(self._min_value, self._max_value), self
+        
+        # choose a k randomly between k_min and k_max, then multiply by step
+        value = randint(k_min, k_max) * step
+        return value, self
 
     def get_values_out_of_bounds(self, current_value: int) -> list[int]:  # pylint: disable=unused-argument
         invalid_values: list[int] = []
@@ -401,6 +424,8 @@ class IntegerSchema(SchemaBase[int], frozen=True):
         if self._max_value < self._max_int:
             invalid_values.append(self._max_value + 1)
 
+        # TODO: handle multipleOf for out of bounds values
+        
         if invalid_values:
             return invalid_values
 
@@ -507,7 +532,35 @@ class NumberSchema(SchemaBase[float], frozen=True):
         if self.enum is not None:
             return choice(self.enum), self
 
-        return uniform(self._min_value, self._max_value), self
+        if self.multipleOf is None:
+            return uniform(self._min_value, self._max_value), self
+
+        #Convert multipleOf and bounds to Decimal to avoid float rounding errors.   
+        step = Decimal(str(self.multipleOf))
+        if step <= 0:
+            logger.debug(f"multipleOf must be > 0, got {self.multipleOf}")
+            return uniform(self._min_value, self._max_value), self
+
+        min_value = Decimal(str(self._min_value))
+        max_value = Decimal(str(self._max_value))
+
+        #k_min and k_max are the bounds for the integer k, which will be chosen randomly, 
+        # then multiplied by the step (multipleOf) to get a valid value. 
+        # dividing by step and using ceiling/floor ensures then rounding ensures that k_min and k_max 
+        # are the smallest/largest integers that satisfy the bounds when multiplied by step.
+        k_min = int((min_value / step).to_integral_value(rounding=ROUND_CEILING))
+        k_max = int((max_value / step).to_integral_value(rounding=ROUND_FLOOR))
+
+        if k_min > k_max:
+            logger.debug(
+                f"No number satisfies bounds [{self._min_value}, {self._max_value}] "
+                f"and multipleOf {self.multipleOf}"
+            )
+            return uniform(self._min_value, self._max_value), self
+
+        #choose a k randomly between k_min and k_max, then multiply by step 
+        value = float(Decimal(randint(k_min, k_max)) * step)
+        return value, self
 
     def get_values_out_of_bounds(self, current_value: float) -> list[float]:  # pylint: disable=unused-argument
         invalid_values: list[float] = []
@@ -518,6 +571,8 @@ class NumberSchema(SchemaBase[float], frozen=True):
         if self._max_value < self._max_float:
             invalid_values.append(self._max_value + 0.000000001)
 
+        # TODO: handle multipleOf for out of bounds values
+        
         if invalid_values:
             return invalid_values
 
