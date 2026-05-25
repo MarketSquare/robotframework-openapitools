@@ -174,7 +174,7 @@ class TestIntegerSchemaVariations(unittest.TestCase):
         schema = IntegerSchema(multipleOf=multiple_of)
         value = schema.get_valid_value()[0]
         factor = value / multiple_of
-        self.assertTrue(factor.is_integer())
+        self.assertTrue(factor.is_integer(), f"{factor=} {value=}")
 
         # The multipleOf is a float, for integers this means the factor will be a
         # mutliple of 10, 100, 1000, etc. depending on the decimals
@@ -182,25 +182,35 @@ class TestIntegerSchemaVariations(unittest.TestCase):
         schema = IntegerSchema(multipleOf=multiple_of)
         value = schema.get_valid_value()[0]
         factor = value / multiple_of
-        self.assertTrue(factor.is_integer())
+        self.assertTrue(factor.is_integer(), f"{factor=} {value=}")
 
     def test_multipleof_with_min(self) -> None:
         # This multiple_of is just within the min/max value of the JSON spec
-        # for (default) int32 so the unbounded factors can only be -1 and 1
+        # for (default) int32 so the unbounded factors can only be -1, 0 and 1
         multiple_of = 2000000000
-        schema = IntegerSchema(multipleOf=multiple_of, minimum=0)
+        schema = IntegerSchema(multipleOf=multiple_of, minimum=1)
         value = schema.get_valid_value()[0]
         factor = value / multiple_of
         self.assertTrue(factor.is_integer())
-        self.assertTrue((int(factor)) == 1)
+        self.assertTrue((int(factor)) == 1, f"{factor=} {value=}")
 
     def test_multipleof_with_max(self) -> None:
         multiple_of = 2000000000
-        schema = IntegerSchema(multipleOf=multiple_of, maximum=0)
+        schema = IntegerSchema(multipleOf=multiple_of, maximum=-1)
         value = schema.get_valid_value()[0]
         factor = value / multiple_of
         self.assertTrue(factor.is_integer())
-        self.assertTrue((int(factor)) == -1)
+        self.assertTrue((int(factor)) == -1, f"{factor=} {value=}")
+
+    def test_multipleof_with_multiple_outside_min_max(self) -> None:
+        # The multiple_of is larger than the min/max value, so the only factor for which
+        # factor * multiple_of = value is factor=0 (and, thus, value=0)
+        multiple_of = 20000000000
+        schema = IntegerSchema(multipleOf=multiple_of)
+        value = schema.get_valid_value()[0]
+        factor = value / multiple_of
+        self.assertTrue(factor.is_integer())
+        self.assertTrue((int(factor)) == 0, f"{factor=} {value=}")
 
     def test_multipleof_with_min_and_max(self) -> None:
         multiple_of = 3.0
@@ -208,7 +218,7 @@ class TestIntegerSchemaVariations(unittest.TestCase):
         value = schema.get_valid_value()[0]
         factor = value / multiple_of
         self.assertTrue(factor.is_integer())
-        self.assertIn(value, [-6, -3, 3])
+        self.assertIn(value, [-6, -3, 0, 3], f"{factor=} {value=}")
 
 
 class TestNumberSchemaVariations(unittest.TestCase):
@@ -217,31 +227,41 @@ class TestNumberSchemaVariations(unittest.TestCase):
         schema = NumberSchema(multipleOf=multiple_of)
         value = schema.get_valid_value()[0]
         factor = value / multiple_of
-        self.assertTrue(factor.is_integer())
+        self.assertTrue(factor.is_integer(), f"{factor=} {value=}")
 
         multiple_of = 0.7
         schema = NumberSchema(multipleOf=multiple_of)
         value = schema.get_valid_value()[0]
         factor = value / multiple_of
-        self.assertTrue(factor.is_integer())
+        self.assertTrue(factor.is_integer(), f"{factor=} {value=}")
 
     def test_multipleof_with_min(self) -> None:
         # This multiple_of is just within the min/max value of the JSON spec
-        # so the unbounded factors can only be -1 and 1
+        # so the unbounded factors can only be -1, 0 and 1
         multiple_of = 9000000000000000000
-        schema = NumberSchema(multipleOf=multiple_of, minimum=0)
+        schema = NumberSchema(multipleOf=multiple_of, minimum=0.1)
         value = schema.get_valid_value()[0]
         factor = value / multiple_of
         self.assertTrue(factor.is_integer())
-        self.assertTrue((int(factor)) == 1)
+        self.assertTrue((int(factor)) == 1, f"{factor=} {value=}")
 
     def test_multipleof_with_max(self) -> None:
         multiple_of = 9000000000000000000
-        schema = NumberSchema(multipleOf=multiple_of, maximum=0)
+        schema = NumberSchema(multipleOf=multiple_of, maximum=-0.1)
         value = schema.get_valid_value()[0]
         factor = value / multiple_of
         self.assertTrue(factor.is_integer())
-        self.assertTrue((int(factor)) == -1)
+        self.assertTrue((int(factor)) == -1, f"{factor=} {value=}")
+
+    def test_multipleof_with_multiple_outside_min_max(self) -> None:
+        # The multiple_of is larger than the min/max value, so the only factor for which
+        # factor * multiple_of = value is factor=0 (and, thus, value=0)
+        multiple_of = 90000000000000000000
+        schema = NumberSchema(multipleOf=multiple_of)
+        value = schema.get_valid_value()[0]
+        factor = value / multiple_of
+        self.assertTrue(factor.is_integer())
+        self.assertTrue((int(factor)) == 0, f"{factor=} {value=}")
 
     def test_multipleof_with_min_and_max(self) -> None:
         multiple_of = 3.11
@@ -249,7 +269,7 @@ class TestNumberSchemaVariations(unittest.TestCase):
         value = schema.get_valid_value()[0]
         factor = value / multiple_of
         self.assertTrue(factor.is_integer())
-        self.assertIn(value, [-6.22, -3.11, 3.11])
+        self.assertIn(value, [-6.22, -3.11, 0, 3.11], f"{factor=} {value=}")
 
 
 class TestArraySchemaVariations(unittest.TestCase):
