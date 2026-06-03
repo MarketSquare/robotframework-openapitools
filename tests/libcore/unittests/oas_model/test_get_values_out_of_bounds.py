@@ -216,5 +216,51 @@ class TestGetValuesOutOfBounds(unittest.TestCase):
             schema.get_values_out_of_bounds(current_value={})
 
 
+class TestGetValuesOutOfBoundsForMultipleOf(unittest.TestCase):
+    def test_integer_schema(self) -> None:
+        schema = IntegerSchema(multipleOf=1)
+        with self.assertRaises(ValueError):
+            schema.get_values_out_of_bounds(current_value=0)
+
+        schema = IntegerSchema(multipleOf=0.001)
+        with self.assertRaises(ValueError):
+            schema.get_values_out_of_bounds(current_value=42)
+
+        schema = IntegerSchema(multipleOf=2)
+        values = schema.get_values_out_of_bounds(current_value=0)
+        self.assertEqual(len(values), 1)
+        factor = values[0] / 2
+        self.assertFalse(int(factor) == factor)
+
+        schema = IntegerSchema(multipleOf=0.02)
+        values = schema.get_values_out_of_bounds(current_value=-42)
+        self.assertEqual(len(values), 1)
+        factor = values[0] / 2
+        self.assertFalse(int(factor) == factor)
+
+        schema = IntegerSchema(maximum=-10, multipleOf=3)
+        values = schema.get_values_out_of_bounds(current_value=-99)
+        self.assertEqual(len(values), 2)
+        self.assertIn(-9, values)
+        [invalid_multipleof_value] = [val for val in values if val != -9]
+        factor = invalid_multipleof_value / 3
+        self.assertFalse(int(factor) == factor)
+
+        schema = IntegerSchema(minimum=1, maximum=3, multipleOf=2)
+        values = schema.get_values_out_of_bounds(current_value=2)
+        self.assertEqual(values, [0, 4])
+
+    def test_number_schema(self) -> None:
+        schema = NumberSchema(multipleOf=0.1)
+        values = schema.get_values_out_of_bounds(current_value=0)
+        self.assertEqual(len(values), 1)
+        factor = values[0] / 0.1
+        self.assertFalse(int(factor) == factor)
+
+        schema = NumberSchema(minimum=-0.2, maximum=0.2, multipleOf=0.1)
+        values = schema.get_values_out_of_bounds(current_value=-99)
+        self.assertEqual(len(values), 3)
+
+
 if __name__ == "__main__":
     unittest.main()
