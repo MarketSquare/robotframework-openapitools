@@ -381,18 +381,10 @@ class IntegerSchema(SchemaBase[int], frozen=True):
 
         return self._min_int
 
-    def get_valid_value(
-        self,
-        operation_id: str | None = None,
-    ) -> tuple[int, IntegerSchema]:
-        """Generate a random int within the min/max range of the schema, if specified."""
-        if self.const is not None:
-            return self.const, self
-        if self.enum is not None:
-            return choice(self.enum), self
-
+    @cached_property
+    def _step(self) -> int | None:
         if self.multipleOf is None:
-            return randint(self._min_value, self._max_value), self
+            return None
 
         # Convert multipleOf and bounds to Decimal to avoid float rounding errors.
         step = Decimal(str(self.multipleOf))
@@ -409,6 +401,20 @@ class IntegerSchema(SchemaBase[int], frozen=True):
             else:
                 exp = 0
             step = step * pow(10, exp)
+        return int(step)
+
+    def get_valid_value(
+        self,
+        operation_id: str | None = None,
+    ) -> tuple[int, IntegerSchema]:
+        """Generate a random int within the min/max range of the schema, if specified."""
+        if self.const is not None:
+            return self.const, self
+        if self.enum is not None:
+            return choice(self.enum), self
+
+        if self._step is None:
+            return randint(self._min_value, self._max_value), self
 
         min_value = Decimal(str(self._min_value))
         max_value = Decimal(str(self._max_value))
@@ -418,10 +424,10 @@ class IntegerSchema(SchemaBase[int], frozen=True):
         # Dividing by step and using ceiling/floor ensures then rounding ensures that
         # k_min and k_max are the smallest/largest integers that satisfy the bounds
         # when multiplied by step.
-        k_min = int((min_value / step).to_integral_value(rounding=ROUND_CEILING))
-        k_max = int((max_value / step).to_integral_value(rounding=ROUND_FLOOR))
+        k_min = int((min_value / self._step).to_integral_value(rounding=ROUND_CEILING))
+        k_max = int((max_value / self._step).to_integral_value(rounding=ROUND_FLOOR))
 
-        value = int(randint(k_min, k_max) * step)
+        value = int(randint(k_min, k_max) * self._step)
         return value, self
 
     def get_values_out_of_bounds(self, current_value: int) -> list[int]:  # pylint: disable=unused-argument
@@ -432,8 +438,15 @@ class IntegerSchema(SchemaBase[int], frozen=True):
 
         if self._max_value < self._max_int:
             invalid_values.append(self._max_value + 1)
+        # Violating multipleOf for ints is only possible is the step size is not 1.
+        if self._step is not None and self._step != 1:
+            # If the current value is not an edge value, adding / subtracting 1 keeps it
+            # within min/max but does violate the multipleOf contraint.
+            if current_value > self._min_value:
+                invalid_values.append(current_value - 1)
 
-        # TODO: handle multipleOf for out of bounds values
+            if current_value < self._max_int:
+                invalid_values.append(current_value + 1)
 
         if invalid_values:
             return invalid_values

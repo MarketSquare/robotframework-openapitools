@@ -228,27 +228,30 @@ class TestGetValuesOutOfBoundsForMultipleOf(unittest.TestCase):
 
         schema = IntegerSchema(multipleOf=2)
         values = schema.get_values_out_of_bounds(current_value=0)
-        self.assertEqual(len(values), 1)
-        factor = values[0] / 2
-        self.assertFalse(int(factor) == factor)
+        self.assertEqual(len(values), 2)
+        for value in values:
+            factor = value / 2
+            self.assertFalse(int(factor) == factor)
 
         schema = IntegerSchema(multipleOf=0.02)
         values = schema.get_values_out_of_bounds(current_value=-42)
-        self.assertEqual(len(values), 1)
-        factor = values[0] / 2
-        self.assertFalse(int(factor) == factor)
+        self.assertEqual(len(values), 2)
+        for value in values:
+            factor = value / 2
+            self.assertFalse(int(factor) == factor)
 
         schema = IntegerSchema(maximum=-10, multipleOf=3)
         values = schema.get_values_out_of_bounds(current_value=-99)
-        self.assertEqual(len(values), 2)
+        self.assertEqual(len(values), 3)
         self.assertIn(-9, values)
-        [invalid_multipleof_value] = [val for val in values if val != -9]
-        factor = invalid_multipleof_value / 3
-        self.assertFalse(int(factor) == factor)
+        invalid_multipleof_values = [val for val in values if val != -9]
+        for value in invalid_multipleof_values:
+            factor = value / 3
+            self.assertFalse(int(factor) == factor)
 
         schema = IntegerSchema(minimum=1, maximum=3, multipleOf=2)
         values = schema.get_values_out_of_bounds(current_value=2)
-        self.assertEqual(values, [0, 4])
+        self.assertEqual(sorted(values), [0, 1, 3, 4])
 
     def test_number_schema(self) -> None:
         schema = NumberSchema(multipleOf=0.1)
