@@ -4,10 +4,10 @@ import builtins
 from abc import abstractmethod
 from collections import ChainMap
 from copy import deepcopy
+from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
 from functools import cached_property
 from random import choice, randint, sample, shuffle, uniform
 from sys import float_info
-from decimal import Decimal, ROUND_CEILING, ROUND_FLOOR
 from typing import (
     Annotated,
     Any,
@@ -445,7 +445,7 @@ class IntegerSchema(SchemaBase[int], frozen=True):
             if current_value > self._min_value:
                 invalid_values.append(current_value - 1)
 
-            if current_value < self._max_int:
+            if current_value < self._max_value:
                 invalid_values.append(current_value + 1)
 
         if invalid_values:
@@ -493,6 +493,10 @@ class IntegerSchema(SchemaBase[int], frozen=True):
         return int
 
 
+# TODO: Change to machine-specific precision?
+DELTA = 0.0000000001
+
+
 class NumberSchema(SchemaBase[float], frozen=True):
     type: Literal["number"] = "number"
     maximum: int | float | None = None
@@ -504,6 +508,9 @@ class NumberSchema(SchemaBase[float], frozen=True):
     enum: list[int | float] | None = None
     nullable: bool = False
 
+    # Technically spoken, Numbers and Integers are not limited under the JSON standard
+    # and integer is not a primitive type under the OAS. For interoperability reasons,
+    # this implementation keeps Numbers within the int64 range.
     @cached_property
     def _max_float(self) -> float:
         return 9223372036854775807.0
@@ -519,11 +526,11 @@ class NumberSchema(SchemaBase[float], frozen=True):
         if isinstance(self.exclusiveMaximum, (int, float)) and not isinstance(
             self.exclusiveMaximum, bool
         ):
-            return self.exclusiveMaximum - 0.0000000001
+            return self.exclusiveMaximum - DELTA
 
         if isinstance(self.maximum, (int, float)):
             if self.exclusiveMaximum is True:
-                return self.maximum - 0.0000000001
+                return self.maximum - DELTA
             return self.maximum
 
         return self._max_float
@@ -535,11 +542,11 @@ class NumberSchema(SchemaBase[float], frozen=True):
         if isinstance(self.exclusiveMinimum, (int, float)) and not isinstance(
             self.exclusiveMinimum, bool
         ):
-            return self.exclusiveMinimum + 0.0000000001
+            return self.exclusiveMinimum + DELTA
 
         if isinstance(self.minimum, (int, float)):
             if self.exclusiveMinimum is True:
-                return self.minimum + 0.0000000001
+                return self.minimum + DELTA
             return self.minimum
 
         return self._min_float
@@ -577,13 +584,25 @@ class NumberSchema(SchemaBase[float], frozen=True):
     def get_values_out_of_bounds(self, current_value: float) -> list[float]:  # pylint: disable=unused-argument
         invalid_values: list[float] = []
 
-        if self._min_value > self._min_float:
-            invalid_values.append(self._min_value - 0.000000001)
+        # The min / max value can be exclusive, in which case a DELTA offset is
+        # already being used. To ensure being outside the min / max range, use an offset
+        # of 2 * DELTA.
+        if self._min_value > self._min_float + 3 * DELTA:
+            invalid_values.append(self._min_value - 2 * DELTA)
 
-        if self._max_value < self._max_float:
-            invalid_values.append(self._max_value + 0.000000001)
+        if self._max_value < self._max_float - 3 * DELTA:
+            invalid_values.append(self._max_value + 2 * DELTA)
 
-        # TODO: handle multipleOf for out of bounds values
+        # Due to the nature of floats, ignore extremely small multipleOf values.
+        if self.multipleOf is not None and self.multipleOf > 10 * DELTA:
+            # If the current value is not an edge value (or really close to it),
+            # adding / subtracting the DELTA keeps it within min/max but does
+            # violate the multipleOf contraint.
+            if current_value > self._min_value + 2 * DELTA:
+                invalid_values.append(current_value - DELTA)
+
+            if current_value < self._max_value - 2 * DELTA:
+                invalid_values.append(current_value + DELTA)
 
         if invalid_values:
             return invalid_values

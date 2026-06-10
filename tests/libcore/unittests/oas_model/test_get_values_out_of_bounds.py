@@ -253,16 +253,36 @@ class TestGetValuesOutOfBoundsForMultipleOf(unittest.TestCase):
         values = schema.get_values_out_of_bounds(current_value=2)
         self.assertEqual(sorted(values), [0, 1, 3, 4])
 
+        schema = IntegerSchema(minimum=3, maximum=3, multipleOf=3)
+        values = schema.get_values_out_of_bounds(current_value=3)
+        self.assertEqual(sorted(values), [2, 4])
+
     def test_number_schema(self) -> None:
         schema = NumberSchema(multipleOf=0.1)
-        values = schema.get_values_out_of_bounds(current_value=0)
-        self.assertEqual(len(values), 1)
+        values = schema.get_values_out_of_bounds(current_value=42)
+        self.assertEqual(len(values), 2)
         factor = values[0] / 0.1
         self.assertFalse(int(factor) == factor)
 
         schema = NumberSchema(minimum=-0.2, maximum=0.2, multipleOf=0.1)
-        values = schema.get_values_out_of_bounds(current_value=-99)
-        self.assertEqual(len(values), 3)
+        values = schema.get_values_out_of_bounds(current_value=0)
+        self.assertEqual(len(values), 4)
+        values = sorted(values)
+        below_minimum = values.pop(0)
+        over_maximum = values.pop(-1)
+        self.assertTrue(below_minimum < -0.2)
+        self.assertTrue(over_maximum > 0.2)
+        for value in values:
+            factor = value / 0.1
+            self.assertFalse(int(factor) == factor)
+            self.assertTrue(-0.2 < value < 0.2)
+
+        schema = NumberSchema(minimum=0, maximum=0, multipleOf=0.01)
+        values = schema.get_values_out_of_bounds(current_value=0)
+        self.assertEqual(len(values), 2)
+        values = sorted(values)
+        below_minimum = values.pop(0)
+        over_maximum = values.pop(-1)
 
 
 if __name__ == "__main__":
