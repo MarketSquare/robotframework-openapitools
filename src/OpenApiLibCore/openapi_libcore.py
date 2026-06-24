@@ -822,7 +822,7 @@ class OpenApiLibCore:  # pylint: disable=too-many-public-methods
 
             specification = self._get_specification(recursion_limit_handler)
 
-            validation_spec = SchemaPath.from_dict(specification)  # type: ignore[arg-type]
+            validation_spec = SchemaPath.from_dict(specification)
 
             json_types_from_spec: set[str] = self._get_json_types_from_spec(
                 specification

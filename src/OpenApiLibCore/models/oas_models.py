@@ -4,6 +4,7 @@ import builtins
 from abc import abstractmethod
 from collections import ChainMap
 from copy import deepcopy
+from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
 from functools import cached_property
 from random import choice, randint, sample, shuffle, uniform
 from sys import float_info
@@ -331,7 +332,7 @@ class IntegerSchema(SchemaBase[int], frozen=True):
     exclusiveMaximum: int | bool | None = None
     minimum: int | None = None
     exclusiveMinimum: int | bool | None = None
-    multipleOf: int | None = None  # TODO: implement support
+    multipleOf: float | None = Field(default=None, gt=0)
     const: int | None = None
     enum: list[int] | None = None
     nullable: bool = False
@@ -380,6 +381,28 @@ class IntegerSchema(SchemaBase[int], frozen=True):
 
         return self._min_int
 
+    @cached_property
+    def _step(self) -> int | None:
+        if self.multipleOf is None:
+            return None
+
+        # Convert multipleOf and bounds to Decimal to avoid float rounding errors.
+        step = Decimal(str(self.multipleOf))
+
+        # If the div of the ratio is 1, the step is already an int.
+        ratio = step.as_integer_ratio()
+        if ratio[1] == 1:
+            step = Decimal(ratio[0])
+        # If the multipleOf is a float, we need to multiply to ensure the outcome is an int.
+        else:
+            _, _, exponent = step.as_tuple()
+            if exponent < 0:  # type: ignore[operator]
+                exp = -exponent  # type: ignore[operator]
+            else:
+                exp = 0
+            step = step * pow(10, exp)
+        return int(step)
+
     def get_valid_value(
         self,
         operation_id: str | None = None,
@@ -390,7 +413,22 @@ class IntegerSchema(SchemaBase[int], frozen=True):
         if self.enum is not None:
             return choice(self.enum), self
 
-        return randint(self._min_value, self._max_value), self
+        if self._step is None:
+            return randint(self._min_value, self._max_value), self
+
+        min_value = Decimal(str(self._min_value))
+        max_value = Decimal(str(self._max_value))
+
+        # k_min and k_max are the bounds for the integer k, which will be chosen
+        # randomly, then multiplied by the step (multipleOf) to get a valid value.
+        # Dividing by step and using ceiling/floor ensures then rounding ensures that
+        # k_min and k_max are the smallest/largest integers that satisfy the bounds
+        # when multiplied by step.
+        k_min = int((min_value / self._step).to_integral_value(rounding=ROUND_CEILING))
+        k_max = int((max_value / self._step).to_integral_value(rounding=ROUND_FLOOR))
+
+        value = int(randint(k_min, k_max) * self._step)
+        return value, self
 
     def get_values_out_of_bounds(self, current_value: int) -> list[int]:  # pylint: disable=unused-argument
         invalid_values: list[int] = []
@@ -400,6 +438,15 @@ class IntegerSchema(SchemaBase[int], frozen=True):
 
         if self._max_value < self._max_int:
             invalid_values.append(self._max_value + 1)
+        # Violating multipleOf for ints is only possible is the step size is not 1.
+        if self._step is not None and self._step != 1:
+            # If the current value is not an edge value, adding / subtracting 1 keeps it
+            # within min/max but does violate the multipleOf contraint.
+            if current_value > self._min_value:
+                invalid_values.append(current_value - 1)
+
+            if current_value < self._max_value:
+                invalid_values.append(current_value + 1)
 
         if invalid_values:
             return invalid_values
@@ -446,17 +493,24 @@ class IntegerSchema(SchemaBase[int], frozen=True):
         return int
 
 
+# TODO: Change to machine-specific precision?
+DELTA = 0.0000000001
+
+
 class NumberSchema(SchemaBase[float], frozen=True):
     type: Literal["number"] = "number"
     maximum: int | float | None = None
     exclusiveMaximum: int | float | bool | None = None
     minimum: int | float | None = None
     exclusiveMinimum: int | float | bool | None = None
-    multipleOf: int | None = None  # TODO: implement support
+    multipleOf: float | None = Field(default=None, gt=0)
     const: int | float | None = None
     enum: list[int | float] | None = None
     nullable: bool = False
 
+    # Technically spoken, Numbers and Integers are not limited under the JSON standard
+    # and integer is not a primitive type under the OAS. For interoperability reasons,
+    # this implementation keeps Numbers within the int64 range.
     @cached_property
     def _max_float(self) -> float:
         return 9223372036854775807.0
@@ -472,11 +526,11 @@ class NumberSchema(SchemaBase[float], frozen=True):
         if isinstance(self.exclusiveMaximum, (int, float)) and not isinstance(
             self.exclusiveMaximum, bool
         ):
-            return self.exclusiveMaximum - 0.0000000001
+            return self.exclusiveMaximum - DELTA
 
         if isinstance(self.maximum, (int, float)):
             if self.exclusiveMaximum is True:
-                return self.maximum - 0.0000000001
+                return self.maximum - DELTA
             return self.maximum
 
         return self._max_float
@@ -488,11 +542,11 @@ class NumberSchema(SchemaBase[float], frozen=True):
         if isinstance(self.exclusiveMinimum, (int, float)) and not isinstance(
             self.exclusiveMinimum, bool
         ):
-            return self.exclusiveMinimum + 0.0000000001
+            return self.exclusiveMinimum + DELTA
 
         if isinstance(self.minimum, (int, float)):
             if self.exclusiveMinimum is True:
-                return self.minimum + 0.0000000001
+                return self.minimum + DELTA
             return self.minimum
 
         return self._min_float
@@ -507,16 +561,48 @@ class NumberSchema(SchemaBase[float], frozen=True):
         if self.enum is not None:
             return choice(self.enum), self
 
-        return uniform(self._min_value, self._max_value), self
+        if self.multipleOf is None:
+            return uniform(self._min_value, self._max_value), self
+
+        # Convert multipleOf and bounds to Decimal to avoid float rounding errors.
+        step = Decimal(str(self.multipleOf))
+
+        min_value = Decimal(str(self._min_value))
+        max_value = Decimal(str(self._max_value))
+
+        # k_min and k_max are the bounds for the integer k, which will be chosen
+        # randomly, then multiplied by the step (multipleOf) to get a valid value.
+        # Dividing by step and using ceiling/floor ensures then rounding ensures that
+        # k_min and k_max are the smallest/largest integers that satisfy the bounds
+        # when multiplied by step.
+        k_min = int((min_value / step).to_integral_value(rounding=ROUND_CEILING))
+        k_max = int((max_value / step).to_integral_value(rounding=ROUND_FLOOR))
+
+        value = float(randint(k_min, k_max) * step)
+        return value, self
 
     def get_values_out_of_bounds(self, current_value: float) -> list[float]:  # pylint: disable=unused-argument
         invalid_values: list[float] = []
 
-        if self._min_value > self._min_float:
-            invalid_values.append(self._min_value - 0.000000001)
+        # The min / max value can be exclusive, in which case a DELTA offset is
+        # already being used. To ensure being outside the min / max range, use an offset
+        # of 2 * DELTA.
+        if self._min_value > self._min_float + 3 * DELTA:
+            invalid_values.append(self._min_value - 2 * DELTA)
 
-        if self._max_value < self._max_float:
-            invalid_values.append(self._max_value + 0.000000001)
+        if self._max_value < self._max_float - 3 * DELTA:
+            invalid_values.append(self._max_value + 2 * DELTA)
+
+        # Due to the nature of floats, ignore extremely small multipleOf values.
+        if self.multipleOf is not None and self.multipleOf > 10 * DELTA:
+            # If the current value is not an edge value (or really close to it),
+            # adding / subtracting the DELTA keeps it within min/max but does
+            # violate the multipleOf contraint.
+            if current_value > self._min_value + 2 * DELTA:
+                invalid_values.append(current_value - DELTA)
+
+            if current_value < self._max_value - 2 * DELTA:
+                invalid_values.append(current_value + DELTA)
 
         if invalid_values:
             return invalid_values

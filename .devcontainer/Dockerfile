@@ -13,6 +13,10 @@ RUN apt-get update && \
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git
 
+# the ssh-client is needed to perform git operations from within the container if ssh is used
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ssh-client
+
 # build-essentials is used for some Python package installs
 RUN apt-get update && \
     apt-get install -y  --no-install-recommends build-essential

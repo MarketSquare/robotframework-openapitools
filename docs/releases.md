@@ -1,14 +1,22 @@
 # Release notes
 
-## OpenApiTools v2.0.1
+## OpenApiTools v2.1.0
 
-### Bugfixes
-- Moved header sanitazion to ensure it's always applied.
-    - This closes [issue #137: Error on DataValidationError](https://github.com/MarketSquare/robotframework-openapitools/issues/137).
+### Major changes and new features
+- Added support for multipleOf.
+    - This closes [issue #76: Add support for multipleOf](https://github.com/MarketSquare/robotframework-openapitools/issues/76).
 
 <br><br><br>
 
 ## Previous versions
+
+### OpenApiTools v2.0.1
+
+#### Bugfixes
+- Moved header sanitazion to ensure it's always applied.
+    - This closes [issue #137: Error on DataValidationError](https://github.com/MarketSquare/robotframework-openapitools/issues/137).
+
+---
 
 ### OpenApiTools v2.0.0
 
