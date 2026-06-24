@@ -392,12 +392,12 @@ class IntegerSchema(SchemaBase[int], frozen=True):
         # If the div of the ratio is 1, the step is already an int.
         ratio = step.as_integer_ratio()
         if ratio[1] == 1:
-            step = ratio[0]
+            step = Decimal(ratio[0])
         # If the multipleOf is a float, we need to multiply to ensure the outcome is an int.
         else:
             _, _, exponent = step.as_tuple()
-            if exponent < 0:
-                exp = -exponent
+            if exponent < 0:  # type: ignore[operator]
+                exp = -exponent  # type: ignore[operator]
             else:
                 exp = 0
             step = step * pow(10, exp)
