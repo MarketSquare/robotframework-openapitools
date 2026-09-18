@@ -92,7 +92,7 @@ jobs:
         poetry install
         pip install robotframework==${{ matrix.robot-version }}
     - name: Start the test server in the background
-      uses: JarvusInnovations/background-action@v1.0.7
+      uses: JarvusInnovations/background-action@v2.0.0
       with:
         run: |
           inv start-api &
